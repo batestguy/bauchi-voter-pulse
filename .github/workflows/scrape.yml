@@ -1,0 +1,15 @@
+name: scrape
+on:
+  schedule:
+    - cron: "30 5 * * *"  # daily 05:30 UTC
+  workflow_dispatch: {}
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: python -c "import pathlib; [pathlib.Path(p).mkdir(parents=True, exist_ok=True) for p in ['data/raw','data/classified','data/aggregates','data/human_review']]"
+      - run: git status --short
