@@ -15,7 +15,7 @@ CHROME = re.compile(r"\s*(?:\d+\s+Likes?\s*)?(?:\d+\s+Shares?\s*)?Share\s+Copy\s
                     re.IGNORECASE | re.DOTALL)
 
 BOARD = "https://www.nairaland.com/politics"
-MAX_TOPICS = 15
+MAX_TOPICS = 30
 SLUG = "nairaland"
 
 

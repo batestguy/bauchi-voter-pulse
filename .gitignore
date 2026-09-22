@@ -8,3 +8,4 @@ venv/
 *API_KEY*
 .DS_Store
 Thumbs.db
+data/.robots_cache.json

@@ -3,6 +3,8 @@ public sources only, robots.txt respected, rate-limit delays, no usernames store
 never modify scraped text, stable raw_id for cross-run dedupe.
 """
 import hashlib
+import json
+import pathlib
 import re
 import time
 import urllib.robotparser as robotparser
@@ -45,6 +47,45 @@ _RAW_COLUMNS = ["raw_id", "source", "date_scraped", "text", "url", "lga_keyword_
 
 _last_hit = {}
 _robots_cache = {}
+_ROBOTS_DISK = pathlib.Path(__file__).resolve().parents[2] / "data" / ".robots_cache.json"
+_ROBOTS_TTL = 24 * 3600
+
+
+def _parse_robots(lines):
+    rp = robotparser.RobotFileParser()
+    rp.parse(lines)
+    try:
+        delay = rp.crawl_delay(USER_AGENT) or 0
+    except Exception:
+        delay = 0
+    return rp, float(delay or 0)
+
+
+def _load_disk_cache():
+    """Pre-seed from yesterday's robots.txt copies so one throttled run can't blind us."""
+    try:
+        disk = json.loads(_ROBOTS_DISK.read_text(encoding="utf-8"))
+        now = time.time()
+        for base, entry in disk.items():
+            if (now - entry.get("fetched_at", 0) < _ROBOTS_TTL
+                    and entry.get("lines") and base not in _robots_cache):
+                _robots_cache[base] = _parse_robots(entry["lines"])
+    except Exception:
+        pass
+
+
+def _save_disk_cache(lines_by_base):
+    try:
+        _ROBOTS_DISK.parent.mkdir(parents=True, exist_ok=True)
+        disk = {}
+        if _ROBOTS_DISK.exists():
+            disk = json.loads(_ROBOTS_DISK.read_text(encoding="utf-8"))
+        now = time.time()
+        for base, lines in lines_by_base.items():
+            disk[base] = {"lines": lines, "fetched_at": now}
+        _ROBOTS_DISK.write_text(json.dumps(disk), encoding="utf-8")
+    except Exception:
+        pass
 _host_delay = {}
 
 
@@ -54,6 +95,8 @@ def _robots_allows(url):
     -> conservative skip. Returns (allowed, delay)."""
     parts = urlparse(url)
     base = f"{parts.scheme}://{parts.netloc}"
+    if not _robots_cache:
+        _load_disk_cache()
     if base not in _robots_cache:
         try:
             resp = requests.get(f"{base}/robots.txt", headers={"User-Agent": USER_AGENT},
@@ -61,13 +104,9 @@ def _robots_allows(url):
             if resp.status_code != 200:
                 _robots_cache[base] = (False, 0.0)
             else:
-                rp = robotparser.RobotFileParser()
-                rp.parse(resp.text.splitlines())
-                try:
-                    delay = rp.crawl_delay(USER_AGENT) or 0
-                except Exception:
-                    delay = 0
-                _robots_cache[base] = (rp, float(delay or 0))
+                lines = resp.text.splitlines()
+                _robots_cache[base] = _parse_robots(lines)
+                _save_disk_cache({base: lines})
         except Exception:
             _robots_cache[base] = (False, 0.0)
     cached = _robots_cache[base]
