@@ -13,7 +13,7 @@ import sys
 from .routing import REVIEW_COLUMNS, SCHEMA_VERSION, THRESHOLD, apply_routing
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SPEC = ROOT / "src" / "schema" / "jev_pulse_v2.json"
+SPEC = ROOT / "src" / "schema" / "jev_pulse_v3.json"
 SPEC_MODEL = json.loads(SPEC.read_text(encoding="utf-8")).get("model", "")
 REVIEW_DIR = ROOT / "data" / "human_review"
 CLASSIFIED_COLUMNS = [

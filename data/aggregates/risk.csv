@@ -1,0 +1,2 @@
+lga,risk,signals,model_version,training_date,note
+unclear,unrated,n<5 usable rows,risk-v0-heuristic,2026-09-22,provisional single-window; change-vs-prior activates with >=2 windows; baseline votes in data/baseline_lg2026.csv

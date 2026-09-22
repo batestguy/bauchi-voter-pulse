@@ -103,6 +103,29 @@ MIX = {
 }
 BUCKETS = {"pos": ("positive", 1, 0), "neg": ("negative", 1, 0),
            "neg_opp": ("negative", 1, 1), "neu": ("neutral", 1, 0), "not": ("not_about_candidate", 0, 0)}
+# No-LGA texts (no {lga} slot): human_lga_relevance = "unclear". (lang, bucket, count)
+NOLGA_PLAN = ([("english", "not")] * 12 + [("english", "neu")] * 4
+              + [("hausa", "not")] * 8 + [("hausa", "neu")] * 4
+              + [("mixed", "not")] * 8 + [("mixed", "neu")] * 4)
+NOLGA = {
+    "english": {
+        "not": ["Rainfall this season is good for farmers nationwide.",
+                "The Super Eagles play on Sunday and fans are excited.",
+                "Traders everywhere complain about rising prices of goods."],
+        "neu": ["Yakubu Adamu announced a statewide empowerment programme today.",
+                "APM released its campaign schedule for the coming weeks."],
+    },
+    "hausa": {
+        "not": ["Ruwan sama bana yana da kyau ga manoma a fadin kasa.",
+                "Yan kasuwa suna korafin tsadar kayayyaki ko ina."],
+        "neu": ["Yakubu Adamu ya sanar da sabon shiri a fadin jihar."],
+    },
+    "mixed": {
+        "not": ["Match ya kare 1-1 on Sunday, fans suna murna.",
+                "Prices are rising, talakawa suna shan wahala."],
+        "neu": ["Yakubu Adamu ya sanar da new programme today."],
+    },
+}
 # per-LGA plan: (lang, bucket, count)
 PLAN = [("english", "pos", 3), ("english", "neg", 2), ("english", "neg_opp", 1),
         ("english", "neu", 2), ("english", "not", 4),
@@ -139,7 +162,24 @@ def build():
                     "human_opposition": opp,
                     "human_language": lang,
                 })
-    assert len(rows) == 500, len(rows)
+    for lang, bucket in NOLGA_PLAN:
+        sentiment, mention, opp = BUCKETS[bucket]
+        pool = NOLGA[lang][bucket]
+        template = pool[n % len(pool)]
+        tk = topic_keys[n % len(topic_keys)]
+        n += 1
+        rows.append({
+            "raw_id": f"PILOT-{n:04d}",
+            "source": "synthetic_pilot",
+            "text": template.format(topic=TOPICS[tk], topic_ha=TOPICS_HA[tk]),
+            "human_sentiment": sentiment,
+            "human_mentions_candidate": mention,
+            "human_intensity": "calm",
+            "human_lga_relevance": "unclear",
+            "human_opposition": opp,
+            "human_language": lang,
+        })
+    assert len(rows) == 540, len(rows)
     return rows
 
 

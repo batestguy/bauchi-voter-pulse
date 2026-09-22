@@ -68,3 +68,12 @@ docs/              # Pages output (index.html) — committed by Actions
 
 ## Deliverable → phase map
 1. Classified corpus → Ph.1–3 | 2. LGA heatmap → Ph.5 | 3. Opposition dashboard → Ph.4–5 | 4. Risk report → Ph.4–5 | 5. Briefing template → Ph.5 (LLM prose over Jev outputs) | 6. Ops manual → Ph.1–2 + Ph.7
+
+## Status log (2026-09-22)
+- Ph.0 done: repo public, Pages live on `docs/`, daily + weekly + monthly workflows.
+- Ph.1 done: schema v3 frozen (`src/schema/jev_pulse_v3.json`, model `jev-1.13.0`). 540-post pilot: sentiment 99.6 / mentions 100 / lga 97.6 / opp 100 / language 94.8; intensity ordinal-only (±1: 93%).
+- Ph.2 done: `src/classification/` runner + routing gate (auto iff min(sentiment,lga conf) ≥0.80) + review-queue protocol.
+- Ph.3 done: 1,618 raw rows (Nairaland board + targeted search, 8 news outlets incl. RFI Hausa). Excluded on purpose: BBC Hausa (terms forbid datasets), TheCable (WAF 403), Facebook (no token — see Ph.3 notes).
+- Ph.4 done: `src/aggregation/aggregate.py` + `data/baseline_lg2026.csv` + `risk-v0-heuristic`. Real-data result: 2/1628 usable rows (cycle dominated by Osun-election news) — risk correctly reports unrated/insufficient-data, no fabricated ratings. ML training gated (refuses <200 LGA-weeks).
+- Key decisions: v3 `unclear` LGA fallback (v2 forced every post into an LGA); aggregation uses usable rows only (mentions≥0.5, ≠not_about, auto); per-language review rates reported in every eval (Hausa ~41-44%).
+- Next: Ph.5 static heatmap/dashboard content; Ph.7 weekly 100-post native-speaker eval.

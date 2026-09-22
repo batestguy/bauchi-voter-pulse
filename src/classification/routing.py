@@ -3,7 +3,7 @@ Rule: auto iff min(sentiment_confidence, lga_confidence) >= threshold, else huma
 Language confidence is measured, never gated. Never act on low-confidence rows.
 """
 THRESHOLD = 0.80
-SCHEMA_VERSION = "v2"
+SCHEMA_VERSION = "v3"
 
 
 def apply_routing(sentiment_confidence, lga_confidence, threshold=THRESHOLD):

@@ -8,7 +8,7 @@ import datetime
 import json
 import pathlib
 
-from . import facebook, nairaland, news
+from . import facebook, nairaland, nairaland_search, news
 from .common import validate_row
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -34,7 +34,8 @@ def main():
     today = datetime.date.today().isoformat()
     seen = existing_ids()
     collected = []
-    for name, mod in [("nairaland", nairaland), ("news", news), ("facebook", facebook)]:
+    for name, mod in [("nairaland", nairaland), ("nl_search", nairaland_search),
+                      ("news", news), ("facebook", facebook)]:
         try:
             rows = mod.scrape(today)
         except Exception as exc:

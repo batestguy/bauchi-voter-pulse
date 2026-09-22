@@ -12,14 +12,14 @@ JEV = ROOT / "data" / "pilot" / "jev_out.jsonl"
 REPORT = ROOT / "data" / "pilot" / "pilot_report.md"
 CLASSIFIED = ROOT / "data" / "classified" / "pilot_classified.csv"
 THRESHOLD = 0.80
-SCHEMA_VERSION = "v2"
+SCHEMA_VERSION = "v3"
 MODEL = "jev-1.13.0"
 
 
 def main():
     humans = [json.loads(l) for l in PILOT.open(encoding="utf-8")]
     jevs = [json.loads(l) for l in JEV.open(encoding="utf-8")]
-    assert len(humans) == len(jevs) == 500
+    assert len(humans) == len(jevs) == 540
     stats = Counter()
     by_lang = defaultdict(Counter)
     by_lga = defaultdict(Counter)
@@ -78,12 +78,13 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
-    L = [f"# Pilot report — schema v2 (500 synthetic posts: 240 EN / 160 HA / 100 mixed, {MODEL}, threshold {THRESHOLD})",
+    n = len(humans)
+    L = [f"# Pilot report — schema v3 (540 synthetic: 256 EN / 172 HA / 112 mixed, incl. 40 no-LGA, {MODEL}, threshold {THRESHOLD})",
          "", "Accuracy vs. template human labels (agreement, not ground truth):", ""]
     for k in ["sentiment", "mentions", "intensity", "lga", "opp", "language"]:
         L.append(f"- {k}: {stats[f'{k}_ok']}/{stats[f'{k}_n']} = {stats[f'{k}_ok']/stats[f'{k}_n']:.1%}")
-    L += [f"- intensity adjacent (±1 level): {intensity_adj}/500 = {intensity_adj/500:.1%}",
-          f"- routing: auto {routing['auto']} ({routing['auto']/5:.1f}%), human_review {routing['human_review']} ({routing['human_review']/5:.1f}%)",
+    L += [f"- intensity adjacent (±1 level): {intensity_adj}/{n} = {intensity_adj/n:.1%}",
+          f"- routing: auto {routing['auto']} ({routing['auto']/n:.1%}), human_review {routing['human_review']} ({routing['human_review']/n:.1%})",
           "", "Sentiment accuracy + review rate by language:"]
     for lang in ["english", "hausa", "mixed"]:
         c = by_lang[lang]
