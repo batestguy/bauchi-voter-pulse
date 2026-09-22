@@ -1,7 +1,8 @@
-"""Phase 1 pilot corpus generator — DETERMINISTIC synthetic posts for schema stress-testing.
+"""Phase 1 pilot corpus generator (schema v2) — DETERMINISTIC synthetic posts for schema stress-testing.
 NOT real scraped data. Every row is marked source=synthetic_pilot. Human labels are assigned
 by construction (template intent) so Jev outputs can be scored for agreement.
-Strata: 20 LGAs x 25 posts = 500. Mix per LGA: 8 pos / 8 neg / 4 neutral / 5 not-about-candidate."""
+Strata: 20 LGAs x 25 posts = 500 (per LGA: 12 English / 8 Hausa / 5 mixed).
+Hausa templates use simple standard Hausa; real validation needs native-speaker labels (Ph.7)."""
 import json
 import pathlib
 import random
@@ -23,70 +24,121 @@ TOPICS = {
     "security": "night patrols and security",
     "markets": "market stall fees",
 }
+TOPICS_HA = {
+    "healthcare": "asibiti",
+    "roads": "hanyoyi",
+    "youth jobs": "rashin aikin yi ga matasa",
+    "education": "makarantu",
+    "water": "ruwan sha",
+    "agriculture": "takin zamani",
+    "security": "tsaro",
+    "markets": "harajin kasuwa",
+}
 
-POS_T = [
-    ("Yakubu Adamu commissioned a new {topic} in {lga} today, residents are celebrating.", "mild"),
-    ("APM's {topic} programme in {lga} is working. Kudos to Yakubu Adamu!", "moderate"),
-    ("I am so happy! {Lga} is finally seeing real progress on {topic} because of Dr. Yakubu Adamu. APM forever!", "strong"),
-    ("Good news from {lga}: {topic} has improved under the APM government.", "calm"),
-]
-NEG_T = [
-    ("APM has failed {lga} on {topic}. Yakubu Adamu must act now.", "moderate"),
-    ("No {topic} in {lga} for months! This APM government does not care about us at all!", "strong"),
-    ("{Lga} people are suffering over {topic} while Yakubu Adamu makes empty promises.", "moderate"),
-    ("DISASTER in {lga}!!! {Topic} has collapsed and APM is silent! Enough is enough!", "very_strong"),
-]
-NEG_OPP_T = [
-    ("APM has failed {lga} on {topic}. PDP will take back our communities next year.", "strong"),
-    ("Yakubu Adamu cannot fix {topic} in {lga}. APC has the real blueprint for Bauchi.", "moderate"),
-]
-NEU_T = [
-    ("Yakubu Adamu visited {lga} yesterday to inspect {topic} projects.", "calm"),
-    ("APM announced a committee on {topic} covering {lga} and neighbouring areas.", "calm"),
-]
-NOT_ABOUT_T = [
-    ("Rainfall in {lga} this season is good for the {topic} farms.", "calm"),
-    ("Football: {lga} united drew 1-1 on Sunday, fans want better {topic} at the stadium.", "mild"),
-    ("Traders in {lga} market complain about rising prices of goods.", "mild"),
-]
+# (template, intensity) pools per language x bucket. mention/opp set by bucket.
+EN = {
+    "pos": [
+        ("Yakubu Adamu commissioned a new {topic} in {lga} today, residents are celebrating.", "mild"),
+        ("APM's {topic} programme in {lga} is working. Kudos to Yakubu Adamu!", "moderate"),
+        ("Good news from {lga}: {topic} has improved under the APM government.", "calm"),
+    ],
+    "neg": [
+        ("APM has failed {lga} on {topic}. Yakubu Adamu must act now.", "moderate"),
+        ("No {topic} in {lga} for months! This APM government does not care about us at all!", "strong"),
+        ("{Lga} people are suffering over {topic} while Yakubu Adamu makes empty promises.", "moderate"),
+    ],
+    "neg_opp": [
+        ("APM has failed {lga} on {topic}. PDP will take back our communities next year.", "strong"),
+        ("Yakubu Adamu cannot fix {topic} in {lga}. APC has the real blueprint for Bauchi.", "moderate"),
+    ],
+    "neu": [
+        ("Yakubu Adamu visited {lga} yesterday to inspect {topic} projects.", "calm"),
+        ("APM announced a committee on {topic} covering {lga} and neighbouring areas.", "calm"),
+    ],
+    "not": [
+        ("Rainfall in {lga} this season is good for the farms.", "calm"),
+        ("Football: {lga} united drew 1-1 on Sunday, fans want a bigger stadium.", "mild"),
+        ("Traders in {lga} market complain about rising prices of goods.", "mild"),
+    ],
+}
+HA = {
+    "pos": [
+        ("Yakubu Adamu ya kaddamar da sabuwar {topic_ha} a {lga}, al'umma suna murna.", "mild"),
+        ("Shirin {topic_ha} na APM a {lga} yana aiki. Madalla da Yakubu Adamu!", "moderate"),
+    ],
+    "neg": [
+        ("APM ta gaza a {lga} kan {topic_ha}. Ya kamata mu kori gwamnatin APM!", "moderate"),
+        ("Babu {topic_ha} a {lga} tun da dadewa! Gwamnatin APM ba ta damu da mu ba!", "strong"),
+    ],
+    "neg_opp": [
+        ("APM ta gaza a {lga} kan {topic_ha}. PDP za ta dawo mulki nan gaba.", "strong"),
+        ("Yakubu Adamu ba zai iya gyara {topic_ha} a {lga} ba. APC ce ke da sahihin tsari.", "moderate"),
+    ],
+    "neu": [
+        ("Yakubu Adamu ya ziyarci {lga} jiya don duba ayyukan {topic_ha}.", "calm"),
+    ],
+    "not": [
+        ("Ruwan sama a {lga} bana yana da kyau ga manoma.", "calm"),
+        ("Yan kasuwa a {lga} suna korafin tsadar kayayyaki.", "mild"),
+    ],
+}
+MIX = {
+    "pos": [
+        ("Good news daga {lga}: {topic} ya inganta karkashin APM.", "mild"),
+        ("Yakubu Adamu is doing great work, {topic_ha} ta inganta a {lga}.", "moderate"),
+    ],
+    "neg": [
+        ("APM has failed {lga} on {topic}, talakawa suna shan wahala.", "moderate"),
+        ("Babu {topic} in {lga} karkashin APM, this government does not care about talakawa!", "strong"),
+    ],
+    "neg_opp": [
+        ("PDP za ta take over {lga} next year, APM ta gaza. Muna goyon bayan PDP.", "strong"),
+    ],
+    "neu": [
+        ("Yakubu Adamu ya ziyarci {lga} yesterday don duba projects.", "calm"),
+    ],
+    "not": [
+        ("Match na {lga} united ya kare 1-1 on Sunday.", "calm"),
+    ],
+}
+BUCKETS = {"pos": ("positive", 1, 0), "neg": ("negative", 1, 0),
+           "neg_opp": ("negative", 1, 1), "neu": ("neutral", 1, 0), "not": ("not_about_candidate", 0, 0)}
+# per-LGA plan: (lang, bucket, count)
+PLAN = [("english", "pos", 3), ("english", "neg", 2), ("english", "neg_opp", 1),
+        ("english", "neu", 2), ("english", "not", 4),
+        ("hausa", "pos", 2), ("hausa", "neg", 2), ("hausa", "neg_opp", 1),
+        ("hausa", "neu", 1), ("hausa", "not", 2),
+        ("mixed", "pos", 1), ("mixed", "neg", 1), ("mixed", "neg_opp", 1),
+        ("mixed", "neu", 1), ("mixed", "not", 1)]
+POOLS = {"english": EN, "hausa": HA, "mixed": MIX}
 
 
 def build():
-    rng = random.Random(2026)
+    rng = random.Random(2027)
     rows = []
     n = 0
+    topic_keys = sorted(TOPICS)
     for lga in LGAS:
-        lga_cap = lga
-        batch = []
-        for t, inten in POS_T * 2:
-            batch.append(("positive", 1, inten, lga, 0, t))
-        for t, inten in NEG_T[:2] * 2:
-            batch.append(("negative", 1, inten, lga, 0, t))
-        for t, inten in NEG_OPP_T * 2:
-            batch.append(("negative", 1, inten, lga, 1, t))
-        for t, inten in NEU_T * 2:
-            batch.append(("neutral", 1, inten, lga, 0, t))
-        for t, inten in NOT_ABOUT_T:
-            batch.append(("not_about_candidate", 0, inten, lga, 0, t))
-        # 8+4+4+4+3 = 23 -> top up to 25 with shuffled extras
-        while len(batch) < 25:
-            batch.append(rng.choice(batch))
-        rng.shuffle(batch)
-        for sentiment, mention, intensity, lga_label, opp, template in batch[:25]:
-            n += 1
-            topic_key = rng.choice(sorted(TOPICS))
-            topic = TOPICS[topic_key]
-            text = template.format(topic=topic, lga=lga, Lga=lga_cap, Topic=topic.capitalize())
-            rows.append({
-                "raw_id": f"PILOT-{n:04d}",
-                "source": "synthetic_pilot",
-                "text": text,
-                "human_sentiment": sentiment,
-                "human_mentions_candidate": mention,
-                "human_intensity": intensity,
-                "human_lga_relevance": lga_label,
-                "human_opposition": opp,
-            })
+        for lang, bucket, count in PLAN:
+            sentiment, mention, opp = BUCKETS[bucket]
+            pool = POOLS[lang][bucket]
+            for i in range(count):
+                n += 1
+                template, intensity = pool[(i + rng.randrange(len(pool))) % len(pool)]
+                tk = rng.choice(topic_keys)
+                text = template.format(topic=TOPICS[tk], topic_ha=TOPICS_HA[tk],
+                                       lga=lga, Lga=lga, Topic=TOPICS[tk].capitalize())
+                rows.append({
+                    "raw_id": f"PILOT-{n:04d}",
+                    "source": "synthetic_pilot",
+                    "text": text,
+                    "human_sentiment": sentiment,
+                    "human_mentions_candidate": mention,
+                    "human_intensity": intensity,
+                    "human_lga_relevance": lga,
+                    "human_opposition": opp,
+                    "human_language": lang,
+                })
     assert len(rows) == 500, len(rows)
     return rows
 

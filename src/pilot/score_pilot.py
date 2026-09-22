@@ -1,5 +1,6 @@
-"""Score Phase 1 pilot: join human labels with Jev outputs, accuracy per question + LGA,
-routing split, and classified CSV in AGENTS.md columns. Run: python src/pilot/score_pilot.py"""
+"""Score Phase 1 pilot (schema v2): join human labels with Jev outputs, accuracy per
+question (overall + by language) + LGA, routing split, classified CSV in AGENTS.md
+columns. Run: python src/pilot/score_pilot.py"""
 import csv
 import json
 import pathlib
@@ -11,7 +12,7 @@ JEV = ROOT / "data" / "pilot" / "jev_out.jsonl"
 REPORT = ROOT / "data" / "pilot" / "pilot_report.md"
 CLASSIFIED = ROOT / "data" / "classified" / "pilot_classified.csv"
 THRESHOLD = 0.80
-SCHEMA_VERSION = "v1"
+SCHEMA_VERSION = "v2"
 MODEL = "jev-1.13.0"
 
 
@@ -20,8 +21,10 @@ def main():
     jevs = [json.loads(l) for l in JEV.open(encoding="utf-8")]
     assert len(humans) == len(jevs) == 500
     stats = Counter()
+    by_lang = defaultdict(Counter)
     by_lga = defaultdict(Counter)
     routing = Counter()
+    routing_by_lang = defaultdict(Counter)
     intensity_adj = 0
     order = ["calm", "mild", "moderate", "strong", "very_strong"]
     rows = []
@@ -33,26 +36,32 @@ def main():
             "intensity": a["intensity"]["label"],
             "lga": a["lga_relevance"]["choice"],
             "opp": int(a["opposition_signal"]["yes"]),
+            "lang": a["language"]["choice"],
         }
         s_conf = a["sentiment"]["confidence"]
         l_conf = a["lga_relevance"]["confidence"]
         decision = "auto" if min(s_conf, l_conf) >= THRESHOLD else "human_review"
+        lang = h["human_language"]
         routing[decision] += 1
+        routing_by_lang[lang][decision] += 1
         checks = {
             "sentiment": pred["sentiment"] == h["human_sentiment"],
             "mentions": pred["mentions"] == h["human_mentions_candidate"],
             "intensity": pred["intensity"] == h["human_intensity"],
             "lga": pred["lga"] == h["human_lga_relevance"],
             "opp": pred["opp"] == h["human_opposition"],
+            "language": pred["lang"] == h["human_language"],
         }
         for k, ok in checks.items():
             stats[f"{k}_ok"] += ok
             stats[f"{k}_n"] += 1
+            by_lang[lang][f"{k}_ok"] += ok
+            by_lang[lang][f"{k}_n"] += 1
         if abs(order.index(pred["intensity"]) - order.index(h["human_intensity"])) <= 1:
             intensity_adj += 1
         lga = h["human_lga_relevance"]
         by_lga[lga]["n"] += 1
-        by_lga[lga]["ok"] += all(checks.values())
+        by_lga[lga]["ok"] += all(v for k, v in checks.items() if k != "language")
         rows.append({
             "raw_id": h["raw_id"], "sentiment_label": pred["sentiment"],
             "sentiment_confidence": round(s_conf, 3),
@@ -60,6 +69,8 @@ def main():
             "intensity_score": pred["intensity"],
             "lga_relevance_label": pred["lga"], "lga_confidence": round(l_conf, 3),
             "opposition_signal_probability": round(a["opposition_signal"]["noul"], 3),
+            "language_label": pred["lang"],
+            "language_confidence": round(a["language"]["confidence"], 3),
             "routing_decision": decision, "schema_version": SCHEMA_VERSION, "model": MODEL,
         })
     CLASSIFIED.parent.mkdir(parents=True, exist_ok=True)
@@ -67,20 +78,25 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
-    L = [f"# Pilot report — schema v1 (500 synthetic posts, {MODEL}, threshold {THRESHOLD})",
+    L = [f"# Pilot report — schema v2 (500 synthetic posts: 240 EN / 160 HA / 100 mixed, {MODEL}, threshold {THRESHOLD})",
          "", "Accuracy vs. template human labels (agreement, not ground truth):", ""]
-    for k in ["sentiment", "mentions", "intensity", "lga", "opp"]:
+    for k in ["sentiment", "mentions", "intensity", "lga", "opp", "language"]:
         L.append(f"- {k}: {stats[f'{k}_ok']}/{stats[f'{k}_n']} = {stats[f'{k}_ok']/stats[f'{k}_n']:.1%}")
     L += [f"- intensity adjacent (±1 level): {intensity_adj}/500 = {intensity_adj/500:.1%}",
           f"- routing: auto {routing['auto']} ({routing['auto']/5:.1f}%), human_review {routing['human_review']} ({routing['human_review']/5:.1f}%)",
-          "", "All-5-correct by LGA:"]
+          "", "Sentiment accuracy + review rate by language:"]
+    for lang in ["english", "hausa", "mixed"]:
+        c = by_lang[lang]
+        n = c["sentiment_n"]
+        L.append(f"- {lang}: sentiment {c['sentiment_ok']/n:.1%}, review rate {routing_by_lang[lang]['human_review']/n:.1%} (n={n})")
+    L += ["", "All-5-correct (excl. language) by LGA:"]
     for lga in sorted(by_lga):
         c = by_lga[lga]
         L.append(f"- {lga}: {c['ok']}/{c['n']} = {c['ok']/c['n']:.0%}")
     L += ["", "Routing rule used: auto iff min(sentiment_conf, lga_conf) >= 0.80, else human_review.",
-          "Note: template labels are weak (by construction); real validation needs the 100-post weekly human-label loop (Ph.7)."]
+          "Note: template labels are weak (by construction, simple standard Hausa); real validation needs native-speaker labels in the 100-post weekly loop (Ph.7)."]
     REPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
-    print("\n".join(L[:9]))
+    print("\n".join(L[:16]))
     print(f"wrote {REPORT} + {CLASSIFIED}")
 
 
