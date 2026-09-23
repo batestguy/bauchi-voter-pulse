@@ -1,6 +1,8 @@
-"""Daily ingestion run: Nairaland + news RSS + (token-gated) Facebook.
+"""Daily ingestion run: Nairaland + news RSS + GDELT targeted + Legit sitemaps +
+(token-gated) Facebook. YouTube excluded on purpose: robots.txt disallows
+/feeds/videos.xml — the Data API (key-gated) is the only compliant path.
 Dedupes by raw_id against all existing data/raw/*.jsonl, validates every row,
-appends only new rows to data/raw/raw_YYYYMMDD.jsonl. Exit 0 even if a source
+appends only new rows to data/raw/raw_YYYY-MM-DD.jsonl. Exit 0 even if a source
 fails (per-source errors are logged, not fatal) — the cron must stay green.
 Run: python -m src.ingestion.run_daily
 """
@@ -8,7 +10,7 @@ import datetime
 import json
 import pathlib
 
-from . import facebook, nairaland, nairaland_search, news
+from . import facebook, gdelt, legit_hausa, nairaland, nairaland_search, news
 from .common import validate_row
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -35,7 +37,8 @@ def main():
     seen = existing_ids()
     collected = []
     for name, mod in [("nairaland", nairaland), ("nl_search", nairaland_search),
-                      ("news", news), ("facebook", facebook)]:
+                      ("news", news), ("gdelt", gdelt),
+                      ("legit_hausa", legit_hausa), ("facebook", facebook)]:
         try:
             rows = mod.scrape(today)
         except Exception as exc:

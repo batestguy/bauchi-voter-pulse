@@ -1,9 +1,9 @@
 topic,mentions,neg_share
+security,4,0.25
+water,4,0.25
+youth jobs,3,0.333
+roads,1,0.0
+education,1,0.0
 healthcare,0,0.0
-roads,0,0.0
-youth jobs,0,0.0
-education,0,0.0
-water,0,0.0
 agriculture,0,0.0
-security,0,0.0
 markets,0,0.0

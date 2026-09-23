@@ -1,6 +1,7 @@
 """News ingestion via RSS (the polite path: one request per outlet, no article crawling).
-Outlets: Punch, Vanguard, Daily Post, The Cable, Tribune.
-Keeps items matching Bauchi/politics filters; text = title + description, stored verbatim.
+Outlets: Punch, Vanguard, Daily Post, Tribune, Daily Trust, Premium Times, RFI Hausa,
+ArewaEars, Guarantee. Keeps items matching Bauchi/politics filters; text = title +
+description, stored verbatim.
 """
 import re
 import xml.etree.ElementTree as ET
@@ -19,6 +20,10 @@ FEEDS = {
     "dailytrust": "https://dailytrust.com/feed/",
     "premiumtimes": "https://www.premiumtimesng.com/feed/",
     "rfi_hausa": "https://www.rfi.fr/ha/rss",
+    # Hausa/Northern politics blogs (Bauchi-2027 coverage). arewaears has been
+    # connection-failing from this host; kept so it recovers automatically.
+    "arewaears": "https://arewaears.com/feed/",
+    "guarantee": "https://guaranteeradio.com/feed/",
 }
 KEEP = re.compile(r"bauchi|yakubu\s+adamu|\bapm\b|\bpdp\b|\bapc\b|governor|election|"
                   r"lga|senator|assembly|presidency|tinubu|atiku|obi\b|"

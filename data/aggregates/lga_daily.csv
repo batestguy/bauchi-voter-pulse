@@ -1,2 +1,8 @@
 date,lga,sentiment_label,mention_count,confidence
-2026-09-22,unclear,negative,2,0.865
+2026-09-22,Alkaleri,positive,1,0.85
+2026-09-22,Bauchi,neutral,2,0.875
+2026-09-22,Zaki,neutral,1,0.96
+2026-09-22,unclear,negative,4,0.86
+2026-09-22,unclear,neutral,5,0.918
+2026-09-22,unclear,positive,6,0.868
+2026-09-23,unclear,neutral,1,0.97

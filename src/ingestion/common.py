@@ -101,7 +101,11 @@ def _robots_allows(url):
         try:
             resp = requests.get(f"{base}/robots.txt", headers={"User-Agent": USER_AGENT},
                                 timeout=TIMEOUT)
-            if resp.status_code != 200:
+            if resp.status_code in (404, 410):
+                # No robots.txt = allow-all (standard interpretation). Needed for
+                # api.gdeltproject.org; skipped only on true fetch failures below.
+                _robots_cache[base] = _parse_robots([])
+            elif resp.status_code != 200:
                 _robots_cache[base] = (False, 0.0)
             else:
                 lines = resp.text.splitlines()

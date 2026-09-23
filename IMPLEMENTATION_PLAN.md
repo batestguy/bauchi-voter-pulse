@@ -78,11 +78,20 @@ docs/              # Pages output (index.html) — committed by Actions
 - Key decisions: v3 `unclear` LGA fallback (v2 forced every post into an LGA); aggregation uses usable rows only (mentions≥0.5, ≠not_about, auto); per-language review rates reported in every eval (Hausa ~41-44%).
 - Next: Ph.5 static heatmap/dashboard content; Ph.7 weekly 100-post native-speaker eval.
 
-## Backlog: targeted Bauchi discovery (Ph.3+, researched 2026-09-22, approved to build)
+## Status log (2026-09-23) — keyless discovery shipped (no FB/YT accounts needed)
+- Ph.3+ built: `gdelt.py` (query-driven `(Bauchi OR "Yakubu Adamu" OR APM)`, 90-day adaptive windows, PACE 90s/backoff 240s — live API enforces a multi-minute sliding 429 after bursts; seedable via `rows_from_articles`; BBC/TheCable URLs hard-excluded), `legit_hausa.py` (hausa-only sitemap index → **last 3 shards by shard number** — index has no lastmod and shard -0 is 2016-era, verified shard -10 is all-2026 → slug-keyword filter → 36 articles/day cap ≈ 40 reqs), news.py += `guarantee` (guaranteeradio.com, works) + `arewaears` (connection-failing from this host; kept, auto-recovers), robots.txt 404/410 → allow-all in `common.py` (true fetch failures still skip).
+- Exclusions finalized: **YouTube** — robots.txt disallows `/feeds/videos.xml`, so even keyless channel RSS is off-limits; Data API key remains the only compliant path (module stays unbuilt). Facebook unchanged (token-gated stub). Leadership exclusion is **feed-endpoint only** — its articles via GDELT are allowed (30 such URLs in seed, kept after review).
+- Pipeline: +446 raw rows (09-23 run, incl. 36 evergreen www-legit) + 36 fresh hausa-legit + 172 GDELT seed + 654 classified today (`batch_2026-09-23.csv` 618 + `_hausa.csv` 36); usable rows 2 → **20** (gdelt 17, nairaland_search 2, hausa 1); sentiment 7 pos / 9 neu / 4 neg; risk: named LGAs now appear but stay `unrated` (n<5), `unclear` = safe. Volume — not plumbing — is now the binding constraint.
+- Reviewer PASS on robots/gdelt/run_daily/counts/routing (0 violations, 0 batch overlap, no secrets); fixes applied: legit sitemap source, render schema-v3 trace + per-LGA fold, docstrings, domain exclusions.
+- Gotcha: never park temp files in `data/raw/` — aggregate globs `*.jsonl`; a temp join file inflated counts (36 → true 19).
+- Next: Ph.5 heatmap content (dashboard is still a placeholder table), Ph.7 weekly eval, and the CI gap — `rebuild-pages.yml` renders without classifying (needs `TYPESAFE_API_KEY` secret + classify/aggregate steps, else Pages only refreshes after local runs).
+
+
+## Backlog: targeted Bauchi discovery (Ph.3+, researched 2026-09-22) — BUILT 2026-09-23
 Problem: only ~1% of front-page/RSS haul mentions APM — need query-driven sources.
-- `src/ingestion/gdelt.py` (new): GDELT DOC 2.0 `artlist`, query `(Bauchi OR "Yakubu Adamu" OR APM)`, 250/req + date-window pagination, ≥6s pacing w/ backoff (429 observed on fast probe), metadata → `polite_get` article fetch. Free/keyless, 3-month window.
-- ArewaEars (`/feed/`, 155KB, robots allow) + Guarantee (`/feed/`, no robots.txt) into `news.py` FEEDS. ArewaEars already runs Bauchi-2027 APC-crisis coverage in Hausa.
-- `src/ingestion/legit_hausa.py` (new, DAILY, cap ~40 reqs): sitemap index → 3 newest article-sitemaps → filter `hausa.legit.ng` locs on Bauchi keywords → `article_body()` fetch. No RSS exists; sitemaps are crawler-provided and robots-clean.
-- Robots fix: 404 on robots.txt = allow-all (needed for Guarantee); skip only on true fetch failures.
-- Key-gated (user holds keys, env-only `YT_API_KEY` / `FB_PAGE_TOKEN` + `FB_PAGES`, never in code): YouTube module (Data API search → captions) + activate Facebook stub for Bauchi public pages.
+- DONE `src/ingestion/gdelt.py`: GDELT DOC 2.0 `artlist`, query `(Bauchi OR "Yakubu Adamu" OR APM)`, adaptive 250/req windows, now PACE 90s / backoff 240s (sliding multi-minute 429 observed — stricter than the ≥6s probe finding), metadata → `polite_get` article fetch. Free/keyless, 90-day window. Seedable via `rows_from_articles` from a saved response.
+- DONE ArewaEars (`arewaears.com/feed/` — currently connection-failing, kept) + Guarantee (`guaranteeradio.com/feed/` — works) into `news.py` FEEDS.
+- DONE `src/ingestion/legit_hausa.py` (DAILY, cap ~40 reqs): hausa sitemap index → last 3 shards by shard number (newest; index has no lastmod) → slug-keyword filter → one-fetch title+body. Sitemaps are robots-clean.
+- DONE Robots fix: 404/410 on robots.txt = allow-all (needed for GDELT API); skip only on true fetch failures.
+- YouTube: **blocked by robots.txt** (`Disallow: /feeds/videos.xml`) — no keyless path compliant with our rules; Data API key-gated module unbuilt. Key-gated (env-only `YT_API_KEY` / `FB_PAGE_TOKEN` + `FB_PAGES`, never in code) remains the only route if keys appear.
 - Standing exclusions: BBC Hausa (terms forbid datasets/AI use), TheCable (WAF 403), Leadership (dead endpoint), VOA/Aminiya (unreachable).
