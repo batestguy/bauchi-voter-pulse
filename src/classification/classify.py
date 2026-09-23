@@ -1,5 +1,6 @@
 """Batch classification runner: raw JSONL -> Jev v2 (one call answers all six) ->
-classified CSV + human-review queue. Run: python src/classification/classify.py IN.jsonl OUT.csv
+classified CSV + human-review queue.
+Run: python -m src.classification.classify IN.jsonl OUT.csv
 Input row: {raw_id, source, date_scraped, text, url, lga_keyword_match}.
 Long texts are chunked at ~6000 chars (32K-token state limit); chunks get raw_id#i rows.
 Requires the `jev` CLI + TYPESAFE_API_KEY (see skill: jev)."""
@@ -26,6 +27,13 @@ CLASSIFIED_COLUMNS = [
 CHUNK_CHARS = 6000
 
 
+def jev_cmd():
+    """jev launcher: PATH shim by default; JEV_BIN overrides (CI points it at the
+    vendored third_party/jev/jev). A .py target runs under the current interpreter."""
+    bin_ = os.environ.get("JEV_BIN", "jev")
+    return [sys.executable, bin_] if bin_.endswith(".py") else [bin_]
+
+
 def chunk_text(text):
     if len(text) <= CHUNK_CHARS:
         return [text]
@@ -48,12 +56,17 @@ def chunk_text(text):
 def run_jev(texts):
     payload = "\n".join(json.dumps({"text": t}, ensure_ascii=False) for t in texts)
     proc = subprocess.run(
-        ["jev", "run", str(SPEC), "-l", "--field", "text", "--json", "-j", "8"],
+        jev_cmd() + ["run", str(SPEC), "-l", "--field", "text", "--json", "-j", "8"],
         input=payload, capture_output=True, text=True, encoding="utf-8",
         shell=(os.name == "nt"))  # .cmd shim on Windows needs a shell
     if proc.returncode not in (0, 1):
         raise RuntimeError(f"jev failed: {proc.stderr[-2000:]}")
-    return [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
+    rows = [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
+    if len(rows) != len(texts):  # exit 1 + short stdout = crash/silent-drop, never 0 rows
+        raise RuntimeError(
+            f"jev returned {len(rows)} of {len(texts)} rows "
+            f"(exit {proc.returncode}): {proc.stderr[-500:]}")
+    return rows
 
 
 def classify_texts(texts):
@@ -75,8 +88,9 @@ def classify_texts(texts):
     return out
 
 
-def main():
-    src, dest = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+def main(argv=None):
+    argv = argv if argv is not None else sys.argv
+    src, dest = pathlib.Path(argv[1]), pathlib.Path(argv[2])
     raws = [json.loads(l) for l in src.open(encoding="utf-8") if l.strip()]
     jobs = [(r, i, chunk) for r in raws for i, chunk in enumerate(chunk_text(r["text"]))]
     results = classify_texts([c for _, _, c in jobs])
@@ -91,10 +105,8 @@ def main():
                                      "schema_version": SCHEMA_VERSION}.get(k, ""))
                                 for k in REVIEW_COLUMNS})
     dest.parent.mkdir(parents=True, exist_ok=True)
-    with dest.open("w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=CLASSIFIED_COLUMNS)
-        w.writeheader()
-        w.writerows(classified_rows)
+    # Queue FIRST, classified CSV LAST: dest is the "done" marker, so a crash can
+    # never orphan queue-less classifications (re-run overwrites same-stem queue).
     if review_rows:
         REVIEW_DIR.mkdir(parents=True, exist_ok=True)
         qpath = REVIEW_DIR / f"queue_{dest.stem}.csv"
@@ -103,6 +115,10 @@ def main():
             w.writeheader()
             w.writerows(review_rows)
         print(f"review queue: {qpath} ({len(review_rows)} rows)")
+    with dest.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=CLASSIFIED_COLUMNS)
+        w.writeheader()
+        w.writerows(classified_rows)
     auto = sum(1 for r in classified_rows if r["routing_decision"] == "auto")
     print(f"classified: {dest} ({len(classified_rows)} rows, {auto} auto, "
           f"{len(classified_rows) - auto} review)")

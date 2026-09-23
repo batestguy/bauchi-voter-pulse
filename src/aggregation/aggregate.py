@@ -24,6 +24,8 @@ BASELINE = ROOT / "data" / "baseline_lg2026.csv"
 RISK_MODEL = "risk-v0-heuristic"
 MIN_ROWS_FOR_RATING = 5
 MIN_LGA_WEEKS_FOR_ML = 200
+SAFE_MAX = 0.3    # neg_share <  SAFE_MAX -> safe
+SWING_MAX = 0.5   # <= SWING_MAX -> swing, else at-risk
 
 TOPICS = {
     "healthcare": ["hospital", "clinic", "health", "asibiti", "doctor", "nurse", "vaccin"],
@@ -100,6 +102,20 @@ def main():
     pd.DataFrame(topic_rows).sort_values("mentions", ascending=False).to_csv(
         AGG_DIR / "topics.csv", index=False)
 
+    # Per-LGA topic breakdown (usable rows) -> dashboard top-3 negative topics per LGA
+    lt_rows = []
+    for lga, g in use.groupby("lga_relevance_label"):
+        for t in TOPICS:
+            m = int(g[f"topic_{t}"].sum())
+            if not m:
+                continue
+            neg = g.loc[g[f"topic_{t}"] == 1, "sentiment_label"].eq("negative").mean()
+            lt_rows.append({"lga": lga, "topic": t, "mentions": m,
+                            "neg_share": round(float(neg), 3)})
+    (pd.DataFrame(lt_rows, columns=["lga", "topic", "mentions", "neg_share"])
+     .sort_values(["lga", "mentions"], ascending=[True, False])
+     .to_csv(AGG_DIR / "lga_topics.csv", index=False))
+
     # Opposition comparison: APM-relevant vs opposition-signal rows (usable only)
     use["opp"] = (use["opposition_signal_probability"] >= 0.5).map({True: "opp_signal",
                                                                     False: "apm_other"})
@@ -122,9 +138,10 @@ def main():
         if r["n"] < MIN_ROWS_FOR_RATING:
             risks.append((r["lga_relevance_label"], "unrated", "n<5 usable rows"))
             continue
-        band = "safe" if r["neg_share"] < 0.3 else ("swing" if r["neg_share"] <= 0.5 else "at-risk")
+        band = "safe" if r["neg_share"] < SAFE_MAX else (
+            "swing" if r["neg_share"] <= SWING_MAX else "at-risk")
         note = f"neg_share={r['neg_share']}"
-        if r["lga_relevance_label"] in narrow and r["neg_share"] >= 0.3 and band == "swing":
+        if r["lga_relevance_label"] in narrow and r["neg_share"] >= SAFE_MAX and band == "swing":
             band, note = "at-risk", note + " +narrow-margin penalty"
         risks.append((r["lga_relevance_label"], band, note))
     risk_df = pd.DataFrame(risks, columns=["lga", "risk", "signals"])
