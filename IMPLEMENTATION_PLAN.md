@@ -510,9 +510,9 @@ The old sentiment dashboard remains available only as a historical archive. It i
 
 - New source-backed landing page is live locally through `docs/index.html`.
 - Official APM and campaign assets are approved, hashed, registered and copied to `docs/assets/brand/`.
-- Current source-backed corpus contains 23 registered sources, 7 needs, 21 public achievement records, 8 campaign commitments and 20 LGA delivery rows.
+- Current source-backed corpus contains 27 registered sources, 7 needs, 25 public achievement records, 8 campaign commitments and 20 LGA delivery rows.
 - `src/ingestion/delivery_sources.py` archives official and approved institutional web pages and creates review candidates under `data/delivery/review_queue.csv`.
-- The current intake has 29 archived pages, 21 sources supporting published achievement records, and 0 candidates still awaiting review; 2 researched LGA records remain in the evidence queue because their source pages could not be archived by the intake worker.
+- The current intake has 33 archived pages, 25 sources supporting published achievement records, and 0 candidates still awaiting review; all 20 Bauchi LGAs now have an explicit source-backed evidence row, with caveats preserved where outcomes remain unmeasured.
 - `delivery-sources.yml` runs the official-source intake weekly and on demand.
 - The Pages workflow renders only the new delivery landing page and fails closed on unapproved assets.
 - The legacy sentiment pipeline is historical and is not run by the new Pages workflow.

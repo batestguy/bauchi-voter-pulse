@@ -49,6 +49,8 @@ ALLOWED_DOMAINS = {
     "albarkaradio.com",
     "unicef.org",
     "thenationonlineng.net",
+    "fmcmisau.gov.ng",
+    "unicef.org",
 }
 
 SECTOR_HINTS = {
