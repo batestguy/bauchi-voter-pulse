@@ -1,6 +1,6 @@
 # APM Bauchi Progress & Delivery Revamp — Governing Plan (v2)
 
-**Status:** approved direction, not yet implemented
+**Status:** implemented as the source-backed public landing page; legacy sentiment/risk work remains separate
 **Supersedes:** the legacy “Bauchi Voter Pulse” sentiment/risk dashboard as the primary product
 **Timeframe:** 2023–September 2026
 **Audience:** internal campaign strategists first; sanitized public presentation second

@@ -35,6 +35,15 @@ Open `http://127.0.0.1:8766/index.html`.
 - Missing data remains unknown and is not estimated.
 - The current administration is described as progress that APM can build on and complete.
 
+## Handoff
+
+See `HANDOFF.md` for the complete operational handoff, deployment runbook, current
+release counts, validation evidence, known limitations, preserved local work and
+prioritized next steps.
+
+The current public release is live at
+`https://batestguy.github.io/bauchi-voter-pulse/`.
+
 ## Project history
 
 The earlier sentiment/risk pipeline remains in the repository as legacy history only. It is not run by the current Pages workflow and is not a live fallback for the new landing page.
