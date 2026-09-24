@@ -3,7 +3,7 @@
 **Handoff date:** 24 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** see `git log -1`; the live product is verified at the URL below
+**Current release:** `b94d4b0` — `feat(delivery): add indicator ledger and integrity tests`
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
 
 ## 1. Handoff Summary
@@ -27,16 +27,14 @@ is not the current product and is not invoked by the current GitHub Pages build.
 
 The next maintainer should resume from this exact checkpoint:
 
-- **Last verified live product:** the prior release is live at the URL below; its
-  Pages run was `35964787695`.
-- **Current P0 update:** implemented locally and ready to commit/push. It adds the
-  8-row `data/delivery/indicators.csv` measurement ledger, an infrastructure need
-  and pathway, a bilingual LGA-selection fix, and dependency-free integrity tests.
-- **Local verification completed:** 8 `unittest` tests pass, rendering passes, and
+- **Last verified live product:** release `b94d4b0` is live at the URL below; its
+  Pages run was `35972044982`.
+- **Current P0 update:** deployed and verified. It adds the 8-row
+  `data/delivery/indicators.csv` measurement ledger, an infrastructure need and
+  pathway, a bilingual LGA-selection fix, and dependency-free integrity tests.
+- **Verification completed:** 8 `unittest` tests pass, rendering passes, and live
   browser checks pass at 1440/1024/760/375px with 6 cards, 8 indicators, 20 LGA
   tiles, no overflow and 0 console errors.
-- **Not live yet:** do not describe the P0 indicator update as deployed until it is
-  committed, pushed and checked on GitHub Pages.
 - **Evaluation report:** `.evals/2026-W39.md` is intentionally local-only because
   its 100-row source sample is not approved for release staging.
 - **Preserve local work:** do not reset or stage `src/aggregation/aggregate.py`,
@@ -48,9 +46,8 @@ The next maintainer should resume from this exact checkpoint:
 ### Live deployment
 
 GitHub Pages reports the site as public and built from `main` with `/docs` as the
-source directory. The last verified live deployment before this staged indicator
-update completed successfully on 24 September 2026. The staged indicator update is
-not live until it is committed and pushed.
+source directory. The current indicator-ledger release completed successfully in
+Pages run `35972044982` on 24 September 2026.
 
 ```text
 https://batestguy.github.io/bauchi-voter-pulse/
@@ -418,8 +415,7 @@ settings in GitHub if that configuration changes.
 
 ## 9. Current Validation and Release Evidence
 
-The last deployed release was checked on 24 September 2026. The indicator-ledger
-update in this handoff is currently staged/local until committed and pushed:
+The current release was checked on 24 September 2026 after deployment:
 
 - 27 registered sources.
 - 33 archived source pages.
@@ -430,11 +426,10 @@ update in this handoff is currently staged/local until committed and pushed:
 - All registered and manifest source hashes reconcile.
 - All 33 manifest snapshot hashes reconcile.
 - Four local brand assets match their registered SHA-256 values.
-- Prior release GitHub Pages deployment completed successfully in run `35964787695`.
-- Prior live page returned the expected 33-page/0-pending source status.
-- Prior live page showed 20 LGA tiles and Misau, Toro and Zaki evidence.
-- Prior live browser console returned 0 errors; the staged P0 update has only local
-  browser evidence until pushed.
+- Current GitHub Pages deployment completed successfully in run `35972044982`.
+- Live page returned the expected 33-page/0-pending source status.
+- Live page showed 20 LGA tiles, 8 indicators and Misau/Toro/Zaki evidence.
+- Live browser console returned 0 errors.
 - Responsive checks showed no horizontal overflow at 1440px, 1024px, 760px or 375px.
 - No pytest, lint or typecheck suite is installed in the current project; the
   dependency-free `unittest` integrity suite passes.
@@ -534,17 +529,15 @@ still need completion.
 
 ### P0 — Strengthen the current product
 
-1. Commit and push the current indicator-ledger/infrastructure update, then verify
-   the live GitHub Pages build and update the live checkpoint.
-2. Extend `indicators.csv` with more verified baselines and targets; keep missing
+1. Extend `indicators.csv` with more verified baselines and targets; keep missing
    baselines blank rather than estimating them.
-3. Replace remaining delivery-output language with measured outcomes where primary
+2. Replace remaining delivery-output language with measured outcomes where primary
    evidence exists: service reliability, beneficiaries, learning, health access,
    market access, income and employment.
-4. Add semantic validation for duplicate claims, date validity and actor/source
+3. Add semantic validation for duplicate claims, date validity and actor/source
    consistency.
-5. Run a native-speaker Hausa review of the bilingual labels and dynamic records.
-6. Extend the focused tests beyond integrity checks to cover language toggling and
+4. Run a native-speaker Hausa review of the bilingual labels and dynamic records.
+5. Extend the focused tests beyond integrity checks to cover language toggling and
    rendered HTML structure.
 
 ### P1 — Complete legacy evaluation work separately
