@@ -1,12 +1,10 @@
 name: scrape
 on:
-  schedule:
-    - cron: "30 5 * * *"  # daily 05:30 UTC
   workflow_dispatch: {}
 permissions:
   contents: write
 concurrency:
-  group: ${{ github.workflow }}
+  group: repo-pages-write
   cancel-in-progress: false
 jobs:
   scrape:
@@ -21,6 +19,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/raw/
-          git diff --cached --quiet || git commit -m "data(raw): daily ingestion"
+          git diff --cached --quiet || git commit -m "data(raw): manual legacy ingestion"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"

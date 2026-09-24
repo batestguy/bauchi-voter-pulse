@@ -1,21 +1,42 @@
-# Bauchi Voter Pulse
+# APM Bauchi Progress & Delivery
 
-Live sentiment + voter-intelligence for 2027 Bauchi governorship (APM). Dashboard: **GitHub Pages, fully automated** — Actions rebuilds `docs/index.html` weekly, zero manual touches.
+A source-backed campaign intelligence landing page for Bauchi State. The product connects:
 
-- Spec: `APMreadme.txt` (v1.0) · Agent rules: `AGENTS.md` · Phases: `IMPLEMENTATION_PLAN.md`
-- Live URL (after Pages is enabled on `docs/`): `https://<owner>.github.io/<repo>/`
-- Pipeline: `src/schema/` → `src/ingestion/` → `src/classification/` (Jev, ≥0.80 routing) → `src/aggregation/` → `src/dashboard/render.py` → `docs/index.html`
-
-## Quick start
-
-```bash
-pip install -r requirements.txt
-python src/dashboard/render.py   # rebuilds docs/index.html locally
+```text
+Public need → Current achievement → APM promise → Next result
 ```
 
-## Tracking
+The new interface uses the official APM identity and approved campaign assets, presents current-administration progress positively, and keeps campaign commitments separate from completed achievements. Asset approval is recorded in `data/delivery/asset_register.csv`.
 
-- `data/raw|classified|aggregates/` — pipeline tables (see `AGENTS.md` for exact columns)
-- `data/human_review/` — Jev confidence <0.80 queue + reasoning logs
-- `.evals/` — weekly 100-post human-label eval reports
-- `.github/workflows/` — `scrape.yml` (daily) + `rebuild-pages.yml` (weekly Pages rebuild)
+## Product
+
+- `docs/index.html` — generated interactive landing page
+- `src/dashboard/render.py` — static dashboard generator
+- `data/delivery/` — sources, needs, achievements, promises, LGA queue, asset register, source snapshots and review queue
+- `src/ingestion/delivery_sources.py` — official-source discovery, archival and candidate intake
+- `assets/brand/` — locally stored official APM and campaign image assets
+- `docs/assets/brand/` — generated copies for GitHub Pages
+
+## Run locally
+
+```bash
+python src/dashboard/render.py
+python -m http.server 8766 --directory docs
+```
+
+Open `http://127.0.0.1:8766/index.html`.
+
+## Evidence rules
+
+- Public sources only; robots.txt and rate limits remain enforced.
+- Every achievement and promise carries a source record.
+- Campaign promises are not displayed as completed achievements.
+- Statewide records are not forced into an LGA without evidence.
+- Missing data remains unknown and is not estimated.
+- The current administration is described as progress that APM can build on and complete.
+
+## Project history
+
+The earlier sentiment/risk pipeline remains in the repository as legacy history only. It is not run by the current Pages workflow and is not a live fallback for the new landing page.
+
+See `IMPLEMENTATION_PLAN.md` for the full revamp phases, data model, evidence hierarchy, UI architecture and acceptance criteria.

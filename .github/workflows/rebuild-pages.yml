@@ -1,12 +1,12 @@
 name: rebuild-pages
 on:
   schedule:
-    - cron: "0 6 * * MON"  # weekly Monday 06:00 UTC (after scrape.yml 05:30)
+    - cron: "0 6 * * MON"
   workflow_dispatch: {}
 permissions:
   contents: write
 concurrency:
-  group: ${{ github.workflow }}
+  group: repo-pages-write
   cancel-in-progress: false
 jobs:
   rebuild:
@@ -16,20 +16,21 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -r requirements.txt
-      - name: Delta-classify new raw rows
-        env:
-          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-          JEV_BIN: ${{ github.workspace }}/third_party/jev/jev
+      - name: Check asset authorization
+        shell: bash
         run: |
-          chmod +x third_party/jev/jev
-          python -m src.classification.classify_new
-      - run: python -m src.aggregation.aggregate
+          if awk -F, 'NR > 1 && $6 != "campaign approved" { bad = 1 } END { exit bad }' data/delivery/asset_register.csv; then
+            :
+          else
+            echo "::error::Every campaign asset must be approved before public Pages publication."
+            exit 1
+          fi
       - run: python src/dashboard/render.py
-      - name: Commit results
+      - name: Commit landing page
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html data/aggregates/ data/classified/ data/human_review/
-          git diff --cached --quiet || git commit -m "chore(pages): weekly classify + aggregate + dashboard rebuild"
+          git add docs/index.html docs/assets/
+          git diff --cached --quiet || git commit -m "chore(pages): rebuild APM Bauchi progress landing"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"

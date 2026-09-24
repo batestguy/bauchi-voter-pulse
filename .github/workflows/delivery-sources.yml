@@ -1,7 +1,7 @@
-name: budgets
+name: delivery-sources
 on:
   schedule:
-    - cron: "0 7 1 * *"  # monthly, 1st 07:00 UTC
+    - cron: "0 4 * * FRI"
   workflow_dispatch: {}
 permissions:
   contents: write
@@ -9,18 +9,19 @@ concurrency:
   group: repo-pages-write
   cancel-in-progress: false
 jobs:
-  budgets:
+  discover:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -r requirements.txt
-      - run: python -m src.ingestion.budgets
-      - run: |
+      - run: python -m src.ingestion.delivery_sources
+      - name: Commit source intake
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/budgets/
-          git diff --cached --quiet || git commit -m "data(budgets): monthly budget documents"
+          git add data/delivery/
+          git diff --cached --quiet || git commit -m "data(delivery): archive official sources and queue candidates"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"

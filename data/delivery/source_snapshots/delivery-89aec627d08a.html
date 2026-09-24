@@ -1,0 +1,2248 @@
+
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Yakubu Adamu | Political Campaign</title>
+    <!-- Tailwind CSS -->
+
+    <!-- Bootstrap CSS -->
+ <script type="text/javascript" src="https://unpkg.com/htmx.org@1.3.1/dist/htmx.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+body {
+    font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background-color: var(--bauchi-light);
+}
+
+h1, h2, h3, h4, h5, h6, .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-weight: 700;
+}
+:root {
+    --bauchi-blue: #e4e7ea;
+    --bauchi-dark-blue: #032b5b;
+    --bauchi-green: #159447;
+    --bauchi-dark-green: #0b7135;
+    --bauchi-light: #f4f8f7;
+    --text: #15233a;
+    --muted: #667085;
+    --shadow: 0 12px 35px rgba(16, 42, 67, .09);
+}
+
+.home-page {
+    color: var(--text);
+    background: #fff;
+    overflow: hidden;
+}
+
+.home-page a {
+    text-decoration: none;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.home-hero {
+    position: relative;
+    min-height: 560px;
+    display: flex;
+    align-items: center;
+    background:
+        radial-gradient(
+            circle at 15% 25%,
+            rgba(21,148,71,.08),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #fff 0%,
+            #f8fbfa 65%,
+            #edf6f2 100%
+        );
+}
+
+.hero-green-shape {
+    position: absolute;
+    right: -100px;
+    top: 0;
+    width: 52%;
+    height: 100%;
+    background: var(--bauchi-green);
+    clip-path: polygon(
+        48% 0,
+        100% 0,
+        100% 100%,
+        0 100%
+    );
+}
+
+.hero-blue-shape {
+    position: absolute;
+    right: -30px;
+    bottom: 0;
+    width: 47%;
+    height: 32%;
+    background: var(--bauchi-blue);
+    clip-path: polygon(
+        38% 100%,
+        100% 0,
+        100% 100%
+    );
+}
+
+.hero-content {
+    position: relative;
+    z-index: 5;
+    padding: 75px 0;
+}
+
+.hero-kicker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--bauchi-blue);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.hero-kicker:before {
+    content: "";
+    width: 5px;
+    height: 34px;
+    border-radius: 5px;
+    background: var(--bauchi-green);
+}
+
+.hero-title {
+    color: var(--bauchi-blue);
+    font-size: clamp(3rem, 6vw, 5.2rem);
+    font-weight: 800;
+    line-height: .98;
+    letter-spacing: -2px;
+    margin-bottom: 25px;
+}
+
+.hero-title span {
+    display: block;
+    color: var(--bauchi-green);
+}
+
+.hero-description {
+    max-width: 570px;
+    color: #475467;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 30px;
+}
+
+.hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.btn-bauchi {
+    background: var(--bauchi-green);
+    border: 1px solid var(--bauchi-green);
+    color: white;
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.btn-bauchi:hover {
+    background: var(--bauchi-dark-green);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-bauchi-blue {
+    background: var(--bauchi-blue);
+    border: 1px solid var(--bauchi-blue);
+    color: white;
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.btn-bauchi-blue:hover {
+    background: var(--bauchi-dark-blue);
+    color: white;
+}
+
+.btn-bauchi-outline {
+    background: white;
+    border: 1px solid #d0d5dd;
+    color: var(--bauchi-blue);
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.hero-person {
+    position: absolute;
+    z-index: 6;
+    right: 4%;
+    bottom: 0;
+    width: min(43%, 550px);
+    max-height: 570px;
+    object-fit: contain;
+    object-position: bottom center;
+    filter: drop-shadow(
+        0 20px 25px rgba(0,0,0,.16)
+    );
+}
+
+/* =========================================================
+   FOUR FEATURE CARDS
+   ========================================================= */
+
+.value-section {
+    position: relative;
+    z-index: 20;
+    margin-top: -5px;
+}
+
+.value-grid {
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    overflow: hidden;
+}
+
+.value-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 25px 22px;
+    border-right: 1px solid #eaecf0;
+}
+
+.value-item:last-child {
+    border-right: none;
+}
+
+.value-icon {
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--bauchi-blue);
+    color: white;
+    font-size: 1.35rem;
+}
+
+.value-item:nth-child(even) .value-icon {
+    background: var(--bauchi-green);
+}
+
+.value-item h5 {
+    color: var(--bauchi-blue);
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 0 0 5px;
+}
+
+.value-item p {
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.45;
+    margin: 0;
+}
+
+/* =========================================================
+   GENERAL SECTIONS
+   ========================================================= */
+
+.home-section {
+    padding: 85px 0;
+}
+
+.home-section-light {
+    background: var(--bauchi-light);
+}
+
+.section-label {
+    color: var(--bauchi-green);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.section-title {
+    color: var(--bauchi-blue);
+    font-size: clamp(2rem,4vw,3rem);
+    line-height: 1.1;
+    font-weight: 800;
+}
+
+.section-title span {
+    color: var(--bauchi-green);
+}
+
+.section-description {
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+/* =========================================================
+   ABOUT
+   ========================================================= */
+
+.about-image {
+    width: 100%;
+    height: 470px;
+    object-fit: cover;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+
+.about-content {
+    padding-left: 35px;
+}
+
+.about-content p {
+    color: var(--muted);
+    line-height: 1.75;
+}
+
+.about-features {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.about-feature {
+    background: white;
+    padding: 22px 18px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(16,42,67,.06);
+    border-top: 3px solid var(--bauchi-green);
+}
+
+.about-feature:nth-child(2) {
+    border-top-color: var(--bauchi-blue);
+}
+
+.about-feature i {
+    font-size: 1.6rem;
+    color: var(--bauchi-green);
+}
+
+.about-feature h6 {
+    color: var(--bauchi-blue);
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+.about-feature p {
+    font-size: .82rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* =========================================================
+   INITIATIVES
+   ========================================================= */
+
+.initiative-card {
+    height: 100%;
+    overflow: hidden;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(16,42,67,.08);
+    transition: .3s ease;
+}
+
+.initiative-card:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 16px 35px rgba(16,42,67,.13);
+}
+
+.initiative-image {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+}
+
+.initiative-body {
+    padding: 22px;
+}
+
+.initiative-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    margin-top: -46px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: var(--bauchi-blue);
+    color: white;
+    font-size: 1.2rem;
+}
+
+.initiative-card:nth-child(even)
+.initiative-icon {
+    background: var(--bauchi-green);
+}
+
+.initiative-body h4 {
+    color: var(--bauchi-blue);
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-top: 17px;
+}
+
+.initiative-body p {
+    min-height: 70px;
+    color: var(--muted);
+    font-size: .88rem;
+    line-height: 1.6;
+}
+
+/* =========================================================
+   NEEDS
+   ========================================================= */
+
+.needs-box {
+    background: linear-gradient(
+        135deg,
+        var(--bauchi-blue),
+        #0a4f94
+    );
+    border-radius: 18px;
+    padding: 42px;
+    color: white;
+    box-shadow: var(--shadow);
+}
+
+.needs-box h2 {
+    font-weight: 800;
+}
+
+.needs-box p {
+    color: rgba(255,255,255,.8);
+}
+
+.needs-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    color: var(--bauchi-blue);
+    padding: 13px 22px;
+    border-radius: 8px;
+    font-weight: 800;
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.stat-card {
+    height: 100%;
+    padding: 25px 18px;
+    text-align: center;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 22px rgba(16,42,67,.07);
+    border-bottom: 4px solid var(--bauchi-green);
+}
+
+.stat-value {
+    color: var(--bauchi-blue);
+    font-size: 2rem;
+    font-weight: 850;
+}
+
+.stat-label {
+    color: var(--muted);
+    font-size: .74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+}
+
+/* =========================================================
+   AGENDA
+   ========================================================= */
+
+.agenda-item {
+    display: flex;
+    gap: 22px;
+    padding: 25px;
+    margin-bottom: 15px;
+    background: white;
+    border-radius: 10px;
+    border-left: 4px solid var(--bauchi-green);
+    box-shadow: 0 6px 20px rgba(16,42,67,.06);
+}
+
+.agenda-number {
+    flex: 0 0 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--bauchi-blue);
+    color: white;
+    font-weight: 800;
+}
+
+.agenda-item:nth-child(even) {
+    border-left-color: var(--bauchi-blue);
+}
+
+.agenda-item:nth-child(even)
+.agenda-number {
+    background: var(--bauchi-green);
+}
+
+.agenda-item h4 {
+    color: var(--bauchi-blue);
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.agenda-item p {
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* =========================================================
+   VIDEO
+   ========================================================= */
+
+.video-section {
+    position: relative;
+    min-height: 430px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.video-section video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-section:after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(3,43,91,.9),
+            rgba(3,43,91,.55),
+            rgba(3,43,91,.25)
+        );
+}
+
+.video-content {
+    position: relative;
+    z-index: 3;
+    max-width: 700px;
+    color: white;
+}
+
+.video-content h2 {
+    font-weight: 850;
+}
+
+/* =========================================================
+   FINAL CTA
+   ========================================================= */
+
+.final-cta {
+    padding: 75px 0;
+    text-align: center;
+    background: linear-gradient(
+        135deg,
+        #eff8f4,
+        #fff
+    );
+}
+
+.final-cta h2 {
+    color: var(--bauchi-blue);
+    font-weight: 850;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 991px) {
+
+    .home-hero {
+        min-height: 680px;
+    }
+
+    .hero-person {
+        width: 48%;
+        right: 0;
+    }
+
+    .value-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .value-item:nth-child(2) {
+        border-right: none;
+    }
+
+    .about-content {
+        padding-left: 0;
+        margin-top: 30px;
+    }
+}
+
+@media (max-width: 767px) {
+
+    .home-hero {
+        min-height: 720px;
+        align-items: flex-start;
+    }
+
+    .hero-green-shape {
+        width: 100%;
+        height: 42%;
+        top: auto;
+        bottom: 0;
+    }
+
+    .hero-blue-shape {
+        width: 80%;
+        height: 22%;
+    }
+
+    .hero-person {
+        width: 68%;
+        right: 4%;
+        max-height: 390px;
+    }
+
+    .hero-content {
+        padding: 48px 0 270px;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .value-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .value-item {
+        border-right: none;
+        border-bottom: 1px solid #eaecf0;
+    }
+
+    .value-item:last-child {
+        border-bottom: none;
+    }
+
+    .home-section {
+        padding: 60px 0;
+    }
+
+    .about-image {
+        height: 360px;
+    }
+
+    .about-features {
+        grid-template-columns: 1fr;
+    }
+
+    .needs-box {
+        padding: 28px 22px;
+    }
+
+    .agenda-item {
+        padding: 20px 17px;
+    }
+}
+
+        body { font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #333; }
+        h1, h2, h3, h4, h5, h6, .navbar-brand { font-family: 'Poppins', 'Inter', sans-serif; font-weight: 700; }
+        .navbar { background-color: #004a99; }
+        .navbar-dark .navbar-nav .nav-link { color: rgba(255,255,255,.8); }
+        .navbar-dark .navbar-nav .nav-link:hover { color: #fff; }
+        .btn-primary { background-color: #004a99; border-color: #004a99; }
+        .btn-primary:hover { background-color: #003366; border-color: #003366; }
+        .footer { background-color: #f8f9fa; padding: 3rem 0; border-top: 1px solid #dee2e6; }
+
+        .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,.1); transition: transform .3s; }
+        .card:hover { transform: translateY(-5px); }
+         .fatfont{ font-family: 'Abril Fatface', serif;font-weight: 400;
+             }
+    </style>
+    
+<style>
+    .video-background-section {
+        position: relative;
+        height: 500px;
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-align: center;
+    }
+
+    .video-background-section video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        z-index: -1;
+        transform: translate(-50%, -50%);
+        object-fit: cover;
+    }
+
+    .video-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 0;
+    }
+
+    .video-content {
+        position: relative;
+        z-index: 1;
+        padding: 20px;
+    }
+
+    /* Vision Cards Professional Styles */
+    .vision-card {
+        border: none;
+        border-radius: 12px;
+        background: #177ce1;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border-top: 4px solid transparent;
+        height: 100%;
+        color: white;
+    }
+
+    .vision-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        border-top: 4px solid #004a99;
+    }
+
+    .vision-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(0, 74, 153, 0.05);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        color: #ffffff;
+        font-size: 2.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .vision-card:hover .vision-icon-wrapper {
+        background-color: #004a99;
+        color: #ffffff;
+    }
+
+    .vision-title {
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        font-family: 'Lora', serif;
+    }
+
+    .vision-text {
+        color: #ffffff;
+        line-height: 1.6;
+    }
+
+    /* Bauchi Stats Section Styles */
+    .bauchi-stats-card {
+        background: #ffffff;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+        padding: 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-bottom: 3px solid #004a99;
+    }
+
+    .bauchi-stats-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .bauchi-stats-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #004a99;
+        margin-bottom: 5px;
+    }
+
+    .bauchi-stats-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+
+
+
+
+
+
+
+
+.achievements-wrapper{
+    max-width:70%;
+    margin:auto;
+}
+
+.achievement-item{
+    background:#004a99;
+    color:#fff;
+    display:flex;
+    gap:30px;
+    padding:20px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.achievement-item:nth-child(even){
+    background:#3b248c;
+}
+
+.icon{
+    min-width:60px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    font-size:48px;
+    font-weight:bold;
+    color:#fff;
+}
+
+.content h2{
+    font-size:20px;
+    line-height:1.1;
+    margin-bottom:15px;
+    font-weight:800;
+    align-content:flex-start;
+    text-align:left;
+}
+
+.content p{
+    font-size:15px;
+    line-height:1.7;
+    color:#f3f3f3;
+    text-align:left;
+}
+
+@media(max-width:768px){
+
+    .achievement-item{
+        flex-direction:column;
+        padding:30px 20px;
+        gap:15px;
+    }
+
+    .icon{
+        font-size:36px;
+    }
+
+    .content h2{
+        font-size:32px;
+    }
+
+    .content p{
+        font-size:16px;
+    }
+}
+
+    :root {
+        --bauchi-green: #159447;
+        --bauchi-blue: #063b78;
+        --text-dark: #101828;
+        --text-gray: #475467;
+        --bg-light: #F9FAFB;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        color: var(--text-dark);
+        background-color: #fff;
+    }
+
+    /* Hero Section */
+    .hero-section {
+        position: relative;
+        padding: 60px 0 10px;
+        background-color: #fff;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        min-height: 600px;
+        background: linear-gradient(rgba(0, 74, 153, 0.8), rgba(0, 74, 153, 0.8)), url('/static/img/bg_crowd.458a16a6b608.png');
+        background-size: cover; background-position: center; color: white;
+    }
+             
+
+    .hero-bg-pattern {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('/static/img/bg_crowd_empty.6f95e11c2bf5.png');
+        background-size: cover;
+        background-position: center;
+        opacity: 0.05;
+        z-index: 1;
+    }
+
+    .hero-shapes {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 50%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .shape-green {
+        position: absolute;
+        top: 0;
+        right: -100px;
+        width: 120%;
+        height: 100%;
+        background-color: var(--bauchi-green);
+        clip-path: polygon(98% 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    .shape-blue {
+        position: absolute;
+        bottom: 0;
+        right: -50px;
+        width: 100%;
+        height: 35%;
+        background-color: var(--bauchi-blue);
+        clip-path: polygon(55% 100%, 100% 0, 100% 100%);
+    }
+
+    .hero-image-overlay-shape {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 7;
+        pointer-events: none;
+        background: linear-gradient(to top, white 5%, transparent 20%);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 10;
+    }
+
+    .hero-kicker {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-dark);
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 24px;
+    }
+
+    .hero-kicker::before {
+        content: "";
+        width: 4px;
+        height: 28px;
+        background-color: var(--bauchi-green);
+        border-radius: 2px;
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 24px;
+        color: var(--bauchi-blue);
+    }
+
+    .hero-title span {
+        color: var(--bauchi-green);
+    }
+
+    .hero-description {
+        font-size: 1.25rem;
+        color: var(--text-gray);
+        max-width: 520px;
+        margin-bottom: 40px;
+    }
+
+    .hero-image-container {
+        position: relative;
+        z-index: 5;
+        height: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+    }
+
+    .hero-image {
+        max-width: 110%;
+        height: auto;
+        position: relative;
+        z-index: 6;
+        margin-bottom: -60px;
+        margin-right: -5%;
+        display: block;
+    }
+
+    .btn-hero {
+        padding: 12px 24px;
+        font-weight: 600;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-trail {
+        background: #fff;
+        color: var(--text-dark);
+        border: 1px solid #D0D5DD;
+        box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+    }
+
+    .btn-trail:hover {
+        background: #F9FAFB;
+    }
+
+    .btn-scholarships {
+        background: var(--bauchi-blue);
+        color: #fff;
+        border: none;
+    }
+
+    .btn-volunteer-hero {
+        background: var(--bauchi-green);
+        color: #fff;
+        border: none;
+    }
+
+    /* Info Bar */
+    .info-bar {
+        position: relative;
+        z-index: 20;
+        margin-top: -60px;
+        margin-bottom: 80px;
+    }
+
+    .info-card {
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0px 20px 24px -4px rgba(16, 24, 40, 0.08), 0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+        display: flex;
+        gap: 16px;
+        height: 100%;
+    }
+
+    .info-icon-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.25rem;
+    }
+
+    .icon-blue { background-color: var(--bauchi-blue); color: #fff; }
+    .icon-green { background-color: var(--bauchi-green); color: #fff; }
+
+    .info-card h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: var(--bauchi-blue);
+    }
+
+    .info-card p {
+        font-size: 0.9rem;
+        color: var(--text-gray);
+        margin-bottom: 0;
+        line-height: 1.5;
+    }
+
+    /* About Section */
+    .section-padding {
+        padding: 100px 0;
+    }
+
+    .tagline {
+        color: var(--bauchi-green);
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--bauchi-blue);
+        margin-bottom: 24px;
+    }
+
+    .about-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 40px 30px;
+        text-align: center;
+        height: 100%;
+        box-shadow: 0px 4px 6px -2px rgba(16, 24, 40, 0.03), 0px 12px 16px -4px rgba(16, 24, 40, 0.08);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-card-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 1.75rem;
+    }
+
+    .about-card h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: var(--bauchi-blue);
+    }
+
+    .about-card p {
+        color: var(--text-gray);
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .about-card-border {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        border-radius: 2px 2px 0 0;
+    }
+
+    .border-green { background-color: var(--bauchi-green); }
+    .border-blue { background-color: var(--bauchi-blue); }
+
+    .discover-link {
+        color: var(--bauchi-blue);
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: gap 0.2s;
+    }
+
+    .discover-link:hover {
+        gap: 12px;
+    }
+
+    /* Initiatives */
+    .initiative-card {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0px 4px 6px -2px rgba(16, 24, 40, 0.03), 0px 12px 16px -4px rgba(16, 24, 40, 0.08);
+        height: 100%;
+        transition: transform 0.2s;
+    }
+
+    .initiative-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .initiative-image {
+        position: relative;
+        height: 200px;
+    }
+
+    .initiative-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .initiative-icon-badge {
+        position: absolute;
+        bottom: -24px;
+        left: 20px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid #fff;
+        font-size: 1.25rem;
+        z-index: 5;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .initiative-body {
+        padding: 40px 24px 24px;
+    }
+
+    .initiative-body h4 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--bauchi-blue);
+    }
+
+    .initiative-body p {
+        color: var(--text-gray);
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+
+    .btn-learn-more {
+        color: var(--bauchi-green);
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.9rem;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background-color: #F0FDF4;
+        border-radius: 24px;
+        padding: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+        margin-bottom: 100px;
+    }
+
+    .cta-content {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+    }
+
+    .cta-logo-circle {
+        width: 80px;
+        height: 80px;
+        background: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0px 10px 20px rgba(0,0,0,0.05);
+        flex-shrink: 0;
+    }
+
+    .cta-logo-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-logo-icon svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .cta-text h2 {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: var(--bauchi-blue);
+        margin-bottom: 8px;
+    }
+
+    .cta-text p {
+        color: var(--text-gray);
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .btn-volunteer-cta {
+        background-color: var(--bauchi-green);
+        color: #fff;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 8px;
+        white-space: nowrap;
+    }
+
+.achievements-wrapper{
+    max-width:70%;
+    margin:auto;
+}
+
+.achievement-item{
+    background:#004a99;
+    color:#fff;
+    display:flex;
+    gap:30px;
+    padding:20px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.achievement-item:nth-child(even){
+    background:#3b248c;
+}
+
+.icon{
+    min-width:60px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    font-size:48px;
+    font-weight:bold;
+    color:#fff;
+}
+
+    @media (max-width: 991px) {
+        .hero-shapes { display: none; }
+        .hero-section { text-align: center; padding-bottom: 20px; }
+        .hero-description { margin: 0 auto 40px; }
+        .hero-image { margin-bottom: 0; margin-top: 40px; }
+        .info-bar { margin-top: 40px; }
+        .cta-section { flex-direction: column; text-align: center; padding: 40px 24px; }
+        .cta-content { flex-direction: column; gap: 20px; }
+    }
+
+</style>
+
+</head>
+<body>
+    <div class="py-2 border-bottom" style="background-color: #ffffff; color: #475467; font-weight: 500; font-size: 13px">
+        <div class="container d-flex justify-content-end align-items-center gap-4">
+            <span class="d-flex align-items-center">
+                <i class="bi bi-people me-2 text-dark"></i> Total Visitors: <strong class="ms-1 text-dark">18873</strong>
+            </span>
+            <span class="d-flex align-items-center">
+                <i class="bi bi-calendar-check me-2 text-dark"></i> Visitors This Month: <strong class="ms-1 text-dark">6987</strong>
+            </span>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top bg-white py-2 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/en/">
+                <div style="background: linear-gradient(135deg, var(--bauchi-green) 50%, var(--bauchi-blue) 50%); width: 35px; height: 35px; border-radius: 4px;"></div>
+                <div>
+                    <span class="fs-4 fw-bold d-block text-primary" style="line-height: 1; color: #063b78 !important;">Dr. Yakubu Adamu</span>
+                    <small class="text-success fw-bold" style="font-size: 0.7rem; color: #159447 !important; letter-spacing: 0.5px;">Bauchi Yakubu Sai Yakubu</small>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/" style="color: #15233a; border-bottom: 2px solid var(--bauchi-green);">Home</a></li>
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/about/" style="color: #475467;">About</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle fw-semibold px-3" href="#" id="galleryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #475467;">
+                            Gallery
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="galleryDropdown">
+                            <li><a class="dropdown-item" href="/en/videos/">Video</a></li>
+                            <li><a class="dropdown-item" href="/en/gallery/">Images</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/trail/" style="color: #475467;">Campaign</a></li>
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/transport/" style="color: #475467;">Kite RogoRide</a></li>
+                                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="https://kitescholar.ng/scholarships" style="color: #475467;" target="_blank">KiteScholar</a></li>
+
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/contact/" style="color: #475467;">KiteMedics</a></li>
+
+                    
+                    <li class="nav-item dropdown ms-lg-3">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-globe"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            
+                            
+                            
+                            
+                                <li>
+                                    <form action="/i18n/setlang/" method="post">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="OlzbSmfeuIub23kcprPPQQe5CZp17cbcx4TuuwjXO2KxGQjgDSpQkWMXPq7em9eQ">
+                                        <input name="next" type="hidden" value="/">
+                                        <input name="language" type="hidden" value="en">
+                                        <button type="submit" class="dropdown-item active">
+                                            English (en)
+                                        </button>
+                                    </form>
+                                </li>
+                            
+                                <li>
+                                    <form action="/i18n/setlang/" method="post">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="OlzbSmfeuIub23kcprPPQQe5CZp17cbcx4TuuwjXO2KxGQjgDSpQkWMXPq7em9eQ">
+                                        <input name="next" type="hidden" value="/">
+                                        <input name="language" type="hidden" value="ha">
+                                        <button type="submit" class="dropdown-item ">
+                                            Hausa (ha)
+                                        </button>
+                                    </form>
+                                </li>
+                            
+                                <li>
+                                    <form action="/i18n/setlang/" method="post">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="OlzbSmfeuIub23kcprPPQQe5CZp17cbcx4TuuwjXO2KxGQjgDSpQkWMXPq7em9eQ">
+                                        <input name="next" type="hidden" value="/">
+                                        <input name="language" type="hidden" value="ig">
+                                        <button type="submit" class="dropdown-item ">
+                                            Igbo (ig)
+                                        </button>
+                                    </form>
+                                </li>
+                            
+                                <li>
+                                    <form action="/i18n/setlang/" method="post">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="OlzbSmfeuIub23kcprPPQQe5CZp17cbcx4TuuwjXO2KxGQjgDSpQkWMXPq7em9eQ">
+                                        <input name="next" type="hidden" value="/">
+                                        <input name="language" type="hidden" value="yo">
+                                        <button type="submit" class="dropdown-item ">
+                                            Yorùbá (yo)
+                                        </button>
+                                    </form>
+                                </li>
+                            
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    
+
+    
+<main>
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="hero-bg-pattern"></div>
+        <div class="hero-shapes">
+            <div class="shape-green"></div>
+            <div class="shape-blue"></div>
+        </div>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <div class="hero-kicker " ><span style="color: white">Dr. Yakubu Adamu for Bauchi State Governor</span></div>
+                    <h1 class="hero-title"><span style="color: white">A Vision for</span> <span>Progress</span></h1>
+                    <p class="hero-description"><span style="color: white">Join Dr. Yakubu Adamu in building a brighter future for our Bauchi.</span></p>
+                    
+                     <div class="d-flex justify-content-center gap-3">
+            <a href="/en/trail/" class="btn btn-light btn-lg px-4">Campaign Trail</a>
+            <a href="/en/scholarships/" class="btn btn-primary btn-lg px-4">Scholarships</a>
+            <a href="/en/volunteer/" class="btn btn-warning btn-lg px-4 fw-bold">Volunteer Today</a>
+        </div>
+                </div>
+                <div class="col-lg-6 hero-image-container">
+                    <img src="/static/img/white3.5e577aa3a446.png" alt="Dr. Yakubu Adamu" class="hero-image">
+
+                </div>
+            </div>
+        </div>
+    </section>
+  <section class="welcome-section py-5 bg-light" >
+    <div class="container" >
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="video-container shadow-lg rounded overflow-hidden" >
+                    <video controls autoplay loop muted class="w-100 d-block"  style="height: 400px">
+                        <source src="/static/videos/launch5.5502c261f528.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+            <div class="col-lg-6 px-lg-5">
+                <h6 class="text-primary fw-bold text-uppercase mb-2">Welcome Address</h6>
+                <h2 class="display-5 fw-bold mb-4" style="font-family: 'Lora', serif;font-size: 20px" >A Message from Dr. Yakubu Adamu</h2>
+                <div class="welcome-text lead fs-5 text-muted">
+                    <p>
+                        
+                        "Good people of Bauchi, I stand before you not just as a candidate, but as a partner in our shared journey toward a more prosperous future. Our vision is built on the pillars of security, education, and infrastructure—foundations that will uplift every family and empower every youth in our great state."
+                        
+                    </p>
+                    <p>
+                        
+                        "Together, we can build a Bauchi where opportunity is not a privilege, but a right for all. I invite you to join us in this movement for progress."
+                        
+                    </p>
+                </div>
+                <div class="mt-4">
+                    <img src="/static/img/dradamu.230dac3c3a0b.jpg" alt="Dr. Yakubu Adamu Signature" class="img-fluid" style="max-height: 60px; filter: grayscale(100%); opacity: 0.7;">
+                    <p class="mt-2 mb-0 fw-bold text-dark">Dr. Yakubu Adamu</p>
+                    <small class="text-secondary">Gubernatorial Candidate</small>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+    <!-- Info Bar -->
+    <section class="info-bar">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="info-card">
+                        <div class="info-icon-circle icon-blue"><i class="bi bi-bullseye"></i></div>
+                        <div>
+                            <h3>Our Vision</h3>
+                            <p>A prosperous, secure and inclusive Bauchi for all.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="info-card">
+                        <div class="info-icon-circle icon-green"><i class="bi bi-heart"></i></div>
+                        <div>
+                            <h3>Our Mission</h3>
+                            <p>To deliver good governance and sustainable development.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="info-card">
+                        <div class="info-icon-circle icon-blue"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <h3>Our People</h3>
+                            <p>Empowering communities and creating opportunities.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="info-card">
+                        <div class="info-icon-circle icon-green"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div>
+                            <h3>Our Progress</h3>
+                            <p>Proven leadership. Measurable results.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Governor Bala Muhammad Section -->
+    <section class="section-padding bg-light">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-5 mb-lg-0">
+                    <img src="/static/img/kaura.4fd4345ee4c1.png" alt="Governor Bala Muhammad" class="img-fluid rounded shadow-lg" style="height: 500px;  border-bottom: 8px solid var(--bauchi-blue);">
+                </div>
+                <div class="col-lg-7 ps-lg-5">
+                    <span class="tagline">The Executive Governor</span>
+                    <h2 class="section-title">H.E. Senator Bala Muhammad (Kauran Bauchi)</h2>
+                    <p class="text-gray mb-4">
+                        
+                        Senator Bala Abdulkadir Mohammed (born 5 October 1958) is a dedicated Nigerian politician who has served as the Governor of Bauchi State since 2019. Prior to his governorship, he served as the Minister of the Federal Capital Territory from 2010 to 2015, and as a Senator representing Bauchi South from 2007 to 2010.
+                        
+                    </p>
+                    
+                    <h4 class="mb-3">Key Achievements</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i> Urban and rural infrastructure development, including extensive road networks.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i> Radical transformation of the education sector through school renovations and staff monitoring.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i> Significant improvements in healthcare delivery and access to clean water.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i> Implementation of the Violence Against Persons Prohibition (VAPP) law.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i> Construction of the world-class Bauchi Hajj Camp and renovation of traditional palaces.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row align-items-center p-5">
+            <div class="col-lg-4 col-sm-12 mb-4 mb-lg-0">
+                <img src="/static/img/dradamu.230dac3c3a0b.jpg" alt="Dr. Yakubu Adamu" class="img-fluid rounded shadow" style="height: 400px; object-fit: cover;">
+            </div>
+            <div class="col-lg-8 col-sm-12 ps-lg-5  p-5 rounded shadow-lg" style="height: 400px; background-color: #177ce1; border-radius: 15px;color: white">
+                <h2 class=" mb-4"  style="font-weight:  900; font-size: 40px; color: white">Meet  Yakubu Adamu, PhD</h2>
+                <p class="lead mb-4">With decades of experience in public service and academic excellence, Dr. Yakubu Adamu brings a unique blend of expertise and compassion to leadership.</p>
+                <p class=" mb-4" style="color: white">He believes that through collaborative effort and strategic planning, we can overcome our challenges and seize the opportunities that lie ahead.</p>
+                <a href="/en/about/" class="btn btn-primary">Read Full Biography</a>
+            </div>
+        </div>
+    </div>
+</section>
+    <!-- About Section -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-5 mb-lg-0">
+                    <span class="tagline">About the Man</span>
+                    <h2 class="section-title">Leadership rooted in experience.</h2>
+                    <p class="text-gray mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                        Dr. Yakubu Adamu brings together experience, knowledge and a commitment to creating opportunities for the people of Bauchi State.
+                    </p>
+                    <a href="/en/about/" class="discover-link">
+                        Discover His Story <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="col-lg-7">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="about-card">
+                                <div class="about-card-icon" style="background-color: #ECFDF5; color: var(--bauchi-green);"><i class="bi bi-mortarboard"></i></div>
+                                <h4>Education</h4>
+                                <p>Strong advocate for quality education and youth empowerment.</p>
+                                <div class="about-card-border border-green"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="about-card">
+                                <div class="about-card-icon" style="background-color: #EFF6FF; color: var(--bauchi-blue);"><i class="bi bi-briefcase"></i></div>
+                                <h4>Experience</h4>
+                                <p>Proven track record in public service and economic development.</p>
+                                <div class="about-card-border border-blue"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="about-card">
+                                <div class="about-card-icon" style="background-color: #ECFDF5; color: var(--bauchi-green);"><i class="bi bi-hand-thumbs-up"></i></div>
+                                <h4>Commitment</h4>
+                                <p>Dedicated to good governance, transparency and inclusive growth.</p>
+                                <div class="about-card-border border-green"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<section class="stats-section py-5 bg-white border-bottom">
+    <div class="container">
+        <div class="row text-center">
+              <div class="mt-2 mb-3 col-12">
+                    <a type="button" href="/en/indicate-needs/" class="btn btn-danger btn-lg px-5 py-3 fw-bold shadow">
+                     <i class="fa fa-question"></i>   What is Your Needs
+                    </a>
+                </div>
+            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                <div class="p-4 rounded shadow-sm bg-light h-100 border-top border-4 border-primary">
+                    <h3 class="display-4 fw-bold text-primary mb-1">0</h3>
+                    <p class="text-muted fw-bold text-uppercase small mb-0">Needs This Week</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                <div class="p-4 rounded shadow-sm bg-light h-100 border-top border-4 border-success">
+                    <h3 class="display-4 fw-bold text-success mb-1">13</h3>
+                    <p class="text-muted fw-bold text-uppercase small mb-0">Needs This Month</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                <div class="p-4 rounded shadow-sm bg-light h-100 border-top border-4 border-info">
+                    <h3 class="display-4 fw-bold text-info mb-1">13</h3>
+                    <p class="text-muted fw-bold text-uppercase small mb-0">Total Needs Received</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="p-4 rounded shadow-sm bg-light h-100 border-top border-4 border-warning">
+                    <h4 class="fw-bold text-warning mb-2" style="font-size: 1.5rem;">GET WIRED WITH A $2…</h4>
+                    <p class="text-muted fw-bold text-uppercase small mb-0">Most Frequent Need</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <section class="volunteer-stats-section py-5 bg-white border-bottom">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold" style="font-family: 'Lora', serif;">Volunteer Network</h2>
+                <p class="lead text-muted">Our growing community of dedicated volunteers by category.</p>
+                <div class="mx-auto" style="width: 80px; height: 3px; background-color: #ffc107;"></div>
+            </div>
+
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-4">
+                    <div class="p-4 rounded shadow-sm bg-warning text-dark h-100 border-bottom border-4 border-dark text-center">
+                        <h3 class="display-4 fw-bold mb-1">5</h3>
+                        <p class="fw-bold text-uppercase small mb-0">Total Enrolled Volunteers</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="bauchi-stats-card text-center">
+                        <div class="bauchi-stats-value" style="font-size: 1.5rem;">3</div>
+                        <div class="bauchi-stats-label">Social Media &amp; Digital</div>
+                    </div>
+                </div>
+                
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="bauchi-stats-card text-center">
+                        <div class="bauchi-stats-value" style="font-size: 1.5rem;">2</div>
+                        <div class="bauchi-stats-label">Canvassing &amp; Door-to-Door</div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Bauchi State Statistics Section -->
+<section class="bauchi-stats-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold" style="font-family: 'Lora', serif;">Bauchi State at a Glance <br><span style="font-size: 26px">Pearl of Tourism</span></h2>
+            <div class="mx-auto" style="width: 80px; height: 3px; background-color: #004a99;"></div>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-3 col-lg-3 col-sm-12">
+              <img class="img-thumbnail" src="/static/img/bauchi_small.4e4ab3ed529b.png" alt="">
+          </div>
+            <div class="col-md-9 col-lg-9 col-sm-12">
+                <div class="col-6 col-md-3 col-lg-3 float-start ms-2 mb-2">
+                <div class="bauchi-stats-card text-center  " >
+                    <div class="bauchi-stats-value ">7.5–8.3M</div>
+                    <div class="bauchi-stats-label ">Population</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-3 col-sm-12 float-start ms-2 mb-2">
+                <div class="bauchi-stats-card text-center">
+                    <div class="bauchi-stats-value">20</div>
+                    <div class="bauchi-stats-label">LGAs</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-3 col-sm-12 float-start ms-2 mb-2">
+                <a href="/en/scholarships/" class="text-decoration-none">
+                    <div class="bauchi-stats-card text-center">
+                        <div class="bauchi-stats-value">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <div class="bauchi-stats-label">Scholarships</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-lg-3 col-sm-12 float-start ms-2 mb-2">
+                <div class="bauchi-stats-card text-center">
+                    <div class="bauchi-stats-value">49,119 <small>km²</small></div>
+                    <div class="bauchi-stats-label">Land Area</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-3 col-sm-12 float-start ms-2 mb-2">
+                <div class="bauchi-stats-card text-center">
+                    <div class="bauchi-stats-value">~55</div>
+                    <div class="bauchi-stats-label">Ethnic Groups</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-3 col-sm-12 float-start ms-2 mb-2">
+                <div class="bauchi-stats-card text-center">
+                    <div class="bauchi-stats-value">65%</div>
+                    <div class="bauchi-stats-label">Cultivable Land</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-3 col-sm-12 float-start ms-2 mb-2">
+                <div class="bauchi-stats-card text-center">
+                    <div class="bauchi-stats-value">3</div>
+                    <div class="bauchi-stats-label">Senatorial Districts</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-3 col-sm-12 float-start ms-2 mb-2">
+                <div class="bauchi-stats-card text-center">
+                    <div class="bauchi-stats-value">12</div>
+                    <div class="bauchi-stats-label">House of Reps Seats</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-3 col-sm-12 float-start ms-2 mb-2">
+                <div class="bauchi-stats-card text-center">
+                    <div class="bauchi-stats-value">31</div>
+                    <div class="bauchi-stats-label">State Assembly Seats</div>
+                </div>
+            </div>
+                 </div>
+        </div>
+        <div class="mt-5">
+            <h3 class="fw-bold mb-4 text-center" style="font-family: 'Lora', serif;">Main Emirates of Bauchi State</h3>
+            <div class="row row-cols-2 row-cols-md-4 g-3">
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Bauchi Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Katagum Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Jama'are Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Burra Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Dambam Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Darazo Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Duguri Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Gamawa Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Giade Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Toro Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Warji Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Ari Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Jama'a Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Lame Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Bununu Emirate</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 bg-white shadow-sm rounded text-center border-start border-3 border-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="fw-bold">Lere Emirate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="container mt-5 p-5">
+    <div class="row">
+        <div class="col-12">
+             <h3 class="fw-bold mb-4 text-center" style="font-family: 'Lora', serif;"> Durbar Celebrations in Bauchi Videos</h3>
+
+        <p class="lead text-center">Most colourful durbar in the country.</p>
+            <div class="card">
+                <div class="card-body">
+
+                      <video   loop playsinline controls style="width: 100%; height: 500px;">
+        <source src="/static/videos/hawan_sallah_small.523d7d75f35f.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+
+<section class="video-gallery-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold" style="font-family: 'Lora', serif;">Video Gallery</h2>
+            <p class="lead text-muted">Watch our latest campaign videos and updates.</p>
+            <div class="mx-auto" style="width: 80px; height: 3px; background-color: #004a99;"></div>
+        </div>
+        <div class="row g-4">
+            
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
+                    <div class="position-relative">
+                        
+                            <img src="/media/videos/thumbnails/comprade.png" class="card-img-top" alt="Chanchantar Dr. Yakubu Adamu" style="height: 200px; object-fit: cover;">
+                        
+                        <a href="https://youtu.be/FwjI1qK4T6Q" class="position-absolute top-50 start-50 translate-middle text-white text-decoration-none" target="_blank">
+                             <i class="bi bi-play-circle-fill display-3"></i>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold text-dark">Chanchantar Dr. Yakubu Adamu</h5>
+                        
+                            <p class="card-text text-muted small">Comrade Umar Dalhatu Umar yayi Fashin Baki</p>
+                        
+                        <div class="d-flex justify-content-end mt-2">
+                            <div class="share-buttons">
+                                <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A//youtu.be/FwjI1qK4T6Q" target="_blank" class="text-primary me-2" title="Share on Facebook">
+                                    <i class="bi bi-facebook small"></i>
+                                </a>
+                                <a href="https://twitter.com/intent/tweet?url=https%3A//youtu.be/FwjI1qK4T6Q&text=Chanchantar%20Dr.%20Yakubu%20Adamu" target="_blank" class="text-info me-2" title="Share on Twitter">
+                                    <i class="bi bi-twitter-x small"></i>
+                                </a>
+                                <a href="https://api.whatsapp.com/send?text=Chanchantar%20Dr.%20Yakubu%20Adamu%20https%3A//youtu.be/FwjI1qK4T6Q" target="_blank" class="text-success" title="Share on WhatsApp">
+                                    <i class="bi bi-whatsapp small"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div class="text-center mt-5">
+            <a href="/en/videos/" class="btn btn-primary px-4 py-2 fw-bold">View All Videos</a>
+        </div>
+    </div>
+</section>
+
+</section>
+    <!-- Initiatives -->
+    <section class="section-padding bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="tagline">Our Initiatives</span>
+                <h2 class="section-title">Building a Better Bauchi</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="initiative-card">
+                        <div class="initiative-image">
+                            <img src="/static/img/kaura.d75f4da22016.jpg" alt="Education">
+                            <div class="initiative-icon-badge icon-blue"><i class="bi bi-mortarboard"></i></div>
+                        </div>
+                        <div class="initiative-body">
+                            <h4>Quality Education</h4>
+                            <p>Investing in schools, teachers and learning resources for a brighter future.</p>
+                            <a href="#" class="btn-learn-more">Learn More <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="initiative-card">
+                        <div class="initiative-image">
+                            <img src="/static/img/bg_bus.3714ee9e5640.png" alt="Infrastructure">
+                            <div class="initiative-icon-badge icon-green"><i class="bi bi-truck"></i></div>
+                        </div>
+                        <div class="initiative-body">
+                            <h4>Infrastructure</h4>
+                            <p>Building reliable infrastructure that connects communities and drives growth.</p>
+                            <a href="#" class="btn-learn-more">Learn More <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="initiative-card">
+                        <div class="initiative-image">
+                            <img src="/static/img/bg_crowd.458a16a6b608.png" alt="Job Creation">
+                            <div class="initiative-icon-badge icon-blue"><i class="bi bi-people"></i></div>
+                        </div>
+                        <div class="initiative-body">
+                            <h4>Job Creation</h4>
+                            <p>Creating opportunities for businesses and empowering our people.</p>
+                            <a href="#" class="btn-learn-more">Learn More <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="initiative-card">
+                        <div class="initiative-image">
+                            <img src="/static/img/dradamu.230dac3c3a0b.jpg" alt="Healthcare">
+                            <div class="initiative-icon-badge icon-green"><i class="bi bi-heart-pulse"></i></div>
+                        </div>
+                        <div class="initiative-body">
+                            <h4>Healthcare</h4>
+                            <p>Improving access to quality healthcare for a healthier Bauchi.</p>
+                            <a href="#" class="btn-learn-more">Learn More <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+<section class="py-5">
+    <div class="container text-center">
+
+
+
+
+<div class="achievements-wrapper">
+<h1>Our Five Point agenda</h1>
+    <div class="achievement-item">
+        <div class="icon">✓</div>
+        <div class="content">
+            <h2>Security and Public Safety</h2>
+            <p>
+                
+                We will strengthen community policing, enhance collaboration with security agencies,
+                and deploy technology-driven solutions to improve intelligence gathering and crime prevention.
+                Every citizen deserves to live, work, and raise a family in a safe and peaceful environment.
+                
+            </p>
+        </div>
+    </div>
+
+    <div class="achievement-item">
+        <div class="icon">✓</div>
+        <div class="content">
+            <h2>Quality Education for All</h2>
+            <p>
+                
+                We will invest in modern classrooms, teacher development,
+                digital learning tools, and scholarships to ensure every child has access to quality education.
+                Education remains the foundation for sustainable development and future prosperity.
+                
+            </p>
+        </div>
+    </div>
+
+    <div class="achievement-item">
+        <div class="icon">✓</div>
+        <div class="content">
+            <h2>Infrastructure Development</h2>
+            <p>
+                
+                We will expand road networks, improve water supply systems,
+                promote rural electrification, and modernize public infrastructure
+                across all local government areas. Strong infrastructure is essential for economic growth,
+                investment attraction, and improved quality of life.
+                
+            </p>
+        </div>
+    </div>
+
+
+
+    <div class="achievement-item">
+        <div class="icon">✓</div>
+        <div class="content">
+            <h2>Youth and Women Empowerment</h2>
+            <p>
+                
+                We will create opportunities through skills acquisition programs,
+                entrepreneurship support, access to finance, and leadership development initiatives.
+                Our administration will ensure that youth and women are active participants in
+                governance and economic development
+                
+            </p>
+        </div>
+    </div>
+
+
+
+    <div class="achievement-item">
+        <div class="icon">✓</div>
+        <div class="content">
+            <h2>Agricultural Transformation and Food Security</h2>
+            <p>
+                
+                We will support farmers with improved inputs, mechanized farming,
+                irrigation systems, access to markets, and agricultural financing.
+                By modernizing agriculture, we will increase food production, create jobs,
+                and strengthen the state's economy.
+                
+            </p>
+        </div>
+    </div>
+
+
+
+</div>
+    </div>
+</section>
+
+
+    <!-- CTA Section -->
+    <section class="container mt-5">
+        <div class="cta-section">
+            <div class="cta-content">
+                <div class="cta-logo-circle">
+                    <div class="cta-logo-icon">
+                        <svg width="48" height="48" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M40 0H80V40H40V0Z" fill="var(--bauchi-blue)"/>
+                            <path d="M40 40H80V80H40V40Z" fill="var(--bauchi-green)"/>
+                            <path d="M0 40C0 17.9086 17.9086 0 40 0V40H0V40Z" fill="var(--bauchi-green)"/>
+                            <path d="M0 80C0 57.9086 17.9086 40 40 40V80H0V80Z" fill="var(--bauchi-blue)"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="cta-text">
+                    <h2>Be Part of the Movement</h2>
+                    <p>Together, we can build a prosperous, secure and inclusive Bauchi for all.</p>
+                </div>
+            </div>
+            <div class="text-lg-end">
+                <a href="/en/volunteer/" class="btn-volunteer-cta">
+                    <i class="bi bi-people-fill me-2"></i>Volunteer Today
+                </a>
+                <p class="small text-gray mb-0">Your time can create a better tomorrow.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+
+    <div id="modals-here"></div>
+<div id="news-modals-here"></div>
+    <footer class="footer mt-5 py-5" style="background-color: #032b5b; color: white; position: relative; overflow: hidden;">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <h5 class="fw-bold mb-3 text-white">Dr. Yakubu Adamu</h5>
+                    <p class="text-white-50 small mb-0">Bauchi Yakubu Sai Yakubu</p>
+                    <p class="text-white-50 small mt-4">&copy; 2026 Yakubu Adamu Campaign. All rights reserved.</p>
+                </div>
+                <div class="col-md-2">
+                    <h5 class="fw-bold mb-2 text-white" style="font-size: 1rem;">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/en/about/" class="text-decoration-none text-white-50 small">About</a></li>
+                        <li><a href="/en/news/" class="text-decoration-none text-white-50 small">News</a></li>
+                        <li><a href="/en/trail/" class="text-decoration-none text-white-50 small">Campaign</a></li>
+                        <li><a href="/en/transport/" class="text-decoration-none text-white-50 small">Student Bus</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h5 class="fw-bold mb-2 text-white" style="font-size: 1rem;">Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/en/gallery/" class="text-decoration-none text-white-50 small">Gallery</a></li>
+                        <li><a href="/en/volunteer/" class="text-decoration-none text-white-50 small">Volunteer</a></li>
+                        <li><a href="/en/contact/" class="text-decoration-none text-white-50 small">Contact</a></li>
+                        <li><a href="#" class="text-decoration-none text-white-50 small">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="fw-bold mb-2 text-white" style="font-size: 1rem;">Stay Connected</h5>
+                    <p class="text-white-50 small mb-3">Follow our journey and stay updated.</p>
+                    <div class="d-flex gap-2">
+                        <a href="https://web.facebook.com/yakubunbauchi" class="btn btn-sm btn-primary rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #3b5998; border: none;"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="btn btn-sm btn-info rounded-circle text-white" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #1da1f2; border: none;"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="btn btn-sm btn-danger rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #e1306c; border: none;"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="btn btn-sm btn-danger rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #ff0000; border: none;"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex justify-content-end align-items-start">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M40 0H80V40H40V0Z" fill="var(--bauchi-blue)"/>
+                        <path d="M40 40H80V80H40V40Z" fill="var(--bauchi-green)"/>
+                        <path d="M0 40C0 17.9086 17.9086 0 40 0V40H0V40Z" fill="var(--bauchi-green)"/>
+                        <path d="M0 80C0 57.9086 17.9086 40 40 40V80H0V80Z" fill="var(--bauchi-blue)"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AOS Animation -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
+    
+</body>
+</html>S

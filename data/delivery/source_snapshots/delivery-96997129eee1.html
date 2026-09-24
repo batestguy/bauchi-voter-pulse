@@ -1,0 +1,945 @@
+
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Dr. Yakubu Adamu | Political Campaign</title>
+    <!-- Tailwind CSS -->
+
+    <!-- Bootstrap CSS -->
+ <script type="text/javascript" src="https://unpkg.com/htmx.org@1.3.1/dist/htmx.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+body {
+    font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background-color: var(--bauchi-light);
+}
+
+h1, h2, h3, h4, h5, h6, .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-weight: 700;
+}
+:root {
+    --bauchi-blue: #e4e7ea;
+    --bauchi-dark-blue: #032b5b;
+    --bauchi-green: #159447;
+    --bauchi-dark-green: #0b7135;
+    --bauchi-light: #f4f8f7;
+    --text: #15233a;
+    --muted: #667085;
+    --shadow: 0 12px 35px rgba(16, 42, 67, .09);
+}
+
+.home-page {
+    color: var(--text);
+    background: #fff;
+    overflow: hidden;
+}
+
+.home-page a {
+    text-decoration: none;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.home-hero {
+    position: relative;
+    min-height: 560px;
+    display: flex;
+    align-items: center;
+    background:
+        radial-gradient(
+            circle at 15% 25%,
+            rgba(21,148,71,.08),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #fff 0%,
+            #f8fbfa 65%,
+            #edf6f2 100%
+        );
+}
+
+.hero-green-shape {
+    position: absolute;
+    right: -100px;
+    top: 0;
+    width: 52%;
+    height: 100%;
+    background: var(--bauchi-green);
+    clip-path: polygon(
+        48% 0,
+        100% 0,
+        100% 100%,
+        0 100%
+    );
+}
+
+.hero-blue-shape {
+    position: absolute;
+    right: -30px;
+    bottom: 0;
+    width: 47%;
+    height: 32%;
+    background: var(--bauchi-blue);
+    clip-path: polygon(
+        38% 100%,
+        100% 0,
+        100% 100%
+    );
+}
+
+.hero-content {
+    position: relative;
+    z-index: 5;
+    padding: 75px 0;
+}
+
+.hero-kicker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--bauchi-blue);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.hero-kicker:before {
+    content: "";
+    width: 5px;
+    height: 34px;
+    border-radius: 5px;
+    background: var(--bauchi-green);
+}
+
+.hero-title {
+    color: var(--bauchi-blue);
+    font-size: clamp(3rem, 6vw, 5.2rem);
+    font-weight: 800;
+    line-height: .98;
+    letter-spacing: -2px;
+    margin-bottom: 25px;
+}
+
+.hero-title span {
+    display: block;
+    color: var(--bauchi-green);
+}
+
+.hero-description {
+    max-width: 570px;
+    color: #475467;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 30px;
+}
+
+.hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.btn-bauchi {
+    background: var(--bauchi-green);
+    border: 1px solid var(--bauchi-green);
+    color: white;
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.btn-bauchi:hover {
+    background: var(--bauchi-dark-green);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-bauchi-blue {
+    background: var(--bauchi-blue);
+    border: 1px solid var(--bauchi-blue);
+    color: white;
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.btn-bauchi-blue:hover {
+    background: var(--bauchi-dark-blue);
+    color: white;
+}
+
+.btn-bauchi-outline {
+    background: white;
+    border: 1px solid #d0d5dd;
+    color: var(--bauchi-blue);
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.hero-person {
+    position: absolute;
+    z-index: 6;
+    right: 4%;
+    bottom: 0;
+    width: min(43%, 550px);
+    max-height: 570px;
+    object-fit: contain;
+    object-position: bottom center;
+    filter: drop-shadow(
+        0 20px 25px rgba(0,0,0,.16)
+    );
+}
+
+/* =========================================================
+   FOUR FEATURE CARDS
+   ========================================================= */
+
+.value-section {
+    position: relative;
+    z-index: 20;
+    margin-top: -5px;
+}
+
+.value-grid {
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    overflow: hidden;
+}
+
+.value-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 25px 22px;
+    border-right: 1px solid #eaecf0;
+}
+
+.value-item:last-child {
+    border-right: none;
+}
+
+.value-icon {
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--bauchi-blue);
+    color: white;
+    font-size: 1.35rem;
+}
+
+.value-item:nth-child(even) .value-icon {
+    background: var(--bauchi-green);
+}
+
+.value-item h5 {
+    color: var(--bauchi-blue);
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 0 0 5px;
+}
+
+.value-item p {
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.45;
+    margin: 0;
+}
+
+/* =========================================================
+   GENERAL SECTIONS
+   ========================================================= */
+
+.home-section {
+    padding: 85px 0;
+}
+
+.home-section-light {
+    background: var(--bauchi-light);
+}
+
+.section-label {
+    color: var(--bauchi-green);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.section-title {
+    color: var(--bauchi-blue);
+    font-size: clamp(2rem,4vw,3rem);
+    line-height: 1.1;
+    font-weight: 800;
+}
+
+.section-title span {
+    color: var(--bauchi-green);
+}
+
+.section-description {
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+/* =========================================================
+   ABOUT
+   ========================================================= */
+
+.about-image {
+    width: 100%;
+    height: 470px;
+    object-fit: cover;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+
+.about-content {
+    padding-left: 35px;
+}
+
+.about-content p {
+    color: var(--muted);
+    line-height: 1.75;
+}
+
+.about-features {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.about-feature {
+    background: white;
+    padding: 22px 18px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(16,42,67,.06);
+    border-top: 3px solid var(--bauchi-green);
+}
+
+.about-feature:nth-child(2) {
+    border-top-color: var(--bauchi-blue);
+}
+
+.about-feature i {
+    font-size: 1.6rem;
+    color: var(--bauchi-green);
+}
+
+.about-feature h6 {
+    color: var(--bauchi-blue);
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+.about-feature p {
+    font-size: .82rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* =========================================================
+   INITIATIVES
+   ========================================================= */
+
+.initiative-card {
+    height: 100%;
+    overflow: hidden;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(16,42,67,.08);
+    transition: .3s ease;
+}
+
+.initiative-card:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 16px 35px rgba(16,42,67,.13);
+}
+
+.initiative-image {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+}
+
+.initiative-body {
+    padding: 22px;
+}
+
+.initiative-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    margin-top: -46px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: var(--bauchi-blue);
+    color: white;
+    font-size: 1.2rem;
+}
+
+.initiative-card:nth-child(even)
+.initiative-icon {
+    background: var(--bauchi-green);
+}
+
+.initiative-body h4 {
+    color: var(--bauchi-blue);
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-top: 17px;
+}
+
+.initiative-body p {
+    min-height: 70px;
+    color: var(--muted);
+    font-size: .88rem;
+    line-height: 1.6;
+}
+
+/* =========================================================
+   NEEDS
+   ========================================================= */
+
+.needs-box {
+    background: linear-gradient(
+        135deg,
+        var(--bauchi-blue),
+        #0a4f94
+    );
+    border-radius: 18px;
+    padding: 42px;
+    color: white;
+    box-shadow: var(--shadow);
+}
+
+.needs-box h2 {
+    font-weight: 800;
+}
+
+.needs-box p {
+    color: rgba(255,255,255,.8);
+}
+
+.needs-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    color: var(--bauchi-blue);
+    padding: 13px 22px;
+    border-radius: 8px;
+    font-weight: 800;
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.stat-card {
+    height: 100%;
+    padding: 25px 18px;
+    text-align: center;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 22px rgba(16,42,67,.07);
+    border-bottom: 4px solid var(--bauchi-green);
+}
+
+.stat-value {
+    color: var(--bauchi-blue);
+    font-size: 2rem;
+    font-weight: 850;
+}
+
+.stat-label {
+    color: var(--muted);
+    font-size: .74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+}
+
+/* =========================================================
+   AGENDA
+   ========================================================= */
+
+.agenda-item {
+    display: flex;
+    gap: 22px;
+    padding: 25px;
+    margin-bottom: 15px;
+    background: white;
+    border-radius: 10px;
+    border-left: 4px solid var(--bauchi-green);
+    box-shadow: 0 6px 20px rgba(16,42,67,.06);
+}
+
+.agenda-number {
+    flex: 0 0 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--bauchi-blue);
+    color: white;
+    font-weight: 800;
+}
+
+.agenda-item:nth-child(even) {
+    border-left-color: var(--bauchi-blue);
+}
+
+.agenda-item:nth-child(even)
+.agenda-number {
+    background: var(--bauchi-green);
+}
+
+.agenda-item h4 {
+    color: var(--bauchi-blue);
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.agenda-item p {
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* =========================================================
+   VIDEO
+   ========================================================= */
+
+.video-section {
+    position: relative;
+    min-height: 430px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.video-section video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-section:after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(3,43,91,.9),
+            rgba(3,43,91,.55),
+            rgba(3,43,91,.25)
+        );
+}
+
+.video-content {
+    position: relative;
+    z-index: 3;
+    max-width: 700px;
+    color: white;
+}
+
+.video-content h2 {
+    font-weight: 850;
+}
+
+/* =========================================================
+   FINAL CTA
+   ========================================================= */
+
+.final-cta {
+    padding: 75px 0;
+    text-align: center;
+    background: linear-gradient(
+        135deg,
+        #eff8f4,
+        #fff
+    );
+}
+
+.final-cta h2 {
+    color: var(--bauchi-blue);
+    font-weight: 850;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 991px) {
+
+    .home-hero {
+        min-height: 680px;
+    }
+
+    .hero-person {
+        width: 48%;
+        right: 0;
+    }
+
+    .value-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .value-item:nth-child(2) {
+        border-right: none;
+    }
+
+    .about-content {
+        padding-left: 0;
+        margin-top: 30px;
+    }
+}
+
+@media (max-width: 767px) {
+
+    .home-hero {
+        min-height: 720px;
+        align-items: flex-start;
+    }
+
+    .hero-green-shape {
+        width: 100%;
+        height: 42%;
+        top: auto;
+        bottom: 0;
+    }
+
+    .hero-blue-shape {
+        width: 80%;
+        height: 22%;
+    }
+
+    .hero-person {
+        width: 68%;
+        right: 4%;
+        max-height: 390px;
+    }
+
+    .hero-content {
+        padding: 48px 0 270px;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .value-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .value-item {
+        border-right: none;
+        border-bottom: 1px solid #eaecf0;
+    }
+
+    .value-item:last-child {
+        border-bottom: none;
+    }
+
+    .home-section {
+        padding: 60px 0;
+    }
+
+    .about-image {
+        height: 360px;
+    }
+
+    .about-features {
+        grid-template-columns: 1fr;
+    }
+
+    .needs-box {
+        padding: 28px 22px;
+    }
+
+    .agenda-item {
+        padding: 20px 17px;
+    }
+}
+
+        body { font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #333; }
+        h1, h2, h3, h4, h5, h6, .navbar-brand { font-family: 'Poppins', 'Inter', sans-serif; font-weight: 700; }
+        .navbar { background-color: #004a99; }
+        .navbar-dark .navbar-nav .nav-link { color: rgba(255,255,255,.8); }
+        .navbar-dark .navbar-nav .nav-link:hover { color: #fff; }
+        .btn-primary { background-color: #004a99; border-color: #004a99; }
+        .btn-primary:hover { background-color: #003366; border-color: #003366; }
+        .footer { background-color: #f8f9fa; padding: 3rem 0; border-top: 1px solid #dee2e6; }
+
+        .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,.1); transition: transform .3s; }
+        .card:hover { transform: translateY(-5px); }
+         .fatfont{ font-family: 'Abril Fatface', serif;font-weight: 400;
+             }
+    </style>
+    
+</head>
+<body>
+    <div class="py-2 border-bottom" style="background-color: #ffffff; color: #475467; font-weight: 500; font-size: 13px">
+        <div class="container d-flex justify-content-end align-items-center gap-4">
+            <span class="d-flex align-items-center">
+                <i class="bi bi-people me-2 text-dark"></i> Total Visitors: <strong class="ms-1 text-dark">18874</strong>
+            </span>
+            <span class="d-flex align-items-center">
+                <i class="bi bi-calendar-check me-2 text-dark"></i> Visitors This Month: <strong class="ms-1 text-dark">6988</strong>
+            </span>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top bg-white py-2 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/en/">
+                <div style="background: linear-gradient(135deg, var(--bauchi-green) 50%, var(--bauchi-blue) 50%); width: 35px; height: 35px; border-radius: 4px;"></div>
+                <div>
+                    <span class="fs-4 fw-bold d-block text-primary" style="line-height: 1; color: #063b78 !important;">Dr. Yakubu Adamu</span>
+                    <small class="text-success fw-bold" style="font-size: 0.7rem; color: #159447 !important; letter-spacing: 0.5px;">Bauchi Yakubu Sai Yakubu</small>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/" style="color: #15233a; border-bottom: 2px solid var(--bauchi-green);">Home</a></li>
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/about/" style="color: #475467;">About</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle fw-semibold px-3" href="#" id="galleryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #475467;">
+                            Gallery
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="galleryDropdown">
+                            <li><a class="dropdown-item" href="/en/videos/">Video</a></li>
+                            <li><a class="dropdown-item" href="/en/gallery/">Images</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/trail/" style="color: #475467;">Campaign</a></li>
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/transport/" style="color: #475467;">Kite RogoRide</a></li>
+                                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="https://kitescholar.ng/scholarships" style="color: #475467;" target="_blank">KiteScholar</a></li>
+
+                    <li class="nav-item"><a class="nav-link fw-semibold px-3" href="/en/contact/" style="color: #475467;">KiteMedics</a></li>
+
+                    
+                    <li class="nav-item dropdown ms-lg-3">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-globe"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            
+                            
+                            
+                            
+                                <li>
+                                    <form action="/i18n/setlang/" method="post">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="FGK8gHPxRfws2TuPi3Q182kogg3B5nZZlrt7mGnUGRug68S3eFlbPWgrDQYnaqDT">
+                                        <input name="next" type="hidden" value="/about/">
+                                        <input name="language" type="hidden" value="en">
+                                        <button type="submit" class="dropdown-item active">
+                                            English (en)
+                                        </button>
+                                    </form>
+                                </li>
+                            
+                                <li>
+                                    <form action="/i18n/setlang/" method="post">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="FGK8gHPxRfws2TuPi3Q182kogg3B5nZZlrt7mGnUGRug68S3eFlbPWgrDQYnaqDT">
+                                        <input name="next" type="hidden" value="/about/">
+                                        <input name="language" type="hidden" value="ha">
+                                        <button type="submit" class="dropdown-item ">
+                                            Hausa (ha)
+                                        </button>
+                                    </form>
+                                </li>
+                            
+                                <li>
+                                    <form action="/i18n/setlang/" method="post">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="FGK8gHPxRfws2TuPi3Q182kogg3B5nZZlrt7mGnUGRug68S3eFlbPWgrDQYnaqDT">
+                                        <input name="next" type="hidden" value="/about/">
+                                        <input name="language" type="hidden" value="ig">
+                                        <button type="submit" class="dropdown-item ">
+                                            Igbo (ig)
+                                        </button>
+                                    </form>
+                                </li>
+                            
+                                <li>
+                                    <form action="/i18n/setlang/" method="post">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="FGK8gHPxRfws2TuPi3Q182kogg3B5nZZlrt7mGnUGRug68S3eFlbPWgrDQYnaqDT">
+                                        <input name="next" type="hidden" value="/about/">
+                                        <input name="language" type="hidden" value="yo">
+                                        <button type="submit" class="dropdown-item ">
+                                            Yorùbá (yo)
+                                        </button>
+                                    </form>
+                                </li>
+                            
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    
+
+    
+<section class="py-5 bg-light">
+    <div class="container">
+        <h1 class="text-center mb-5" style="font-weight: 900; font-size: 45px">About Dr. Yakubu Adamu</h1>
+        <div class="row align-items-center">
+            <div class="col-lg-5 mb-4">
+                <img src="/static/img/yakubu_sit2.png" alt="Dr. Yakubu Adamu" class="img-fluid rounded shadow-lg">
+            </div>
+            <div class="col-lg-7 ps-lg-5">
+                <h2 class="mb-4" style="font-weight: 900; font-size: 25px">Academic and Public Excellence</h2>
+                <p>Dr. Yakubu Adamu is a distinguished scholar and public servant with a passion for transformative leadership. Holding a PhD in Economics, he has dedicated his life to understanding and solving complex socio-economic challenges.</p>
+                <p>Throughout his career, Dr. Yakubu has consistently demonstrated a commitment to integrity, transparency, and the empowerment of others. His work in both the academic and public spheres has been marked by a focus on sustainable development and inclusive growth.</p>
+                <p>He believes that the strength of our community lies in its diversity and its shared commitment to progress. As a leader, he is dedicated to fostering a culture of collaboration and mutual respect, where every voice is heard and valued.</p>
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-mortarboard-fill fs-2 text-primary me-3"></i>
+                            <div>
+                                <h4 class="h6 fw-bold mb-0">PhD in Economics</h4>
+                                <small class="text-muted">Academic Excellence</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-briefcase-fill fs-2 text-primary me-3"></i>
+                            <div>
+                                <h4 class="h6 fw-bold mb-0">20+ Years Experience</h4>
+                                <small class="text-muted">Public Service</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="fw-bold text-center mb-5">Journey and Achievements</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 bg-white shadow-sm p-4">
+                    <h3 class="h5 fw-bold text-primary">Early Life & Education</h3>
+                    <p class="text-muted">Born and raised in our local community, Dr. Yakubu's journey began with a strong foundation in education and a deep appreciation for our shared heritage.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 bg-white shadow-sm p-4">
+                    <h3 class="h5 fw-bold text-primary">Professional Growth</h3>
+                    <p class="text-muted">From his early roles in public administration to his academic contributions, Dr. Yakubu has consistently sought to make a positive impact.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 bg-white shadow-sm p-4">
+                    <h3 class="h5 fw-bold text-primary">Leadership Roles</h3>
+                    <p class="text-muted">Dr. Yakubu has held various leadership positions, where he has successfully implemented policies that have improved the lives of many.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+    <div id="modals-here"></div>
+<div id="news-modals-here"></div>
+    <footer class="footer mt-5 py-5" style="background-color: #032b5b; color: white; position: relative; overflow: hidden;">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <h5 class="fw-bold mb-3 text-white">Dr. Yakubu Adamu</h5>
+                    <p class="text-white-50 small mb-0">Bauchi Yakubu Sai Yakubu</p>
+                    <p class="text-white-50 small mt-4">&copy; 2026 Yakubu Adamu Campaign. All rights reserved.</p>
+                </div>
+                <div class="col-md-2">
+                    <h5 class="fw-bold mb-2 text-white" style="font-size: 1rem;">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/en/about/" class="text-decoration-none text-white-50 small">About</a></li>
+                        <li><a href="/en/news/" class="text-decoration-none text-white-50 small">News</a></li>
+                        <li><a href="/en/trail/" class="text-decoration-none text-white-50 small">Campaign</a></li>
+                        <li><a href="/en/transport/" class="text-decoration-none text-white-50 small">Student Bus</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h5 class="fw-bold mb-2 text-white" style="font-size: 1rem;">Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/en/gallery/" class="text-decoration-none text-white-50 small">Gallery</a></li>
+                        <li><a href="/en/volunteer/" class="text-decoration-none text-white-50 small">Volunteer</a></li>
+                        <li><a href="/en/contact/" class="text-decoration-none text-white-50 small">Contact</a></li>
+                        <li><a href="#" class="text-decoration-none text-white-50 small">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="fw-bold mb-2 text-white" style="font-size: 1rem;">Stay Connected</h5>
+                    <p class="text-white-50 small mb-3">Follow our journey and stay updated.</p>
+                    <div class="d-flex gap-2">
+                        <a href="https://web.facebook.com/yakubunbauchi" class="btn btn-sm btn-primary rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #3b5998; border: none;"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="btn btn-sm btn-info rounded-circle text-white" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #1da1f2; border: none;"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="btn btn-sm btn-danger rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #e1306c; border: none;"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="btn btn-sm btn-danger rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #ff0000; border: none;"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex justify-content-end align-items-start">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M40 0H80V40H40V0Z" fill="var(--bauchi-blue)"/>
+                        <path d="M40 40H80V80H40V40Z" fill="var(--bauchi-green)"/>
+                        <path d="M0 40C0 17.9086 17.9086 0 40 0V40H0V40Z" fill="var(--bauchi-green)"/>
+                        <path d="M0 80C0 57.9086 17.9086 40 40 40V80H0V80Z" fill="var(--bauchi-blue)"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AOS Animation -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
+    
+</body>
+</html>S
