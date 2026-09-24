@@ -3,7 +3,7 @@
 **Handoff date:** 24 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** `22a8914` — `feat(delivery): complete Bauchi LGA evidence coverage`
+**Current release:** see `git log -1`; the live product is verified at the URL below
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
 
 ## 1. Handoff Summary
@@ -23,13 +23,34 @@ as social/news analysis, not private polling.
 The earlier sentiment/risk dashboard remains in the repository as legacy history. It
 is not the current product and is not invoked by the current GitHub Pages build.
 
+## Current Checkpoint
+
+The next maintainer should resume from this exact checkpoint:
+
+- **Last verified live product:** the prior release is live at the URL below; its
+  Pages run was `35964787695`.
+- **Current P0 update:** implemented locally and ready to commit/push. It adds the
+  8-row `data/delivery/indicators.csv` measurement ledger, an infrastructure need
+  and pathway, a bilingual LGA-selection fix, and dependency-free integrity tests.
+- **Local verification completed:** 8 `unittest` tests pass, rendering passes, and
+  browser checks pass at 1440/1024/760/375px with 6 cards, 8 indicators, 20 LGA
+  tiles, no overflow and 0 console errors.
+- **Not live yet:** do not describe the P0 indicator update as deployed until it is
+  committed, pushed and checked on GitHub Pages.
+- **Evaluation report:** `.evals/2026-W39.md` is intentionally local-only because
+  its 100-row source sample is not approved for release staging.
+- **Preserve local work:** do not reset or stage `src/aggregation/aggregate.py`,
+  `.evals/2026-W39_sample100_filled.csv`, `.evals/2026-W39.md` or
+  `data/human_review/filled/`.
+
 ## 2. Release State
 
 ### Live deployment
 
 GitHub Pages reports the site as public and built from `main` with `/docs` as the
-source directory. The most recent Pages deployment completed successfully on
-24 September 2026.
+source directory. The last verified live deployment before this staged indicator
+update completed successfully on 24 September 2026. The staged indicator update is
+not live until it is committed and pushed.
 
 ```text
 https://batestguy.github.io/bauchi-voter-pulse/
@@ -46,12 +67,13 @@ not call an explicit Pages deployment action.
 | Registered sources | 27 | `data/delivery/source_register.csv` |
 | Archived source pages | 33 | `data/delivery/source_manifest.csv` |
 | Review queue records | 33 | `data/delivery/review_queue.csv` |
-| Needs | 7 | `data/delivery/needs.csv` |
+| Needs | 8 | `data/delivery/needs.csv` |
 | Achievements | 25 | `data/delivery/achievements.csv` |
 | APM promises | 8 | `data/delivery/promises.csv` |
 | LGA delivery rows | 20 | `data/delivery/lga_delivery.csv` |
 | Approved brand assets | 4 | `data/delivery/asset_register.csv` |
-| Pending source reviews | 0 | `review_status != needs_review` |
+| Outcome indicators | 8 | `data/delivery/indicators.csv` |
+| Pending source reviews | 0 | `review_status == needs_review` |
 
 All 20 LGAs currently have an explicit LGA-specific evidence row. This means each
 LGA has a source-backed record for the atlas; it does not mean that every sector or
@@ -86,7 +108,7 @@ GitHub Pages
 |---|---|
 | `docs/index.html` | Generated public landing page |
 | `src/dashboard/render.py` | Validates delivery data and generates the page |
-| `data/delivery/` | Curated source, evidence, promise and LGA tables |
+| `data/delivery/` | Curated source, evidence, promise, indicator and LGA tables |
 | `data/delivery/source_snapshots/` | Locally archived source responses |
 | `src/ingestion/delivery_sources.py` | Public source discovery, archival and review intake |
 | `src/ingestion/common.py` | Shared polite HTTP, robots.txt and rate-limit logic |
@@ -100,10 +122,11 @@ GitHub Pages
 - APM identity and approved local imagery.
 - English/Hausa toggle.
 - Four-step public-need-to-next-result pathway.
-- Sector filtering for health, education, water/WASH and governance.
+- Sector filtering for health, education, water/WASH, infrastructure and governance.
 - Twenty-LGA selector with source-backed LGA summaries.
 - Current-administration continuity framing.
 - Separate APM campaign agenda.
+- Measurement ledger separating reported outputs from outcomes still being measured.
 - Source list with publication date, retrieval date, usage note and evidence grade.
 - Responsive layout and reduced-motion support.
 - `Created By Deerflow` attribution in the footer.
@@ -137,6 +160,13 @@ Evidence grades:
 - `B`: programme or implementing-partner evidence, or reputable corroborating report.
 - `C`: provisional or weakly corroborated source; do not promote without review.
 - `D`: campaign material; use for promises and positioning, not completed outcomes.
+
+### Outcome indicators
+
+`indicators.csv` is the measurement ledger shown on the public page. It separates
+reported delivery outputs from outcomes that still need follow-up. Fields include
+baseline, current value, unit, year, target, status, LGA/sector scope, source and a
+measurement note. Blank baselines are intentional when no verified baseline exists.
 
 ### Needs
 
@@ -388,7 +418,8 @@ settings in GitHub if that configuration changes.
 
 ## 9. Current Validation and Release Evidence
 
-The latest release was checked on 24 September 2026:
+The last deployed release was checked on 24 September 2026. The indicator-ledger
+update in this handoff is currently staged/local until committed and pushed:
 
 - 27 registered sources.
 - 33 archived source pages.
@@ -399,12 +430,14 @@ The latest release was checked on 24 September 2026:
 - All registered and manifest source hashes reconcile.
 - All 33 manifest snapshot hashes reconcile.
 - Four local brand assets match their registered SHA-256 values.
-- GitHub Pages deployment completed successfully.
-- Live page returned the expected 33-page/0-pending source status.
-- Live page showed 20 LGA tiles and Misau, Toro and Zaki evidence.
-- Live browser console returned 0 errors.
+- Prior release GitHub Pages deployment completed successfully in run `35964787695`.
+- Prior live page returned the expected 33-page/0-pending source status.
+- Prior live page showed 20 LGA tiles and Misau, Toro and Zaki evidence.
+- Prior live browser console returned 0 errors; the staged P0 update has only local
+  browser evidence until pushed.
 - Responsive checks showed no horizontal overflow at 1440px, 1024px, 760px or 375px.
-- No pytest, lint or typecheck suite is installed in the current project.
+- No pytest, lint or typecheck suite is installed in the current project; the
+  dependency-free `unittest` integrity suite passes.
 
 ## 10. Legacy Sentiment/Risk Pipeline
 
@@ -457,7 +490,8 @@ The worktree is intentionally not clean. These changes are local work and were n
 part of the public delivery release:
 
 ```text
-M  src/aggregation/aggregate.py
+ M src/aggregation/aggregate.py
+?? .evals/2026-W39.md
 ?? .evals/2026-W39_sample100_filled.csv
 ?? data/human_review/filled/
 ```
@@ -484,8 +518,7 @@ still need completion.
 - The 20-LGA display is a designed grid, not an authoritative map.
 - English/Hausa copy exists, but native-speaker review is not documented.
 - There is no automated semantic duplicate checker, date validator or claim verifier.
-- The current arrow-card filter set does not expose a dedicated infrastructure card,
-  even though infrastructure records exist.
+- Baselines in `indicators.csv` remain blank where no verified baseline is available.
 
 ### Legacy pipeline
 
@@ -501,15 +534,18 @@ still need completion.
 
 ### P0 — Strengthen the current product
 
-1. Add an `indicators.csv` or equivalent outcome-indicator table with baseline,
-   current value, target, date, LGA/sector scope, source and verification status.
-2. Replace remaining delivery-output language with measured outcomes where primary
+1. Commit and push the current indicator-ledger/infrastructure update, then verify
+   the live GitHub Pages build and update the live checkpoint.
+2. Extend `indicators.csv` with more verified baselines and targets; keep missing
+   baselines blank rather than estimating them.
+3. Replace remaining delivery-output language with measured outcomes where primary
    evidence exists: service reliability, beneficiaries, learning, health access,
    market access, income and employment.
-3. Add a dedicated infrastructure arrow-card path and stronger semantic validation.
-4. Run a native-speaker Hausa review of the bilingual labels and dynamic records.
-5. Add focused automated tests for CSV validation, source-hash reconciliation,
-   language toggling and LGA coverage.
+4. Add semantic validation for duplicate claims, date validity and actor/source
+   consistency.
+5. Run a native-speaker Hausa review of the bilingual labels and dynamic records.
+6. Extend the focused tests beyond integrity checks to cover language toggling and
+   rendered HTML structure.
 
 ### P1 — Complete legacy evaluation work separately
 
@@ -518,7 +554,8 @@ still need completion.
 2. Merge completed review parts by `raw_id` into the root queue files.
 3. Run the modified aggregation code and inspect `pipeline_stats.csv` and risk
    outputs.
-4. Create `.evals/2026-W39.md` from the evaluation template.
+4. Maintain a local `.evals/2026-W39.md` for each evaluation cycle. The current report
+   is local-only because its 100-row filled sample is not approved for release staging.
 5. Disclose that the current filled sample was labelled by
    `mimo-v2.6-ai-reviewer`, not a native Hausa speaker.
 

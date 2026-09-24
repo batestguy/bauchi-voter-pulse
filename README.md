@@ -12,7 +12,7 @@ The new interface uses the official APM identity and approved campaign assets, p
 
 - `docs/index.html` — generated interactive landing page
 - `src/dashboard/render.py` — static dashboard generator
-- `data/delivery/` — sources, needs, achievements, promises, LGA queue, asset register, source snapshots and review queue
+- `data/delivery/` — sources, needs, achievements, promises, outcome indicators, LGA queue, asset register, source snapshots and review queue
 - `src/ingestion/delivery_sources.py` — official-source discovery, archival and candidate intake
 - `assets/brand/` — locally stored official APM and campaign image assets
 - `docs/assets/brand/` — generated copies for GitHub Pages
@@ -20,6 +20,7 @@ The new interface uses the official APM identity and approved campaign assets, p
 ## Run locally
 
 ```bash
+python -m unittest discover -s tests -v
 python src/dashboard/render.py
 python -m http.server 8766 --directory docs
 ```
