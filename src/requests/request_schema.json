@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:apm:contract:request-schema:v1",
+  "title": "APM public request intake contract",
+  "description": "Untrusted public form input for the eventual Apps Script/Google Sheet adapter. This is a contract only, not an Apps Script deployment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lga",
+    "ward_code",
+    "address",
+    "category",
+    "details",
+    "consent"
+  ],
+  "properties": {
+    "lga": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "Required location field. The server must match it against its supplied authoritative 20-LGA configuration and return the configured spelling."
+    },
+    "ward_code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "description": "Required location field. When an approved ward map is configured, the code must belong to the selected LGA."
+    },
+    "address": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "description": "Required free-text location details. It is private and must not be published."
+    },
+    "category": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "water",
+        "electricity",
+        "roads",
+        "healthcare",
+        "education",
+        "jobs_agriculture",
+        "security",
+        "housing_environment",
+        "other"
+      ],
+      "description": "Required single primary category. Only a configured subset of these exact values may be enabled."
+    },
+    "details": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000,
+      "description": "Required private free text. Surrounding whitespace may be removed, but submitted meaning and wording must otherwise be preserved."
+    },
+    "consent": {
+      "const": true,
+      "description": "Required affirmative consent. Only the JSON boolean true is valid; missing, false, string, numeric, and malformed values are rejected."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "description": "Optional private follow-up name. It must never be logged, echoed in errors, or published."
+    },
+    "phone": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "pattern": "^\\+?[0-9](?:[0-9 ().\\-]*[0-9])?$",
+      "description": "Optional private follow-up phone. The shape permits 7 to 15 digits and common spacing, parenthesis, and hyphen formatting. Normalization removes formatting without inferring a country code."
+    },
+    "email": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 254,
+      "format": "email",
+      "description": "Optional private follow-up email. Only a conservative address shape is accepted; the domain is lowercased and the local part is preserved."
+    },
+    "website": {
+      "const": "",
+      "description": "Hidden optional honeypot field. When included, it must be an empty string and must never be shown to people."
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "maxLength": 64,
+      "description": "Optional timezone-aware client timestamp. If supplied, the server must pass an explicit timezone-aware now value and reject timestamps older than 24 hours or more than 5 minutes in the future."
+    }
+  },
+  "x-server-allocated-fields": {
+    "request_id": {
+      "client-submission-allowed": false,
+      "pattern": "^APM-[0-9]{4}-[0-9]{4,12}$",
+      "maxLength": 40,
+      "allocation": "The endpoint must allocate the year and sequence. The pure validator includes an ID only when the server supplies request_id or an explicit request_id_generator."
+    },
+    "created_at": {
+      "allocation": "Derived only from an explicit timezone-aware server time supplied by the endpoint."
+    }
+  },
+  "x-normalized-private-record": {
+    "type": "object",
+    "properties": {
+      "request_id": {
+        "type": "string"
+      },
+      "lga": {
+        "type": "string"
+      },
+      "ward_code": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
+      },
+      "category": {
+        "type": "string"
+      },
+      "details": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "phone": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "consent": {
+        "const": true
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "validation_status": {
+        "enum": [
+          "validated",
+          "ward_map_missing"
+        ]
+      },
+      "validation_warnings": {
+        "type": "array",
+        "items": {
+          "const": "ward_map_required_before_production"
+        }
+      }
+    },
+    "privacy": "Private-only storage. Optional contact fields require an owner-approved retention policy and are never public."
+  },
+  "x-endpoint-response": {
+    "type": "object",
+    "required": [
+      "request_id"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "request_id": {
+        "type": "string",
+        "pattern": "^APM-[0-9]{4}-[0-9]{4,12}$",
+        "description": "Server-generated non-sensitive request tracking reference. It is not an official voter ID. The browser displays this value only after strict validation."
+      }
+    },
+    "note": "The endpoint must return JSON with request_id only. It must not return private request fields or contact details."
+  },
+  "x-public-projection": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "lga": {
+        "type": "string"
+      },
+      "category": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "excluded-fields": [
+      "request_id",
+      "ward_code",
+      "address",
+      "details",
+      "name",
+      "phone",
+      "email",
+      "consent"
+    ],
+    "note": "This function is a fixed field projection, not a public aggregate. Aggregation must publish approved counts and reporting dates only and must apply small-count suppression."
+  },
+  "x-safety-rules": [
+    "Do not collect or request an official voter ID, registered voter number, or any equivalent identity credential.",
+    "A request_id is only a non-sensitive request tracking reference and must not be described as an official voter ID.",
+    "The endpoint must repeat every validation rule and must not rely on browser validation.",
+    "Unknown payload fields, malformed consent, invalid LGA/ward pairs, invalid category values, honeypot values, control characters, and invalid contact shapes are rejected.",
+    "If the approved ward map is not configured, a nonblank ward_code may pass pure validation only with ward_map_required_before_production; the endpoint must block production use.",
+    "Raw requests, private contact fields, Google Sheet data, Apps Script source, credentials, and validation values must not be committed, logged, or placed in docs.",
+    "Request submissions are campaign input only and are not verified needs, achievements, promises, evidence, or outcome measurements."
+  ]
+}

@@ -1,6 +1,6 @@
 # APM Bauchi Progress & Delivery — Project Handoff
 
-**Handoff date:** 24 September 2026
+**Handoff date:** 25 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
 **Current release:** `b94d4b0` — `feat(delivery): add indicator ledger and integrity tests`
@@ -27,19 +27,26 @@ is not the current product and is not invoked by the current GitHub Pages build.
 
 The next maintainer should resume from this exact checkpoint:
 
-- **Last verified live product:** release `b94d4b0` is live at the URL below; its
-  Pages run was `35972044982`.
-- **Current P0 update:** deployed and verified. It adds the 8-row
-  `data/delivery/indicators.csv` measurement ledger, an infrastructure need and
-  pathway, a bilingual LGA-selection fix, and dependency-free integrity tests.
-- **Verification completed:** 8 `unittest` tests pass, rendering passes, and live
-  browser checks pass at 1440/1024/760/375px with 6 cards, 8 indicators, 20 LGA
-  tiles, no overflow and 0 console errors.
+- **Current local product checkpoint:** the approved interactive expansion is
+  implemented locally in the delivery site. The next deployable release adds one
+  five-slide featured-achievement carousel, five source-attributed local images,
+  a 212-row provisional INEC electoral-RA dataset, a bilingual request form with
+  dependent LGA/RA selection, and the private request validation/aggregation
+  contracts. The form is intentionally not connected to a public endpoint yet.
+- **Last verified live product:** release `b94d4b0` remains the last deployed
+  Pages release at the URL below; its Pages run was `35972044982`.
+- **Current local verification:** 40 `unittest` tests pass; Python compilation,
+  rendering, featured-data validation, asset hashes, RA counts, public-output
+  privacy checks, and browser interaction checks pass locally. Browser checks
+  covered 375px/1440px, Hausa toggling, LGA→RA selection, carousel navigation,
+  scope filters, zero console errors, bilingual validation, and disabled submission
+  with the empty endpoint.
 - **Evaluation report:** `.evals/2026-W39.md` is intentionally local-only because
   its 100-row source sample is not approved for release staging.
 - **Preserve local work:** do not reset or stage `src/aggregation/aggregate.py`,
-  `.evals/2026-W39_sample100_filled.csv`, `.evals/2026-W39.md` or
-  `data/human_review/filled/`.
+  `.evals/2026-W39_sample100_filled.csv`, `.evals/2026-W39.md`,
+  `data/human_review/filled/`, or `.playwright-mcp/`. The last path is a local
+  browser artifact and is not part of the release.
 
 ## 2. Release State
 
@@ -68,7 +75,9 @@ not call an explicit Pages deployment action.
 | Achievements | 25 | `data/delivery/achievements.csv` |
 | APM promises | 8 | `data/delivery/promises.csv` |
 | LGA delivery rows | 20 | `data/delivery/lga_delivery.csv` |
-| Approved brand assets | 4 | `data/delivery/asset_register.csv` |
+| Approved assets | 9 | `data/delivery/asset_register.csv` |
+| Featured achievement records | 5 | `data/delivery/featured_achievements.csv` |
+| Provisional electoral RAs | 212 | `data/delivery/lga_wards.csv` |
 | Outcome indicators | 8 | `data/delivery/indicators.csv` |
 | Pending source reviews | 0 | `review_status == needs_review` |
 
@@ -104,11 +113,14 @@ GitHub Pages
 | File or directory | Responsibility |
 |---|---|
 | `docs/index.html` | Generated public landing page |
-| `src/dashboard/render.py` | Validates delivery data and generates the page |
-| `data/delivery/` | Curated source, evidence, promise, indicator and LGA tables |
+| `src/dashboard/render.py` | Validates delivery data and generates the page, carousel, RA selector and request form |
+| `data/delivery/` | Curated source, evidence, promise, indicator, featured-achievement, provisional electoral-RA and LGA tables |
 | `data/delivery/source_snapshots/` | Locally archived source responses |
 | `src/ingestion/delivery_sources.py` | Public source discovery, archival and review intake |
 | `src/ingestion/common.py` | Shared polite HTTP, robots.txt and rate-limit logic |
+| `src/requests/validation.py` | Pure bilingual-safe private request validation contract |
+| `src/requests/aggregate.py` | Contact-free public request aggregation contract |
+| `docs/GOOGLE_SHEETS_SETUP.md` | Owner-only Google Sheet/Apps Script setup and privacy guide |
 | `assets/brand/` | Approved local source assets |
 | `docs/assets/brand/` | Generated copies used by the public page |
 | `README.md` | Short product and local-run guide |
@@ -119,13 +131,18 @@ GitHub Pages
 - APM identity and approved local imagery.
 - English/Hausa toggle.
 - Four-step public-need-to-next-result pathway.
+- Five-slide approved featured-achievement carousel with source and image attribution.
+- LGA/electoral-RA dependent request selector using 20 LGAs and 212 provisional RAs.
+- Bilingual one-primary-request form with optional private follow-up details, consent and honeypot.
+- Submission remains disabled until an explicitly approved HTTPS Apps Script endpoint is configured.
 - Sector filtering for health, education, water/WASH, infrastructure and governance.
 - Twenty-LGA selector with source-backed LGA summaries.
 - Current-administration continuity framing.
 - Separate APM campaign agenda.
 - Measurement ledger separating reported outputs from outcomes still being measured.
 - Source list with publication date, retrieval date, usage note and evidence grade.
-- Responsive layout and reduced-motion support.
+- Responsive layout, bilingual validation and reduced-motion support.
+- Full-screen achievement viewer is deferred to the next implementation phase; the in-page carousel remains the current fallback.
 - `Created By Deerflow` attribution in the footer.
 
 ## 4. Delivery Data Model
@@ -225,6 +242,11 @@ approval date for each asset. Current local assets are:
 - `assets/brand/yakubu-adamu-hero.png`
 - `assets/brand/yakubu-adamu-portrait.png`
 - `assets/brand/bala-mohammed.png`
+- `assets/brand/achievement-estrra-outcomes.jpg`
+- `assets/brand/achievement-giade-mill.jpg`
+- `assets/brand/achievement-toro-odf.jpg`
+- `assets/brand/achievement-education-scorecard.webp`
+- `assets/brand/achievement-maternal-services.jpg`
 
 Never hotlink or replace these assets without repeating the approval and hash check.
 
@@ -581,7 +603,367 @@ Do not claim that:
 - A launch or handover is automatically a completed outcome.
 - A statewide record can be assigned to an LGA without explicit LGA evidence.
 
-## 15. Handoff Checklist
+## 15. Approved Interactive Site Expansion Plan
+
+This section records the approved plan and the current implementation state. The
+featured carousel, RA dataset, bilingual request form, request validation, and
+privacy-safe aggregation are implemented locally. The Apps Script adapter,
+private Google Sheet deployment, and weekly aggregate publishing are not
+implemented yet; the form's submit control stays disabled until an approved
+HTTPS endpoint is configured.
+
+### Product decisions confirmed
+
+- Extend the current static `docs/index.html` delivery site, not the legacy
+  sentiment/risk dashboard.
+- Add a highly interactive achievement experience with a five-slide curated
+  showcase.
+- Use real, verified achievement photographs, not a live social/news feed.
+  Each image must be stored locally, approved, and linked to its source record.
+- The five featured achievements are selected and approved by the campaign owner;
+  they are not automatically ranked.
+- Add an LGA achievement explorer. Statewide or multi-LGA records must retain an
+  explicit scope and must not be falsely assigned to one LGA.
+- Add a public request form with one primary request per person. The form is not
+  an official voter-registration or voter-ID system.
+- Generate a non-sensitive request tracking ID such as `APM-2026-0001`.
+- Request location fields: LGA dropdown, dependent ward dropdown, and free-text
+  address/location field.
+- Request categories: water, electricity, roads, healthcare, education,
+  jobs/agriculture, security, housing/environment, and other.
+- Add an optional short description/details field.
+- Optional private name, phone, or email fields may be collected for follow-up.
+  They must never be published in the public dashboard or committed to the repo.
+- Public request output is aggregate-only: counts by LGA, category, and reporting
+  period. No names, contact details, addresses, request IDs, or free text appear
+  publicly.
+- The public dashboard refreshes weekly.
+- The feature is bilingual in English and Hausa, including form validation,
+  categories, dashboard labels, and confirmation text.
+- Ward names must be researched from authoritative/public sources and validated
+  before the ward dropdown is published. Do not infer or invent the ward list.
+- Submitted requests are campaign input only. They must not automatically become
+  verified needs, achievements, evidence records, or outcome claims.
+
+### Target architecture
+
+```text
+Approved achievement data + approved local images
+                    ↓
+           src/dashboard/render.py
+                    ↓
+      interactive static docs/index.html
+                    ↓
+              GitHub Pages
+
+Public request form
+        ↓
+Google Apps Script web endpoint
+        ↓
+Private Google Sheet + private contact fields
+        ↓
+Weekly aggregate generation
+        ↓
+Public aggregate-only request dashboard
+```
+
+GitHub Pages cannot receive or persist form submissions by itself. The Google
+Sheet and Apps Script endpoint therefore form a separate public write path from
+the static page. The raw Sheet, Apps Script source, service credentials, and
+contact details are not stored in this repository.
+
+### Implementation phases
+
+#### Phase 0 — Data and policy preparation
+
+1. Complete the RA naming/limitation review and owner confirmation of the
+   provisional 212-row dataset.
+2. Review the five rendered captions, scope labels, source-attributed images and
+   context-image notes before public deployment.
+3. Confirm optional contact collection, consent copy, retention/deletion policy,
+   duplicate-retry rule, and privacy threshold.
+4. Confirm the private Google Sheet owner, Apps Script deployment account, and
+   access list before collecting any personal information.
+
+#### Phase 1 — Achievement carousel and explorer (implemented locally)
+
+1. Add a curated featured-achievement data contract, separate from the complete
+   achievement table.
+2. Add image references and metadata to the existing asset approval model.
+3. Render five accessible carousel slides with captions, alt text, keyboard
+   controls, previous/next controls, and a no-JavaScript text fallback.
+4. Add LGA scope handling for `lga`, `multi_lga`, and `statewide` records, with
+   canonical `lga_names` validation and visible scope labels.
+5. Preserve the distinction between verified achievement, campaign promise, and
+   unmeasured outcome.
+6. **Deferred:** add a full-screen achievement viewer as a focused overlay opened
+   from the existing carousel. The in-page carousel remains the no-JavaScript
+   fallback. The viewer must support next/previous buttons, dots, counter,
+   keyboard arrows/Home/End/Escape, touch swipe, focus return, background scroll
+   lock, reduced-motion behaviour and mobile overflow safety.
+
+1. Add a curated featured-achievement data contract, separate from the complete
+   achievement table.
+2. Add image references and metadata to the existing asset approval model.
+3. Render five accessible carousel slides with captions, alt text, keyboard
+   controls, previous/next controls, and a no-JavaScript text fallback.
+4. Add LGA scope handling for `lga`, `multi_lga`, and `statewide` records.
+5. Add sector/evidence filters and shareable LGA URL parameters where safe.
+6. Preserve the distinction between verified achievement, campaign promise, and
+   unmeasured outcome.
+
+#### Phase 2 — Request intake (form implemented locally; backend pending)
+
+1. The bilingual form is implemented with dependent LGA/RA selectors and
+   free-text address/details.
+2. Generate a request tracking ID server-side; do not ask for an official voter ID.
+3. Validate allowed LGA, RA, category, field lengths, consent, and request size
+   in the endpoint, not only in the browser.
+4. Add a honeypot, rate limiting, safe error handling, and a separately approved
+   duplicate/idempotency design.
+5. Store the raw request privately and show a confirmation containing only the
+   generated tracking ID and neutral next-step text.
+6. Do not place contact details, raw requests, credentials, Sheet IDs, or Apps
+   Script deployment details in GitHub Pages, `docs/`, logs, or public source
+   files.
+
+#### Phase 3 — Weekly aggregate dashboard
+
+1. Compute totals by LGA, category, and reporting period from approved/private
+   request records.
+2. Publish only aggregate data to the static site or a sanitized aggregate file.
+3. Display the reporting date and a clear privacy/moderation notice.
+4. Add an interactive, accessible bar chart and LGA/category matrix.
+5. Suppress ward-level public counts below the approved privacy threshold,
+   provisionally five requests, until the campaign owner approves another value.
+6. Refresh weekly through the approved operational workflow.
+
+### Acceptance criteria
+
+- The existing static render and GitHub Pages deployment continue to work.
+- Exactly five approved featured achievements appear in the showcase.
+- Every featured image loads locally and has valid provenance and approval data.
+- LGA selection never mislabels statewide or multi-LGA evidence.
+- The RA selector contains the approved provisional 212-row INEC electoral-RA
+  dataset, with the limitation visibly stated.
+- One submission creates one request with one primary category.
+- The form supports English/Hausa, keyboard use, mobile layout, clear validation,
+  and accessible error/confirmation states.
+- The public dashboard contains no personal data, request IDs, addresses, or
+  free-text descriptions.
+- Weekly output clearly states its reporting date; no ward-level cells are
+  published, and any future ward-level output requires the approved suppression
+  rule.
+- Spam, invalid categories, oversized descriptions, invalid ward/LGA pairs, and
+  duplicate retries are handled safely.
+- Existing integrity tests, rendering, evidence validation, and responsive checks
+  continue to pass.
+
+### Risks and unresolved dependencies
+
+- The 212 RA labels are provisional electoral-registration data, not a verified
+  current administrative-ward schedule; the public form must say RA.
+- The five source-attributed images are owner-approved for use, but independent
+  rights clearance is not verified. The education and maternal images are
+  visibly contextual rather than project close-ups and are labelled as such.
+- Google Apps Script deployment permissions, quotas, and abuse controls need a
+  real account test.
+- Optional contact details require a documented retention and deletion policy.
+- Aggregate counts can still create privacy risk in small locations; exact
+  LGA/category cells remain owner-review items, and no ward-level cells are
+  published.
+- The current local suite passes 40 `unittest` tests; browser verification covers
+  375px/1440px rendering, Hausa toggling, LGA→RA selection, carousel navigation,
+  scope filters, zero console errors, and disabled submission with the empty
+  endpoint.
+- The public static site cannot provide reliable real-time request updates; the
+  agreed dashboard is weekly.
+
+### Implementation checkpoint — 25 September 2026
+
+The following first safe slice is implemented but not connected to production or
+published:
+
+- The five approved featured records and source-attributed local images are now
+  present and rendered. The current carousel is live locally in `docs/index.html`
+  with exactly one section, five slides, bilingual captions, scope badges, and
+  visible achievement-source and image-source links.
+- The 212-row `lga_wards.csv` is an explicitly provisional INEC electoral-RA
+  dataset for the owner-approved MVP. It is not a verified current administrative
+  council-ward schedule.
+- `src/requests/validation.py` and `src/requests/request_schema.json` define the
+  private request contract, consent, honeypot, LGA/ward/category rules, length
+  limits, optional contact fields, and a fixed PII-free public projection.
+- `src/requests/aggregate.py` produces deterministic LGA/category aggregates with
+  consent/status/period checks, timezone-aware timestamps, and small ward-count
+  suppression.
+- `tests/test_request_validation.py`, `tests/test_request_aggregation.py`,
+  `tests/test_ward_dataset.py`, and `tests/test_request_form.py` cover the new
+  contracts. The current local suite passes 40 tests.
+
+Not implemented yet: the Google Apps Script adapter, Google Sheet
+schema/deployment, rate limiting, moderation workflow, aggregate snapshot file,
+weekly aggregate job, and release/deployment changes. The static bilingual form
+and RA-dependent selector are implemented locally, but submission is disabled
+until an explicitly approved HTTPS Apps Script endpoint is configured.
+
+### P0 research checkpoint — 25 September 2026
+
+Two read-only research agents completed the first evidence pass:
+
+#### Ward research
+
+- The 20 Bauchi LGA names are high-confidence and supported by the Bauchi State
+  Ministry of Local Government and Chieftaincy Affairs and INEC-aligned sources.
+- A 212-item electoral Registration Area (RA) list was found through INEC-aligned
+  and secondary sources. It is suitable only as a **provisional electoral-RA**
+  dataset, not as a verified current statutory administrative-ward schedule.
+- The recommended public label is `LGA and electoral registration area (RA)`.
+- Key official INEC PDFs returned 404/403 or were JavaScript-rendered; no current
+  official administrative ward gazette was located.
+- The dataset must be manually reviewed before production, especially slash-
+  combined labels, A/B wards, and spelling variants such as Dambam/Damban,
+  Kirfi/Krifi, Misau/Miau, Alkaleri/Alakali, and Dagauda/Dagaurda.
+
+#### Achievement review packet
+
+The campaign owner approved these five candidates for the carousel. Their current
+records retain the original research caveats:
+
+1. `achievement-estrra-outcomes` — ESTRRA livelihoods outcomes; Grade A;
+   `multi_lga`/Bauchi North scope; quantitative reported outcomes, not
+   independently audited.
+2. `achievement-giade-mill` — Kurba rice milling hub; Grade A; `lga`; reported
+   operating-capacity improvement, with income/skills outcomes still to measure.
+3. `achievement-toro-odf` — Toro open-defecation-free validation; Grade A; `lga`;
+   institutional validation milestone with continued behaviour/maintenance
+   follow-up needed.
+4. `achievement-education-scorecard` — education delivery scorecard; Grade A;
+   `statewide`; reported delivery outputs, not measured learning outcomes.
+5. `achievement-maternal-services` — maternal and child health services; Grade A;
+   `statewide`; service-reach milestone, not measured health outcomes.
+
+Five source-attributed project/context images are now registered and approved
+for owner-directed public use. Independent rights clearance is not verified.
+The ESTRRA, Toro, education, and maternal images are explicitly marked as
+context images; only the Giade Kurba mill image is a direct project image.
+
+## 16. Next Session — Full-Screen Achievement Viewer (Deferred)
+
+Do not start this until the current local checkpoint is committed. The viewer
+will be a new focused overlay rather than a redesign of the whole page.
+
+1. Add an `Open full-screen slides` control to the existing featured section.
+2. Render the same five approved records in a fixed full-viewport dialog.
+3. Support next/previous controls, dot navigation, slide counter, scope filters,
+   `ArrowLeft`, `ArrowRight`, `Home`, `End`, and `Escape`.
+4. Support touch/swipe movement without an external library.
+5. Trap focus while open, return focus to the opener on close, lock background
+   scrolling, and close via button, `Escape`, or backdrop activation.
+6. Keep the current in-page carousel as the no-JavaScript fallback.
+7. Add reduced-motion and mobile overflow handling.
+8. Add renderer contract tests plus browser checks for open, navigate, filter,
+   keyboard close, focus return, and 375px/1440px layout.
+9. Run the independent review before staging or committing the viewer change.
+
+### External human-only deployment gates
+
+1. Owner review of the five rendered captions, scope labels and source/image
+   attribution presentation.
+2. Independent image rights/licensing confirmation. The five images are recorded
+   as owner-directed source-attributed use, but rights clearance is not verified.
+3. Owner review of the provisional 212-row electoral-RA list and its limitation
+   wording, especially slash-combined labels and spelling variants.
+4. Native-speaker Hausa review of public copy.
+5. Owner provision of the private Google Sheet, Apps Script execution account,
+   staff access list, deployment audience, consent wording, optional-contact
+   decision, retention/deletion policy, duplicate/idempotency policy, rate limit,
+   privacy threshold and weekly reporting schedule.
+6. Agents cannot create or operate the private Google account without owner
+   credentials. See `docs/GOOGLE_SHEETS_SETUP.md`.
+
+
+## 17. OpenCode Session Restart and Navigation
+
+### Global mouse configuration
+
+The global OpenCode TUI configuration is stored at:
+
+```text
+C:\Users\TOSHIBA\.config\opencode\tui.json
+```
+
+It currently contains:
+
+```json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "mouse": true,
+  "scroll_speed": 3
+}
+```
+
+Quit and restart OpenCode after changing this file. The setting applies globally,
+not only to this project.
+
+### Manual message scrolling
+
+These are the current default OpenCode message-navigation shortcuts:
+
+- `PageUp` — previous page
+- `PageDown` — next page
+- `Ctrl+Alt+B` — previous page
+- `Ctrl+Alt+F` — next page
+- `Ctrl+Alt+Y` — one line up
+- `Ctrl+Alt+E` — one line down
+- `Ctrl+Alt+U` — half page up
+- `Ctrl+Alt+D` — half page down
+- `Home` or `Ctrl+G` — first message
+- `End` or `Ctrl+Alt+G` — last message
+
+On some terminals, `PageUp` and `PageDown` may be intercepted by the terminal
+itself. If that happens, use the `Ctrl+Alt+B` and `Ctrl+Alt+F` alternatives.
+Mouse scrolling should work after the OpenCode restart when terminal mouse
+capture is enabled.
+
+## 18. Commit Boundary and Working Tree
+
+The current interactive expansion is a **local verified checkpoint**, not a
+public deployment. Before committing, stage only the intended release paths:
+
+```text
+HANDOFF.md
+IMPLEMENTATION_PLAN.md
+README.md
+data/delivery/asset_register.csv
+data/delivery/featured_achievements.csv
+data/delivery/lga_wards.csv
+assets/brand/achievement-*.jpg
+assets/brand/achievement-*.webp
+docs/GOOGLE_SHEETS_SETUP.md
+docs/index.html
+docs/assets/brand/achievement-*.jpg
+docs/assets/brand/achievement-*.webp
+src/dashboard/render.py
+src/requests/
+tests/test_dashboard_contract.py
+tests/test_request_aggregation.py
+tests/test_request_form.py
+tests/test_request_validation.py
+tests/test_ward_dataset.py
+```
+
+Never stage or commit these preserved/local paths without explicit owner
+confirmation:
+
+```text
+src/aggregation/aggregate.py
+.evals/
+data/human_review/filled/
+.playwright-mcp/
+```
+
+## 19. Handoff Checklist
 
 A new maintainer should be able to answer “yes” to each question:
 
@@ -598,6 +980,23 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Do I know which outcome claims still require measurement?
 - [ ] Do I have a next-step list that does not mix current-product work with
       legacy evaluation work?
+
+## Restart and Resume Procedure
+
+1. Start a new OpenCode session from `D:\APMdeliverable`.
+2. Read `HANDOFF.md` sections 1, 15, 16, 17, 18 and 19 before making changes.
+3. Read `AGENTS.md` for repository rules and preserve all local-only legacy work.
+4. Read `IMPLEMENTATION_PLAN.md` before changing the current delivery contract.
+5. Run `python -m unittest discover -s tests -v` before implementation.
+6. Commit the current verified local checkpoint only after the owner explicitly
+   requests a commit; do not include `.playwright-mcp/` or preserved legacy work.
+7. After that commit, implement the deferred full-screen achievement viewer from
+   the section above. Do not redesign the whole page into a deck.
+8. Run tests, render, browser interaction checks and an independent review before
+   staging the viewer change.
+9. Do not reset, clean, stash permanently, or stage the preserved local work.
+10. Do not deploy the request form until the external human-only gates in this
+    handoff are satisfied and an Apps Script endpoint is configured.
 
 The complete project contract remains in `IMPLEMENTATION_PLAN.md`. This handoff is
 the operational starting point for maintainers and deployment.

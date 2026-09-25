@@ -8,6 +8,122 @@
 
 This section is the new product contract. The historical implementation log remains below for rollback and provenance. The legacy sentiment system is retained for historical reference only and is not run by the current Pages workflow.
 
+## Interactive Expansion Execution Plan — Approved 25 September 2026
+
+The next release extends the static delivery page without introducing a server runtime
+into GitHub Pages. Public request submissions use a separate Google Apps Script write
+path into a private Google Sheet; only sanitized weekly aggregates return to the
+public site.
+
+### Phase ownership
+
+| Phase | Owner/agent | Files/area | Deliverable | Gate |
+|---|---|---|---|---|
+| P0 — baseline and contracts | Main maintainer | `data/delivery/` contracts, tests | Versioned schemas for featured achievements, wards, requests and aggregates | No existing test regression |
+| P1 — achievement experience | Renderer agent | `src/dashboard/render.py`, renderer tests | Five-slide in-page carousel, LGA scope validation, source/image attribution and no-JS fallback | Implemented locally; browser verified |
+| P2 — request contract | Request-intake agent | `src/requests/validation.py`, `src/requests/request_schema.json`, tests | Bilingual-safe validation, category/LGA/RA rules, length limits, consent and spam guard | Implemented locally; endpoint pending |
+| P3 — privacy-safe aggregation | Aggregation agent | `src/requests/aggregate.py`, tests | Aggregate by LGA/category/period with contact-free public output | Implemented locally; publishing job pending |
+| P4 — full-screen achievement viewer | Renderer agent + reviewer | `src/dashboard/render.py`, browser tests | Focused full-viewport overlay with navigation, keyboard, swipe, focus management and mobile safeguards | Deferred to next session |
+| P5 — private intake integration | Main maintainer | Apps Script adapter, private Sheet, form endpoint | Server-side validation, rate limiting, moderation, idempotency and tracking response | Blocked on owner account/decisions |
+| P6 — release gate | Main maintainer + reviewer | `docs/`, workflows, docs | Responsive, keyboard, bilingual, privacy, source and deployment checks | 40 local tests pass; external gates remain |
+
+### Phase order and dependencies
+
+1. **P0 — contracts first.** Define field names, allowed values and empty-data behavior
+   before wiring UI. Missing approved data must not create fabricated records.
+2. **P1 — renderer slice (implemented).** The in-page carousel is active only
+   with five approved records and approved local assets. It keeps scope and image
+   attribution visible and has a no-JavaScript text fallback.
+3. **P2 — request contract (implemented).** Validation is a pure, testable module.
+   The browser improves usability, but the future endpoint must repeat every
+   validation rule and must not rely on browser validation.
+4. **P3 — aggregation (implemented).** Publish counts only. No names, phone
+   numbers, email, addresses, request IDs, or free text enter the public snapshot.
+5. **P4 — full-screen viewer (next).** Add a focused full-viewport overlay from
+   the existing carousel; do not convert the whole site into a deck.
+6. **P5 — private integration.** Add the bilingual form endpoint, private Sheet,
+   rate limiting, moderation, idempotency decision, aggregate snapshot and weekly
+   publishing only after the owner supplies the private account and policies.
+7. **P6 — release gate.** Verify evidence provenance, multilingual copy, keyboard
+   operation, mobile widths, privacy suppression, static rendering and workflows.
+
+### Data contracts
+
+**Featured achievement record** — exactly five approved records, ordered 1–5:
+
+```text
+featured_id,achievement_id,featured_order,lga_scope,lga_names,sector,image_asset_id,caption_en,caption_ha,image_alt_en,image_alt_ha,source_id,approval_status
+```
+
+`lga_scope` is `lga`, `multi_lga` or `statewide`; `lga_names` is a pipe-separated
+list of canonical Bauchi LGA names. Require exactly one name for `lga`, at least
+two for `multi_lga`, and none for `statewide`. The renderer must not turn
+statewide evidence into a single-LGA claim.
+
+**Electoral registration-area record** — the MVP uses the approved provisional
+INEC electoral RA dataset. It must not be described as a current statutory
+administrative council-ward schedule:
+
+```text
+lga,ward_code,ra_name_source,ra_name_display,source_id,source_url,source_scope,as_of_date,verification_status,review_note
+```
+
+The public form wording must say `electoral registration area (RA)` and show
+a source/limitation note. Records with provisional status may be used only for
+the owner-approved MVP; they must be replaced or relabelled before any claim of
+current administrative-ward coverage.
+
+**Request record** — private-only:
+
+```text
+request_id,lga,ward_code,address,category,details,name,phone,email,consent,created_at
+```
+
+**Public aggregate**:
+
+```text
+reporting_period_start,reporting_period_end,total_requests,by_lga,by_category,by_lga_category,generated_at,small_count_threshold,suppressed_ward_count
+```
+
+The public projection must contain no field from the private request record except
+approved LGA, approved category, counts and reporting dates. The current
+small-count threshold applies only to hypothetical ward-level output; no
+ward-level cells are published.
+
+### Safety rules
+
+- Public sources and approved local assets only.
+- Requests are not evidence, needs, achievements, promises or outcome measurements.
+- No official voter ID is collected; the tracking ID is generated and non-sensitive.
+- Optional contact data stays private and requires an owner-approved retention policy.
+- Google Sheet, Apps Script source, service credentials and raw requests are not
+  committed to this repository.
+- All UI copy is bilingual English/Hausa and must be reviewed before release.
+- A missing or invalid optional dataset must not break the existing page.
+
+### P4 — Deferred full-screen achievement viewer
+
+This is the next implementation slice after the current local checkpoint is
+committed. The existing in-page carousel remains the normal page experience and
+the no-JavaScript fallback.
+
+- Add an `Open full-screen slides` control to the featured section.
+- Reuse the five approved featured records; do not duplicate or invent content.
+- Use a fixed full-viewport dialog with next/previous controls, dots, counter and
+  the existing scope filters.
+- Support `ArrowLeft`, `ArrowRight`, `Home`, `End` and `Escape`.
+- Support touch/swipe movement without external libraries.
+- Trap focus while open, return focus to the opener on close, lock background
+  scrolling, and close via button, `Escape` or backdrop activation.
+- Keep reduced-motion behavior and prevent horizontal overflow at 375px.
+- Add renderer contract tests and browser checks for open, navigate, filter,
+  keyboard close, focus return and mobile/desktop layout.
+### Phase exit criteria
+
+A phase is complete only when its tests pass, the renderer/validation contract is
+documented, and the next phase has an explicit input. A visually complete page is
+not enough if it publishes unverified claims or personal data.
+
 ## 1. Mission
 
 Build a beautiful, interactive landing page and internal decision dashboard that tells one coherent story:
