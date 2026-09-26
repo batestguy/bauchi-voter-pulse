@@ -3,7 +3,7 @@
 **Handoff date:** 26 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** `533a210` — `fix(header): legible APM emblem, sponsor slot, persistent language (S2)`
+**Current release:** `S3` six-page split, committed locally — see §9 for the commit list
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
 **Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
 
@@ -37,17 +37,20 @@ is not the current product and is not invoked by the current GitHub Pages build.
 | `9cd101b` | S0 | Added `SITE_EXPANSION_PLAN.md` |
 | `be832e0` | S1 | Bilingual correctness across all delivery content |
 | `533a210` | S2 | Legible APM emblem, sponsor slot, persistent language control, de-duplicated promises |
+| S3 | S3 | **Six-page split**, mobile nav, solid subpage header, both CI release traps closed |
 
 The next maintainer should resume from this exact checkpoint:
 
-- **Current local product checkpoint:** the delivery site is still a **single page**
-  (`docs/index.html`) but is now materially better than the last deployed release. Phases
-  S0–S2 are committed locally; **S3 (the six-page split) has not started.**
+- **Current local product checkpoint:** the delivery site is now **six flat pages** in
+  `docs/` — `index`, `achievements`, `atlas`, `poll`, `agenda`, `sources` — sharing one
+  header, footer and language control. Phases S0–S3 are committed locally. **S4 (the Bauchi
+  map) and S5 (the opinion poll) have not started**, so `atlas.html` still shows the 20-LGA
+  tile grid rather than a map, and `poll.html` holds only the request form.
 - **Last verified live product:** release `b94d4b0` remains the last deployed Pages
-  release at the URL below; its Pages run was `35972044982`. **Everything in
-  `9cd101b`, `be832e0` and `533a210` is unpushed**, so the live site still shows the
-  white-rectangle logo, the untranslated Hausa and the duplicated water promise.
-- **Current local verification:** **87 `unittest` tests pass** (was 40). Python
+  release at the URL below; its Pages run was `35972044982`. **Everything from `9cd101b`
+  onward is unpushed**, so the live site is still a single page with the white-rectangle
+  logo, the untranslated Hausa and the duplicated water promise.
+- **Current local verification:** **115 `unittest` tests pass** (40 before this work). Python
   compilation, delivery-data validation, asset hash checks, the CI asset gate, a
   `node --check` parse of the inline script, and browser interaction checks all pass.
   Browser checks covered 375px/1440px, EN↔Hausa switching, language persistence across
@@ -622,32 +625,47 @@ still need completion.
 
 ## 13. Prioritized Next Steps
 
-### P0 — Do next: the six-page split (phase S3)
+### P0 — Do next: the Bauchi map (phase S4)
 
-Full detail in `SITE_EXPANSION_PLAN.md` §4 and §3. Do not start S4 (map) or S5 (poll)
-until S3 ships.
+S3 shipped. Full detail in `SITE_EXPANSION_PLAN.md` §4. `atlas.html` currently shows the
+20-LGA tile grid; S4 replaces or augments it with real boundaries.
 
-1. Extract the single f-string into a Jinja2 shared layout. Jinja2 is already in
-   `requirements.txt` and currently unused, so this adds no dependency.
-2. Ship six flat pages in `docs/` so existing `assets/brand/...` relative paths keep
-   working: `index.html`, `achievements.html`, `atlas.html`, `poll.html`, `agenda.html`,
-   `sources.html`.
-3. **Add a mobile navigation menu.** `.nav` is `display:none` below 1050px. On a single
-   page that is survivable; with subpages, phones get **no navigation at all**.
-4. **Add a solid-header variant.** `.topbar` is `position:absolute` with white text over
-   the dark hero; subpages without a hero need an opaque background.
-5. Make `FEATURED_SCRIPT` conditional on `achievements.html` and `REQUEST_SCRIPT`
-   conditional on `poll.html`. Blocks A/D/E — `currentLanguage`, `setLanguage`, the
-   language binding — must ship on **every** page, in that order.
-6. Re-target all 8 in-page anchors as cross-page links (mapping in
-   `SITE_EXPANSION_PLAN.md` §5).
-7. Preserve the duplicate-breakpoint cascade order in the CSS (1056/1058 are both
-   1050px; 1057/1059 are both 760px) and keep the global `*` reduced-motion rule on
-   every page.
-8. Update `rebuild-pages.yml:33` and the staging allowlist in §18 **in the same change** —
-   see the two release-breaking traps in §20.
+1. Fetch the GRID3 / eHealth Africa operational LGA boundaries once and cache them under
+   `data/delivery/source_snapshots/`. Register the source in `source_register.csv` as
+   **grade B** with the licence and the "simplified for display" change note.
+2. **Licence is CC BY 4.0**: commercial use is fine and attribution is the only
+   obligation. There is **no ShareAlike**, so the simplified derivative can be published
+   on our own terms. ⚠️ The sibling GRID3 **Wards** layers are BY-SA and would force
+   BY-SA on the whole site — do not pull them in.
+3. Emit the derived path strings into a committed `data/derived/lga_paths.json` so the
+   weekly Pages rebuild never calls ArcGIS and the build stays deterministic.
+4. Simplify in pure stdlib: quantize to 4 dp, then Douglas-Peucker with an **explicit
+   stack** (a 1,223-point ring exceeds Python's 1000-frame recursion limit), then snap
+   neighbours back together. Project with the `cos(latMid)` correction.
+5. ⚠️ **Never quantize below 3 dp.** At 2 dp, 56% of the shared boundary edges between
+   LGAs collapse and the map visibly tears. Add a test asserting ≥90% shared-edge
+   retention so this cannot regress.
+6. Join on `lgacode` (5001–5020), never on names. Two names differ from the repo
+   canonical list: `Itas/Gadau` → `Itas-Gadau` and `Jama'Are` → `Jamaare`.
+7. Show the required CC BY attribution and the "operational, simplified, indicative —
+   not gazetted" caveat. These boundaries descend from polio microplanning data.
+8. Keep the RA list in the side panel labelled **"not geo-located"**. `lga_wards.csv` has
+   no coordinates and none will be invented.
 
-### P1 — Housekeeping on the current product
+### P1 — Then the opinion poll (phase S5)
+
+9. New `src/poll/` package mirroring `src/requests/`. Q1 is a required single choice over
+   the **existing 9 `REQUEST_CATEGORIES`** so results stay comparable with the request
+   queue; Q2 is an optional ≤300-char free text that must be **excluded from the tally**.
+10. `POLL_ENDPOINT = ""` ships it disabled, mirroring `REQUEST_ENDPOINT`. On a static
+    host, live results mean: read the endpoint when configured, else fall back to a
+    committed `data/delivery/poll_snapshot.json` the weekly cron regenerates.
+11. Minimum PII: no name, phone or email. Honeypot, consent, one submission per browser.
+    Never seed, example or placeholder results — an empty set must render as empty.
+12. Show `N` prominently with a self-selected-respondent disclosure, and hold percentages
+    behind a configurable floor (default 10) so one vote cannot read as 100%.
+
+### P2 — Housekeeping on the current product
 
 1. Extend `indicators.csv` with more verified baselines and targets; keep missing
    baselines blank rather than estimating them.
@@ -663,7 +681,7 @@ until S3 ships.
 6. Decide whether to narrow the `wash` sector label. It renders as "Water and climate
    resilience", but the published campaign source contains **zero** climate content.
 
-### P2 — Complete legacy evaluation work separately
+### P3 — Complete legacy evaluation work separately
 
 1. Create the missing `data/human_review/filled/queue_en_part1.csv` without
    overwriting existing parts.
@@ -675,7 +693,7 @@ until S3 ships.
 5. Disclose that the current filled sample was labelled by
    `mimo-v2.6-ai-reviewer`, not a native Hausa speaker.
 
-### P3 — Operate and improve
+### P4 — Operate and improve
 
 1. Monitor `delivery-sources.yml` weekly and review all new candidates.
 2. Add sector-specific primary sources for water, health, education, roads,
@@ -1048,7 +1066,7 @@ capture is enabled.
 ## 18. Commit Boundary and Working Tree
 
 The S0–S2 work is a **local verified checkpoint, not a public deployment.** As of
-26 September 2026 `main` is **4 commits ahead of `origin/main`** and nothing has been
+26 September 2026 `main` is **5 commits ahead of `origin/main`** and nothing has been
 pushed:
 
 ```text
@@ -1078,14 +1096,21 @@ data/delivery/source_register.csv
 assets/brand/apm-emblem.png
 docs/assets/brand/apm-emblem.png
 docs/index.html
+docs/achievements.html
+docs/atlas.html
+docs/poll.html
+docs/agenda.html
+docs/sources.html
+.github/workflows/rebuild-pages.yml
 src/dashboard/render.py
 tests/test_bilingual.py
 tests/test_header_brand.py
+tests/test_site_structure.py
 ```
 
-> ⚠️ **This allowlist is only valid while the site is one page.** When S3 lands, the six
-> generated pages and the template directory must be added here, or a maintainer
-> following this section will render, diff and commit nothing. See §20.
+**The site is now six pages.** `python src/dashboard/render.py` writes all six; the weekly
+cron stages `docs/*.html` and fails if any page is missing. See §20 for how both traps
+were closed.
 
 Never stage or commit these preserved/local paths without explicit owner
 confirmation:
@@ -1097,37 +1122,43 @@ data/human_review/filled/
 .playwright-mcp/
 ```
 
-## 20. Two Release-Breaking Traps That Fire When S3 Lands
+## 20. The Two Release Traps — Both Closed in S3
 
-Both are silent. Neither produces an error, which is why they are written down here.
+These were the two silent failure modes that would have broken the multi-page release.
+Both are fixed, and both fixes are asserted by `tests/test_site_structure.py` so they
+cannot regress.
 
-### 🔴 Trap 1 — the weekly cron will not commit the new pages
+### ✅ Trap 1 — the cron staged only `docs/index.html`
 
-`.github/workflows/rebuild-pages.yml:33` runs:
+`rebuild-pages.yml` ran `git add docs/index.html docs/assets/`. With six pages that
+renders all of them and commits one, so five subpages would silently stay stale forever.
+
+Now:
 
 ```text
-git add docs/index.html docs/assets/
+git add docs/*.html docs/assets/
 ```
 
-Add pages without changing this and the Monday cron will **render** all six, then commit
-only `index.html`, leaving five stale pages published forever. Fix it in the same change
-as S3, not afterwards.
+plus a new **Verify every generated page exists** step that iterates all six slugs and
+fails the build if any is missing, so a dropped page is a red run rather than a stale
+page.
 
-### 🔴 Trap 2 — this handoff's own allowlist will commit nothing
+### ✅ Trap 2 — the handoff allowlist named only `docs/index.html`
 
-See §18. The allowlist above names only `docs/index.html`.
+A maintainer following §18 would have staged nothing new. All six pages are now listed,
+along with `rebuild-pages.yml` and `tests/test_site_structure.py`.
 
-### Lesser traps in the same change
+### Still true after S3
 
-- `rebuild-pages.yml:19-27` validates assets with `awk -F, 'NR > 1 && $6 != "campaign
-  approved"'`. That is **column-position coupled**. Any new asset row must have
+- `rebuild-pages.yml` validates assets with `awk -F, 'NR > 1 && $6 != "campaign
+  approved"'`. That is **column-position coupled**; any new asset row must have
   `usage_status` in exactly column 6 or CI fails closed.
-- `tests/test_request_form.py:21` asserts `html.count('data-request-ra-lga=') == 212`,
-  but there are **213** raw occurrences — 212 `<option>`s plus one inside
-  `REQUEST_SCRIPT`. It only passes because the markup and its JS ship in the same file.
-  Re-target it when S3 splits scripts.
-- `test_dashboard_contract.py` has 4 assertions that belong on `atlas.html` and 9 that
-  belong on `achievements.html`; all currently read `docs/index.html`.
+- A duplicate `const` in any page's inline script is a `SyntaxError` that disables every
+  handler on that page while the HTML still renders. All six pages are now parsed with
+  `node --check`, and a duplicate top-level declaration detector runs per page.
+- Heavy sections must stay on exactly one page each, or pages get large for no reason.
+  `test_site_structure.test_heavy_sections_appear_on_exactly_one_page` enforces that the
+  source register, request form, agenda, indicators, atlas and carousel each appear once.
 
 ## 19. Handoff Checklist
 
@@ -1136,6 +1167,7 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Can I render the live product locally?
 - [ ] Can I explain the four-step narrative model?
 - [ ] Can I identify the source register, manifest, review queue and curated tables?
+- [ ] Can I name all six generated pages and say which sections live on each?
 - [ ] Can I distinguish an achievement from an APM promise?
 - [ ] Can I explain why the water promise is a published *clause*, not a pillar?
 - [ ] Can I explain why `docs/` is the public source directory?
@@ -1150,7 +1182,7 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Do I know which pipeline is legacy and not part of the public product?
 - [ ] Do I know which outcome claims still require measurement?
 - [ ] Do I know which 53 Hausa strings are AI-drafted and unreviewed?
-- [ ] Do I know the two release-breaking traps in §20?
+- [ ] Do I know that the two release-breaking traps in §20 are closed and test-guarded?
 - [ ] Do I have a next-step list that does not mix current-product work with
       legacy evaluation work?
 
@@ -1172,7 +1204,7 @@ A new maintainer should be able to answer “yes” to each question:
 8. Run the full suite, render, browser-check at 375px and 1440px, and get an independent
    review before staging anything.
 9. Commit only after the owner explicitly asks. **Do not push** without explicit
-   authorisation — `main` is already 4 commits ahead of `origin/main`.
+   authorisation — `main` is already 5 commits ahead of `origin/main`.
 10. Do not deploy the request form or the poll until an approved HTTPS Apps Script
     endpoint is configured; both ship disabled until then.
 
@@ -1181,13 +1213,14 @@ A new maintainer should be able to answer “yes” to each question:
 Run S1's and S2's guards against a change you made:
 
 ```text
-python -m unittest tests.test_bilingual tests.test_header_brand -v
+python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure -v
 ```
 
 These cover the defects that are invisible in a visual check — untranslated strings,
 Hausa pasted into English columns, a missing emblem hash, an invert filter creeping
-back, invented sponsor content, and a duplicate `const` that would disable every script
-on the page.
+back, invented sponsor content, a duplicate `const` that would disable every script on a
+page, a nav link pointing at a page that was never generated, and a cron that would
+publish stale subpages.
 
 The complete project contract remains in `IMPLEMENTATION_PLAN.md`. This handoff is
 the operational starting point for maintainers and deployment.

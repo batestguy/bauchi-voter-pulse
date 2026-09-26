@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Published APM Bauchi campaign commitments, kept separate from completed achievements.">
+<link rel="icon" type="image/png" href="assets/brand/apm-emblem.png">
+<title>APM agenda · APM Bauchi</title>
+<style>:root{--ink:#13202b;--navy:#0b263c;--blue:#145d86;--sky:#d9eff6;--gold:#d89b31;--gold-soft:#f5e6c4;--paper:#f7f4ed;--white:#fffdf8;--line:#d8d8cd;--muted:#6c7880;--green:#2e7254;--green-soft:#dcefe3;--shadow:0 24px 70px rgba(11,38,60,.14)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",sans-serif;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:radial-gradient(#13202b .55px,transparent .55px);background-size:7px 7px;mix-blend-mode:multiply;z-index:10}
+a{color:inherit}
+.shell{width:min(1240px,calc(100% - 40px));margin:auto}
+.topbar{position:absolute;z-index:2;top:0;left:0;right:0;color:#fff;padding:22px 0}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+/* The emblem already has a transparent background, so it needs no colour filter.
+   An earlier brightness(0) invert(1) collapsed the logo's opaque white page and the
+   whitened artwork into one solid block. */
+.brand img{width:38px;height:44px;object-fit:contain;flex:none}
+.brand small{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.74;margin-top:-3px}
+.nav{display:flex;align-items:center;gap:24px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.nav a{opacity:.78;text-decoration:none}
+.nav a:hover{opacity:1}
+.lang{display:flex;align-items:center;gap:9px}
+.lang-label{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;opacity:.72;white-space:nowrap}
+.lang-label svg{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}
+.lang-toggle{display:flex;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:3px}
+.lang button{border:0;background:transparent;color:#fff;padding:5px 9px;border-radius:999px;cursor:pointer;font:inherit;font-size:10px}
+.lang button.active{background:#fff;color:var(--navy)}
+.hero{min-height:760px;background:var(--navy);color:#fff;position:relative;overflow:hidden;display:flex;align-items:center;padding:128px 0 74px}
+.hero::before{content:"";position:absolute;width:900px;height:900px;right:-220px;top:-340px;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 70px rgba(255,255,255,.025),0 0 0 140px rgba(255,255,255,.02)}
+.hero::after{content:"";position:absolute;inset:auto -10% 0;height:180px;background:linear-gradient(180deg,transparent,rgba(5,20,31,.5));clip-path:polygon(0 100%,100% 22%,100% 100%)}
+.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;align-items:center;gap:56px;position:relative;z-index:1}
+.eyebrow{font-size:11px;letter-spacing:.19em;text-transform:uppercase;font-weight:700;color:var(--gold)}
+.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(3.5rem,7.3vw,7.3rem);font-weight:400;line-height:.91;letter-spacing:-.06em;margin:22px 0 26px;max-width:760px}
+.hero h1 em{color:#f4c35d;font-style:normal}
+.hero-lede{font-size:clamp(1.05rem,1.7vw,1.35rem);color:rgba(255,255,255,.76);max-width:590px;margin:0 0 32px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid transparent;border-radius:999px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;transition:transform .2s,box-shadow .2s,background .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--gold);color:var(--navy);box-shadow:0 12px 24px rgba(216,155,49,.22)}
+.btn-secondary{color:#fff;border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.04)}
+.hero-note{margin-top:30px;display:flex;gap:18px;align-items:center;color:rgba(255,255,255,.65);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.hero-note::before{content:"";width:38px;height:1px;background:var(--gold)}
+.portrait-wrap{min-height:570px;position:relative;display:flex;align-items:end;justify-content:center}
+.portrait-wrap::before{content:"";position:absolute;width:380px;height:380px;border-radius:50%;background:var(--gold);top:35px;right:25px;opacity:.9}
+.portrait-wrap::after{content:"";position:absolute;width:420px;height:520px;border:1px solid rgba(255,255,255,.23);right:-20px;top:0;transform:rotate(8deg)}
+.portrait{position:relative;z-index:1;width:min(100%,520px);max-height:610px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 30px 35px rgba(0,0,0,.25));mix-blend-mode:screen}
+.portrait-caption{position:absolute;z-index:2;bottom:20px;left:0;max-width:240px;padding:14px 16px;background:rgba(255,253,248,.95);color:var(--ink);border-radius:3px;box-shadow:var(--shadow);font-size:12px}
+.portrait-caption strong{display:block;font-family:Georgia,serif;font-size:20px;font-weight:400}
+.motto{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-top:34px}
+.stats{background:var(--gold);color:var(--navy);position:relative;z-index:3;margin-top:-1px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{padding:24px 28px;border-right:1px solid rgba(11,38,60,.18)}
+.stat:last-child{border-right:0}
+.stat strong{display:block;font-family:Georgia,serif;font-size:2.25rem;font-weight:400;line-height:1}
+.stat span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-top:8px;font-weight:700}
+.section{padding:100px 0}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:38px}
+.section-head h2,.section-head h3{font-family:Georgia,serif;font-size:clamp(2.2rem,4vw,4rem);font-weight:400;line-height:.98;letter-spacing:-.05em;margin:12px 0 0;max-width:720px}
+.section-head p{color:var(--muted);max-width:360px;font-size:14px;margin:0}
+.light-rule{border-top:1px solid var(--line)}
+.intro-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:80px;align-items:start}
+.intro-copy{font-family:Georgia,serif;font-size:clamp(1.7rem,3vw,2.7rem);line-height:1.08;letter-spacing:-.04em;margin:0}
+.note-box{border-left:3px solid var(--gold);padding:8px 0 8px 22px;color:var(--muted);font-size:14px}
+.progress-path{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow);padding:22px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:60px}
+.path-step{padding:22px 20px;position:relative;min-height:180px}
+.path-step:not(:last-child)::after{content:"→";position:absolute;right:-13px;top:76px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--navy);font-size:19px;z-index:2}
+.step-no{font-size:10px;letter-spacing:.16em;color:var(--gold);font-weight:700}
+.path-step h3{font-family:Georgia,serif;font-size:1.4rem;font-weight:400;margin:18px 0 8px}
+.path-step p{font-size:13px;color:var(--muted);margin:0}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 22px}
+.filter{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 13px;font:inherit;font-size:11px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.filter.active,.filter:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.arrow-list{display:grid;gap:18px}
+.arrow-card{background:var(--white);border:1px solid var(--line);padding:0;overflow:hidden;box-shadow:0 12px 35px rgba(11,38,60,.05)}
+.arrow-head{display:flex;justify-content:space-between;align-items:center;padding:17px 22px;border-bottom:1px solid var(--line);background:#fbfaf6}
+.arrow-index{font-family:Georgia,serif;font-size:1.2rem;color:var(--gold)}
+.arrow-path{display:grid;grid-template-columns:1fr 28px 1.45fr 28px 1.2fr 28px 1.1fr;align-items:stretch;padding:22px}
+.path-node{padding:18px;min-width:0}
+.path-node:nth-child(odd){background:#f7f8f3;border:1px solid #e4e8df;border-radius:2px}
+.achievement-node{background:var(--green-soft)!important;border-color:#c9e0ce!important}
+.promise-node{background:#fff6e5!important;border-color:#efd9ac!important}
+.result-node{background:#eaf4f7!important;border-color:#c8e0e8!important}
+.path-arrow{display:grid;place-items:center;color:var(--gold);font-size:24px;padding-top:70px}
+.node-number{font-size:10px;color:var(--muted);letter-spacing:.15em}
+.path-node h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;line-height:1.1;margin:15px 0 9px}
+.path-node p{font-size:13px;line-height:1.45;margin:0 0 14px;color:#35434a}
+.node-tag{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-top:1px solid currentColor;padding-top:6px}
+.achievement-list{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:9px}
+.achievement-item{border-bottom:1px solid rgba(46,114,84,.22);padding-bottom:9px}
+.achievement-item:last-child{border-bottom:0;padding-bottom:0}
+.item-top{display:flex;align-items:start;justify-content:space-between;gap:10px}
+.item-top strong{font-size:12px;line-height:1.25}
+.achievement-item p{font-size:11px;margin:5px 0;color:#4b6259}
+.item-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:9px;color:#567064}
+.status{display:inline-block;white-space:nowrap;border-radius:999px;padding:3px 6px;font-size:8px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.status-progress{background:var(--green);color:#fff}
+.status-underway{background:var(--blue);color:#fff}
+.status-milestone{background:#765b9e;color:#fff}
+.status-promise{background:var(--gold);color:var(--navy)}
+.status-next{background:#b88920;color:#fff}
+.status-measured{background:#7a6c9b;color:#fff}
+.source-link{font-size:9px;text-decoration:none;color:var(--blue);font-weight:700;white-space:nowrap}
+.source-link:hover{text-decoration:underline}
+.empty-item{font-size:12px;color:var(--muted)}
+.lga-section{background:var(--navy);color:#fff;position:relative;overflow:hidden}
+.lga-section::before{content:"";position:absolute;width:600px;height:600px;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-180px;top:-260px;box-shadow:0 0 0 50px rgba(255,255,255,.025),0 0 0 100px rgba(255,255,255,.02)}
+.lga-section .section-head h2{color:#fff}
+.lga-section .section-head p{color:rgba(255,255,255,.65)}
+.lga-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative;z-index:1}
+.lga-tile{text-align:left;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;padding:18px 16px;min-height:105px;cursor:pointer;font:inherit;position:relative;transition:background .2s,transform .2s,border .2s}
+.lga-tile:hover,.lga-tile.active{background:rgba(216,155,49,.17);border-color:var(--gold);transform:translateY(-3px)}
+.lga-tile.lga-specific{border-color:rgba(216,155,49,.62);background:rgba(216,155,49,.08)}
+.lga-tile.lga-specific .lga-dot{box-shadow:0 0 0 4px rgba(216,155,49,.16)}
+.lga-tile strong{display:block;font-family:Georgia,serif;font-size:1.25rem;font-weight:400}
+.lga-tile small{display:block;color:rgba(255,255,255,.55);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-top:20px}
+.lga-dot{display:block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-bottom:12px}
+.lga-detail{margin-top:26px;border:1px solid rgba(255,255,255,.2);padding:25px;background:rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:30px;align-items:start}
+.lga-detail h3{font-family:Georgia,serif;font-size:2rem;font-weight:400;margin:0 0 8px}
+.lga-detail p{color:rgba(255,255,255,.66);font-size:14px;max-width:620px;margin:0}
+.lga-detail .detail-label{color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:.15em;white-space:nowrap}
+.governance-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:start}
+.governor-card{background:var(--navy);color:#fff;padding:16px;box-shadow:var(--shadow);position:relative}
+.governor-card img{width:100%;height:440px;object-fit:cover;object-position:center top;display:block;filter:saturate(.8)}
+.governor-caption{padding:18px 12px 12px;display:flex;justify-content:space-between;gap:12px;align-items:end}
+.governor-caption strong{font-family:Georgia,serif;font-size:1.7rem;font-weight:400}
+.governor-caption span{color:rgba(255,255,255,.55);font-size:10px;text-align:right;line-height:1.4}
+.governance-copy h3{font-family:Georgia,serif;font-size:clamp(2rem,4vw,3.8rem);font-weight:400;line-height:1;letter-spacing:-.05em;margin:0 0 20px}
+.governance-copy p{font-size:15px;color:var(--muted);max-width:560px}
+.continuity-list{display:grid;gap:12px;margin-top:28px}
+.continuity-item{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:16px 0;border-top:1px solid var(--line)}
+.continuity-item b{color:var(--gold);font-family:Georgia,serif;font-size:1.5rem;font-weight:400}
+.continuity-item span{font-size:13px}
+.agenda-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.agenda-card{min-height:250px;background:var(--white);border:1px solid var(--line);padding:20px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .2s,box-shadow .2s}
+.agenda-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.agenda-card .agenda-no{font-family:Georgia,serif;font-size:2.6rem;color:var(--gold);line-height:1}
+.agenda-card h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;line-height:1.1;margin:15px 0 8px}
+.agenda-card p{font-size:11px;color:var(--muted);margin:0}
+.sources-section{background:#ecebe4;padding:70px 0}
+.featured-section{padding:100px 0;background:#f1eee5;border-top:1px solid var(--line)}
+.featured-section .section-head h2{max-width:780px}
+.featured-carousel{border:1px solid var(--line);background:var(--white);padding:18px;box-shadow:var(--shadow)}
+.featured-carousel:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.featured-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.featured-scope-filters{display:flex;gap:8px;flex-wrap:wrap}
+.featured-scope-filter,.featured-control{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 12px;font:inherit;font-size:10px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
+.featured-scope-filter.active,.featured-scope-filter:hover,.featured-control:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.featured-controls{display:flex;align-items:center;gap:9px}
+.featured-control:disabled{opacity:.4;cursor:not-allowed}
+.featured-status{min-width:48px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);font-weight:700}
+.featured-slides{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:18px}
+.featured-slide{display:grid;grid-template-columns:minmax(240px,.9fr) minmax(0,1.1fr);gap:24px;padding:18px;border:1px solid var(--line);background:#fbfaf6}
+.featured-carousel-ready .featured-slide{display:none}
+.featured-carousel-ready .featured-slide.is-active{display:grid}
+.featured-media{margin:0;min-width:0}
+.featured-media img{display:block;width:100%;height:310px;object-fit:cover;background:#dfe8e5}
+.featured-media figcaption{font-size:10px;line-height:1.4;color:var(--muted);padding-top:8px}
+.featured-image-note{display:block;margin-top:8px;padding:6px 8px;background:#fff6e5;border:1px solid #efd9ac;color:#6d4a12;font-size:9px;line-height:1.35}
+.featured-slide-copy{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.featured-slide-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.featured-sector,.featured-scope-badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.featured-sector{background:var(--sky);color:var(--navy)}
+.featured-scope-badge{background:var(--gold-soft);color:#6d4a12}
+.featured-slide h3{font-family:Georgia,serif;font-size:clamp(1.7rem,3vw,2.6rem);font-weight:400;line-height:1.05;letter-spacing:-.04em;margin:18px 0 12px}
+.featured-caption{font-size:14px;line-height:1.5;color:#35434a;margin:0}
+.featured-source{margin-top:22px}
+.featured-pending-section .section-head p{max-width:500px}
+.requests-section{background:var(--white);border-top:1px solid var(--line)}
+.request-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);gap:28px;align-items:start}
+.request-form{background:#fbfaf6;border:1px solid var(--line);padding:clamp(20px,4vw,40px);box-shadow:var(--shadow);position:relative}
+.request-config-status{margin:0 0 26px;padding:12px 14px;border-left:3px solid var(--gold);background:var(--gold-soft);color:#5f4317;font-size:12px;font-weight:700}
+.request-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.request-field{display:grid;gap:8px;margin-bottom:18px;min-width:0}
+.request-field-wide{grid-column:1/-1}
+.request-field label,.request-contact-fields legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--navy)}
+.request-required{color:#9a351f}
+.request-field input,.request-field select,.request-field textarea{width:100%;border:1px solid #bfc7c6;border-radius:0;background:#fff;color:var(--ink);font:inherit;font-size:14px;padding:12px 13px;transition:border-color .2s,box-shadow .2s,background .2s}
+.request-field textarea{resize:vertical;min-height:145px}
+.request-field select{min-height:47px}
+.request-field input:hover,.request-field select:hover,.request-field textarea:hover{border-color:#829493}
+.request-field input:focus,.request-field select:focus,.request-field textarea:focus{outline:3px solid rgba(216,155,49,.38);outline-offset:2px;border-color:var(--blue);background:#fff}
+.request-field input:disabled,.request-field select:disabled{background:#ecebe4;color:#788086;cursor:not-allowed}
+.request-note{margin:-4px 0 20px;padding:12px 14px;background:#eef5f1;border-left:3px solid var(--green);color:#355448;font-size:11px;line-height:1.55}
+.request-contact-fields{margin:2px 0 20px;padding:20px;border:1px solid var(--line);background:#f3f1e9;min-width:0}
+.request-contact-fields legend{padding:0 8px}
+.request-consent{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start;margin:22px 0 12px}
+.request-consent input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--blue)}
+.request-consent label{font-size:12px;line-height:1.5;color:#35434a;cursor:pointer}
+.request-honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+.request-submit{border:0;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 10px 22px rgba(11,38,60,.18)}
+.request-submit:hover{background:var(--blue)}
+.request-submit:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.request-submit:disabled{opacity:.55;cursor:wait;transform:none}
+.request-status,.request-confirmation{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.5}
+.request-status{background:#ecebe4;border-left:3px solid #7b8589;color:#46545a}
+.request-status.is-error{background:#fff0eb;border-left-color:#9a351f;color:#7a2818}
+.request-confirmation{background:var(--green-soft);border-left:3px solid var(--green);color:#244d3a;font-weight:700}
+.request-status[hidden],.request-confirmation[hidden]{display:none}
+.request-aside{background:var(--navy);color:#fff;padding:8px 28px;box-shadow:var(--shadow)}
+.request-aside>div{padding:26px 0;border-bottom:1px solid rgba(255,255,255,.16)}
+.request-aside>div:last-child{border-bottom:0}
+.request-aside span{display:block;color:var(--gold);font-size:10px;letter-spacing:.16em;font-weight:700;margin-bottom:12px}
+.request-aside h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;margin:0 0 10px}
+.request-aside p{font-size:12px;line-height:1.6;color:rgba(255,255,255,.68);margin:0}
+.indicator-section{padding:100px 0;background:#eef5f1;border-top:1px solid var(--line)}
+.indicator-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.indicator-card{background:var(--white);border:1px solid var(--line);padding:20px;min-height:220px;box-shadow:0 12px 30px rgba(11,38,60,.05);display:flex;flex-direction:column}
+.indicator-top{display:flex;justify-content:space-between;align-items:start;gap:10px}
+.indicator-top .eyebrow{font-size:9px;letter-spacing:.12em}
+.indicator-card h3{font-family:Georgia,serif;font-size:1.25rem;font-weight:400;line-height:1.15;margin:20px 0 12px}
+.indicator-value{display:flex;align-items:baseline;gap:8px;color:var(--navy)}
+.indicator-value strong{font-family:Georgia,serif;font-size:1.7rem;font-weight:400}
+.indicator-value span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.indicator-card p{font-size:11px;color:var(--muted);line-height:1.45;margin:12px 0 16px}
+.indicator-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:auto;font-size:9px;color:var(--muted)}
+.source-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+.source-list li{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #d4d5cb;font-size:12px}
+.source-list li span:nth-child(2){display:grid;gap:3px}
+.source-list li small{font-size:9px;color:var(--muted)}
+.source-legend{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0 0;font-size:10px;color:var(--muted)}
+.source-grade{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700}
+.source-link{justify-self:end}
+.site-footer{background:#081d2c;color:#fff;padding:34px 0 28px}
+.footer-inner{display:flex;justify-content:space-between;gap:30px;align-items:center;flex-wrap:wrap}
+.footer-inner p{font-size:11px;color:rgba(255,255,255,.56);margin:0;max-width:650px}
+.footer-inner strong{font-family:Georgia,serif;font-size:1.3rem;font-weight:400;display:block;margin-bottom:6px}
+.deerflow{font-size:10px;color:rgba(255,255,255,.45);text-decoration:none;border:1px solid rgba(255,255,255,.2);padding:7px 10px;border-radius:999px;white-space:nowrap}
+.deerflow:hover{color:#fff;border-color:#fff}
+/* Sponsor slot. Deliberately reads as an unfilled placeholder: no invented name, no
+   invented contribution, no amount. The contribution line is a factual disclosure the
+   owner completes, not a claim of delivered achievement. */
+.sponsor{display:flex;gap:14px;align-items:center;max-width:400px;padding:12px 16px;border:1px dashed rgba(255,255,255,.28);border-radius:4px;background:rgba(255,255,255,.03)}
+.sponsor-photo{width:58px;height:58px;flex:none;border:1px dashed rgba(255,255,255,.3);border-radius:3px;display:grid;place-items:center;text-align:center;padding:4px}
+.sponsor-photo span{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);line-height:1.3}
+.sponsor-body{min-width:0}
+.sponsor-label{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}
+.sponsor-name{display:block;font-family:Georgia,serif;font-size:1.05rem;font-weight:400;color:#fff}
+.sponsor-contribution{display:block;font-size:11px;line-height:1.45;color:rgba(255,255,255,.72);margin-top:5px}
+.sponsor-contribution b{color:#fff;font-weight:700}
+.reveal{opacity:0;transform:translateY(15px);animation:rise .7s ease forwards;animation-delay:var(--delay,0s)}
+@keyframes rise{to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+@media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
+@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}}
+@media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-grid{grid-template-columns:repeat(4,1fr)}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
+@media (max-width:760px){.shell{width:min(100% - 28px,1240px)}.hero{min-height:auto;padding-top:112px;padding-bottom:54px}.hero-grid,.intro-grid,.governance-grid{grid-template-columns:1fr}.hero h1{font-size:clamp(3.2rem,16vw,5.5rem)}.portrait-wrap{min-height:390px;margin-top:20px}.portrait-wrap::before{width:280px;height:280px;right:4%}.portrait-wrap::after{width:320px;height:400px;right:1%}.portrait{max-height:420px}.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}.stat:nth-child(2){border-right:0}.section{padding:70px 0}.section-head{display:block}.section-head p{margin-top:18px}.progress-path{grid-template-columns:1fr;padding:16px}.path-step{min-height:0;padding:14px 16px 24px}.path-step:not(:last-child)::after{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}.arrow-head{padding:15px 16px}.arrow-path{display:block;padding:14px}.path-node{margin-bottom:10px;padding:16px}.path-arrow{padding:0;height:24px;transform:rotate(90deg)}.lga-grid{grid-template-columns:1fr 1fr}.lga-detail{display:block}.lga-detail .detail-label{display:block;margin-bottom:12px}.governor-card img{height:340px}.agenda-grid{grid-template-columns:1fr 1fr}.source-list{grid-template-columns:1fr}.footer-inner{display:block}.deerflow{display:inline-block;margin-top:20px}}
+/* --- shared multi-page shell ------------------------------------------- */
+.page-head{background:var(--navy);position:relative;z-index:2}
+/* position:relative, not static: the mobile panel is absolutely positioned at
+   top:100% of this bar and needs it as its containing block. */
+.page-head .topbar{position:relative;background:var(--navy);padding:18px 0}
+.page-hero{background:var(--navy);color:#fff;padding:56px 0 62px;position:relative;overflow:hidden}
+.page-hero::before{content:"";position:absolute;width:760px;height:760px;right:-200px;top:-420px;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 60px rgba(255,255,255,.025),0 0 0 120px rgba(255,255,255,.02)}
+.page-hero .shell{position:relative;z-index:1}
+.page-hero .eyebrow{color:var(--gold)}
+.page-hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(2.2rem,4.6vw,3.9rem);font-weight:400;line-height:1.02;letter-spacing:-.05em;margin:16px 0 18px;max-width:820px}
+.page-hero p{font-size:clamp(1rem,1.4vw,1.15rem);color:rgba(255,255,255,.76);max-width:640px;margin:0}
+.page-hero .crumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+.page-hero .crumbs a{color:rgba(255,255,255,.66);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.28);padding-bottom:2px}
+.page-hero .crumbs a:hover{color:#fff;border-color:#fff}
+.page-hero .crumbs span{color:rgba(255,255,255,.4)}
+
+/* Primary nav. Hidden below 1050px, where .navmenu takes over - without that,
+   phones get no navigation at all once the site has subpages. */
+.navmenu{display:none}
+.navmenu-toggle{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:7px 12px}
+.navmenu-toggle::-webkit-details-marker{display:none}
+.navmenu-toggle svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.navmenu-panel{position:absolute;left:0;right:0;top:100%;background:var(--navy);border-top:1px solid rgba(255,255,255,.12);box-shadow:0 22px 44px rgba(5,20,31,.4);padding:10px 0 16px}
+.navmenu-panel a{display:block;padding:11px 20px;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.82);text-decoration:none;border-left:2px solid transparent}
+.navmenu-panel a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.navmenu-panel a[aria-current="page"]{color:var(--gold);border-left-color:var(--gold)}
+
+/* Cross-links from the home page into the subpages. */
+.nav-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.nav-card{display:block;text-decoration:none;color:inherit;background:var(--white);border:1px solid var(--line);padding:24px 22px;box-shadow:0 12px 32px rgba(11,38,60,.05);transition:transform .2s,box-shadow .2s,border-color .2s}
+.nav-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--gold)}
+.nav-card .nav-card-no{font-size:10px;letter-spacing:.16em;color:var(--gold);font-weight:700}
+.nav-card h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;margin:12px 0 8px;letter-spacing:-.02em}
+.nav-card p{font-size:13px;color:var(--muted);margin:0}
+.nav-card .nav-card-go{display:inline-block;margin-top:14px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);font-weight:700}
+
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--gold);color:var(--navy);padding:10px 16px;z-index:50;font-size:12px;font-weight:700}
+.skip-link:focus{left:8px;top:8px}
+.nav a:focus-visible,.navmenu-toggle:focus-visible,.nav-card:focus-visible,.lang button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+@media (max-width:1050px){
+.navmenu{display:block}
+}
+@media (max-width:760px){
+.nav-cards{grid-template-columns:1fr}
+.page-hero{padding:40px 0 46px}
+.nav-card{padding:20px}
+}
+</style>
+</head>
+<body class="page page--agenda">
+<div class="page-head"><a class="skip-link" href="#main">Skip to content</a><div class="topbar"><div class="shell topbar-inner"><a class="brand" href="index.html"><img src="assets/brand/apm-emblem.png" width="38" height="44" alt="Allied Peoples Movement emblem"><small>Allied Peoples' Movement</small></a><nav class="nav" data-aria-label-en="Primary navigation" data-aria-label-ha="Babban menu" aria-label="Primary navigation"><a class="" href="index.html"><span data-en="Home" data-ha="Gida">Home</span></a><a class="" href="achievements.html"><span data-en="Achievements" data-ha="Ayyuka da aka yi">Achievements</span></a><a class="" href="atlas.html"><span data-en="LGA atlas" data-ha="Taswirar LGA">LGA atlas</span></a><a class="" href="poll.html"><span data-en="Speak to us" data-ha="Yi magana da mu">Speak to us</span></a><a class="" href="agenda.html" aria-current="page"><span data-en="APM agenda" data-ha="Bayan-APM">APM agenda</span></a><a class="" href="sources.html"><span data-en="Sources" data-ha="Bayane">Sources</span></a></nav><details class="navmenu"><summary class="navmenu-toggle"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span><span data-en="Menu" data-ha="Menu">Menu</span></span></summary><div class="navmenu-panel"><a class="" href="index.html"><span data-en="Home" data-ha="Gida">Home</span></a><a class="" href="achievements.html"><span data-en="Achievements" data-ha="Ayyuka da aka yi">Achievements</span></a><a class="" href="atlas.html"><span data-en="LGA atlas" data-ha="Taswirar LGA">LGA atlas</span></a><a class="" href="poll.html"><span data-en="Speak to us" data-ha="Yi magana da mu">Speak to us</span></a><a class="" href="agenda.html" aria-current="page"><span data-en="APM agenda" data-ha="Bayan-APM">APM agenda</span></a><a class="" href="sources.html"><span data-en="Sources" data-ha="Bayane">Sources</span></a></div></details><div class="lang"><span class="lang-label" id="lang-label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg><span data-en="Language" data-ha="Harshe">Language</span></span><div class="lang-toggle" role="group" aria-labelledby="lang-label"><button type="button" data-lang="en" class="active" aria-pressed="true">EN</button><button type="button" data-lang="ha" aria-pressed="false">HA</button></div></div></div></div></div><div class="page-hero"><div class="shell"><div class="eyebrow"><span data-en="APM agenda" data-ha="Bayan-APM">APM agenda</span></div><h1><span data-en="Published commitments." data-ha="Alkawarin da aka wallafa.">Published commitments.</span></h1><p><span data-en="These are campaign commitments, not completed projects. One of them is a published clause rather than a standalone pillar, and it is labelled as such." data-ha="Waannan alkawarin gaggawa ne, ba ayyuka da aka kammala ba. Dayan daga cikinsu shi ne bendi na alkawarin da aka wallafa, ba tsari mai zaman kansa ba, an nuna shi haka.">These are campaign commitments, not completed projects. One of them is a published clause rather than a standalone pillar, and it is labelled as such.</span></p><div class="crumbs"><a href="index.html"><span data-en="Home" data-ha="Gida">Home</span></a><span>/</span><span><span data-en="APM agenda" data-ha="Bayan-APM">APM agenda</span></span></div></div></div><main id="main"><section class="section" id="agenda"><div class="shell"><div class="section-head"><div><div class="eyebrow"><span data-en="Published campaign commitments" data-ha="Alkawarin gaggawa da aka wallafa">Published campaign commitments</span></div><h2><span data-en="A focused agenda for the next Bauchi." data-ha="ƙa agenda mai mayar hankali don Bauchi na gaba.">A focused agenda for the next Bauchi.</span></h2></div><p><span data-en="These are campaign commitments, not completed achievements. They are shown separately so the evidence story stays clear." data-ha="Waannan alkawarin gaggawa ne, ba ayyuka da aka kammala ba. An nuna su a wuri dabewa don bayan ci gabansu ya kasance mai sauƙi.">These are campaign commitments, not completed achievements. They are shown separately so the evidence story stays clear.</span></p></div><div class="agenda-grid"><article class="agenda-card"><div><span class="agenda-no">01</span><h3><span data-en="Safety and public trust" data-ha="Tsaro da aminci">Safety and public trust</span></h3><p><span data-en="Strengthen community policing collaboration with security agencies and technology-driven intelligence." data-ha="Karfi tsaro na al&#x27;umma tare da hadin kowane hukumanni na tsaro da fasaha mai taimakon hankali.">Strengthen community policing collaboration with security agencies and technology-driven intelligence.</span></p><p class="agenda-type">Campaign commitment</p><p class="agenda-measure"><span data-en="Measured by:" data-ha="Ana aunawa da:">Measured by:</span> <span data-en="Safer communities and improved response" data-ha="Al&#x27;umma mai tsafi da amsa da sauri.">Safer communities and improved response</span></p></div><a class="source-link" href="https://yakubuadamuphd.com/en" target="_blank" rel="noopener noreferrer"><span data-en="Campaign source" data-ha="Sauro gaggawa">Campaign source</span> <span aria-hidden="true">↗</span></a></article><article class="agenda-card"><div><span class="agenda-no">02</span><h3><span data-en="Health and nutrition" data-ha="Kafi lafiya da ciwon suji">Health and nutrition</span></h3><p><span data-en="Improving access to quality healthcare for a healthier Bauchi." data-ha="Inganta damar kafi lafiya mai kyau don Bauchi mai lafiya.">Improving access to quality healthcare for a healthier Bauchi.</span></p><p class="agenda-type">Campaign commitment</p><p class="agenda-measure"><span data-en="Measured by:" data-ha="Ana aunawa da:">Measured by:</span> <span data-en="Improved healthcare access and service quality" data-ha="Inganta damar kafi lafiya da ingancin sabis.">Improved healthcare access and service quality</span></p></div><a class="source-link" href="https://yakubuadamuphd.com/en" target="_blank" rel="noopener noreferrer"><span data-en="Campaign source" data-ha="Sauro gaggawa">Campaign source</span> <span aria-hidden="true">↗</span></a></article><article class="agenda-card"><div><span class="agenda-no">03</span><h3><span data-en="Education and skills" data-ha="Ilimi da koyarwa">Education and skills</span></h3><p><span data-en="Invest in modern classrooms teacher development digital learning tools and scholarships." data-ha="Sanya hudu a makiyawa masu zamani da horar da malami da kayan koyarwa na dijital da scholarship.">Invest in modern classrooms teacher development digital learning tools and scholarships.</span></p><p class="agenda-type">Campaign commitment</p><p class="agenda-measure"><span data-en="Measured by:" data-ha="Ana aunawa da:">Measured by:</span> <span data-en="Improved access completion and learning support" data-ha="Inganta damar karatama da kammawa da goyon karatama.">Improved access completion and learning support</span></p></div><a class="source-link" href="https://yakubuadamuphd.com/en" target="_blank" rel="noopener noreferrer"><span data-en="Campaign source" data-ha="Sauro gaggawa">Campaign source</span> <span aria-hidden="true">↗</span></a></article><article class="agenda-card"><div><span class="agenda-no">04</span><h3><span data-en="Water and climate resilience" data-ha="Ruwan sha da bambancin yanayi">Water and climate resilience</span></h3><p><span data-en="Improve water supply systems across all local government areas." data-ha="Haɓa da tsigon ruwa a cikin duk LGA na Bauchi.">Improve water supply systems across all local government areas.</span></p><p class="agenda-type">Published commitment clause <span class="agenda-kind"><span data-en="published clause" data-ha="bendi da aka wallafa">published clause</span></span></p><p class="agenda-measure"><span data-en="Measured by:" data-ha="Ana aunawa da:">Measured by:</span> <span data-en="Improved access to functional water supply" data-ha="Mafi kyawan shiga ruwa mai aiki">Improved access to functional water supply</span></p></div><a class="source-link" href="https://yakubuadamuphd.com/en" target="_blank" rel="noopener noreferrer"><span data-en="Campaign source" data-ha="Sauro gaggawa">Campaign source</span> <span aria-hidden="true">↗</span></a></article><article class="agenda-card"><div><span class="agenda-no">05</span><h3><span data-en="Infrastructure and connectivity" data-ha="Infastructure da haɗi">Infrastructure and connectivity</span></h3><p><span data-en="Expand road networks improve water supply systems promote rural electrification and modernise public infrastructure." data-ha="Kara wasa&#x27;afi, ya faɗa da tsigon ruwa, inganta haskacen karkara, kaɗaɗe infastiture na al&#x27;umma.">Expand road networks improve water supply systems promote rural electrification and modernise public infrastructure.</span></p><p class="agenda-type">Campaign commitment</p><p class="agenda-measure"><span data-en="Measured by:" data-ha="Ana aunawa da:">Measured by:</span> <span data-en="Reliable infrastructure and improved connectivity" data-ha="Infastructure mai dogaro da madauri mai kyau.">Reliable infrastructure and improved connectivity</span></p></div><a class="source-link" href="https://yakubuadamuphd.com/en" target="_blank" rel="noopener noreferrer"><span data-en="Campaign source" data-ha="Sauro gaggawa">Campaign source</span> <span aria-hidden="true">↗</span></a></article><article class="agenda-card"><div><span class="agenda-no">06</span><h3><span data-en="Jobs and livelihoods" data-ha="Aiki da rayuwa">Jobs and livelihoods</span></h3><p><span data-en="Create skills acquisition entrepreneurship access to finance and leadership development opportunities for youth and women." data-ha="Ƙirƙira dama na hannu da kasuwanci da samu dama na kudi da horar da leadership ga matane da matasa.">Create skills acquisition entrepreneurship access to finance and leadership development opportunities for youth and women.</span></p><p class="agenda-type">Campaign commitment</p><p class="agenda-measure"><span data-en="Measured by:" data-ha="Ana aunawa da:">Measured by:</span> <span data-en="Skills participation enterprise creation and leadership participation" data-ha="Fiye da hannu da kasuwanci da shigar hannu.">Skills participation enterprise creation and leadership participation</span></p></div><a class="source-link" href="https://yakubuadamuphd.com/en" target="_blank" rel="noopener noreferrer"><span data-en="Campaign source" data-ha="Sauro gaggawa">Campaign source</span> <span aria-hidden="true">↗</span></a></article><article class="agenda-card"><div><span class="agenda-no">07</span><h3><span data-en="Agriculture and food systems" data-ha="Noma da abinci">Agriculture and food systems</span></h3><p><span data-en="Support improved inputs mechanised farming irrigation market access and agricultural financing." data-ha="Taimaka waƙaƙa da abincin da aka inganta da na&#x27;ibar ruwa da kasuwar manaje da kudi.">Support improved inputs mechanised farming irrigation market access and agricultural financing.</span></p><p class="agenda-type">Campaign commitment</p><p class="agenda-measure"><span data-en="Measured by:" data-ha="Ana aunawa da:">Measured by:</span> <span data-en="Higher productivity food security and income opportunities" data-ha="Karfi yawa da tsaro da abinci da karfi rayuwa.">Higher productivity food security and income opportunities</span></p></div><a class="source-link" href="https://yakubuadamuphd.com/en" target="_blank" rel="noopener noreferrer"><span data-en="Campaign source" data-ha="Sauro gaggawa">Campaign source</span> <span aria-hidden="true">↗</span></a></article><article class="agenda-card"><div><span class="agenda-no">08</span><h3><span data-en="Service delivery and governance" data-ha="Isar da ganyayi da gwaji">Service delivery and governance</span></h3><p><span data-en="Maintain good governance transparency and inclusive growth." data-ha="Kiyaye gwaji mai kyau da haske da haɓaɓe mai ciki.">Maintain good governance transparency and inclusive growth.</span></p><p class="agenda-type">Campaign commitment</p><p class="agenda-measure"><span data-en="Measured by:" data-ha="Ana aunawa da:">Measured by:</span> <span data-en="Published performance information and inclusive service delivery" data-ha="Bayan aikin da aka wallafa da sabis mai ciki.">Published performance information and inclusive service delivery</span></p></div><a class="source-link" href="https://yakubuadamuphd.com/en" target="_blank" rel="noopener noreferrer"><span data-en="Campaign source" data-ha="Sauro gaggawa">Campaign source</span> <span aria-hidden="true">↗</span></a></article></div></div></section></main>
+<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p><span data-en="Public-source campaign intelligence. Built" data-ha="Basirar gaggawa daga bayanan al&#x27;umma. An gina a">Public-source campaign intelligence. Built</span> 26 Sep 2026 · 21:28 UTC. <span data-en="Public information and campaign materials are labelled separately; this page is not private polling." data-ha="Bayanan al&#x27;umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra&#x27;yu na ɓoye ba.">Public information and campaign materials are labelled separately; this page is not private polling.</span></p></div><div class="sponsor"><div class="sponsor-photo"><span><span data-en="Sponsor photo" data-ha="Hotun mai tallafi">Sponsor photo</span></span></div><div class="sponsor-body"><span class="sponsor-label"><span data-en="Sponsor" data-ha="Mai tallafi">Sponsor</span></span><span class="sponsor-name"><span data-en="[ Sponsor name ]" data-ha="[ Suna na mai tallafi ]">[ Sponsor name ]</span></span><span class="sponsor-contribution"><span data-en="Contribution:" data-ha="Zuciya:">Contribution:</span> <b><span data-en="[ What was contributed and by whom — to be completed by the campaign team ]" data-ha="[ Abin da aka ba da da kuɗi — za a cika shi da hukumar gaggawa ]">[ What was contributed and by whom — to be completed by the campaign team ]</span></b></span></div></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" data-en="Created By Deerflow" data-ha="An ƙirƙira Deerflow">Created By Deerflow</a></div></footer>
+<script>
+const root=document.documentElement;
+let currentLanguage='en';
+let selectedLga='';
+let renderFeatured=()=>{};
+const renderLgaDetail=()=>{if(!selectedLga)return;const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const titleEl=document.getElementById('selected-lga');const copyEl=document.getElementById('selected-copy');if(!titleEl||!copyEl)return;const summary=currentLanguage==='ha'?btn.dataset.summaryHa:btn.dataset.summary;const promise=currentLanguage==='ha'?btn.dataset.promiseHa:btn.dataset.promise;const result=currentLanguage==='ha'?btn.dataset.resultHa:btn.dataset.result;titleEl.textContent=selectedLga;copyEl.textContent=currentLanguage==='ha'?selectedLga+': '+summary+' APM: '+promise+' Sami na gaba: '+result:selectedLga+': '+summary+' APM: '+promise+' Next result: '+result;};
+const LANGUAGE_KEY='apm-lang';
+const readStoredLanguage=()=>{try{const stored=window.localStorage.getItem(LANGUAGE_KEY);return stored==='ha'||stored==='en'?stored:null;}catch(error){return null;}};
+const storeLanguage=(lang)=>{try{window.localStorage.setItem(LANGUAGE_KEY,lang);}catch(error){/* blocked storage: the toggle still works for this page */}};
+const setLanguage=(lang,persist=true)=>{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;});document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',lang==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});document.querySelectorAll('[data-lang]').forEach(btn=>{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);};
+document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',currentLanguage==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});
+document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
+const storedLanguage=readStoredLanguage();if(storedLanguage)setLanguage(storedLanguage,false);
+document.querySelectorAll('[data-lga]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-lga]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');selectedLga=btn.dataset.lga;renderLgaDetail();}));
+</script>
+</body>
+</html>

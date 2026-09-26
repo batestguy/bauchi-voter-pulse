@@ -535,7 +535,7 @@ const featuredSlides=featuredCarousel?[...featuredCarousel.querySelectorAll('[da
 let featuredIndex=0;
 let featuredScope='all';
 const featuredVisibleSlides=()=>featuredSlides.filter(slide=>featuredScope==='all'||slide.dataset.lgaScope===featuredScope);
-const renderFeatured=()=>{
+renderFeatured=()=>{
   if(!featuredCarousel)return;
   const visible=featuredVisibleSlides();
   featuredSlides.forEach(slide=>{slide.classList.remove('is-active');slide.setAttribute('aria-hidden','true');});
@@ -917,10 +917,699 @@ def request_form_section(ward_rows):
   </div>
 </section>'''
 
+# ---------------------------------------------------------------------------
+# Multi-page shell (S3)
+# ---------------------------------------------------------------------------
+# The site is generated as six flat files in docs/. Flat, not nested, so the
+# existing assets/brand/... relative paths keep working unchanged on every page.
 
-def render():
-    validate_data()
-    prepare_assets()
+SITE_CSS = """:root{--ink:#13202b;--navy:#0b263c;--blue:#145d86;--sky:#d9eff6;--gold:#d89b31;--gold-soft:#f5e6c4;--paper:#f7f4ed;--white:#fffdf8;--line:#d8d8cd;--muted:#6c7880;--green:#2e7254;--green-soft:#dcefe3;--shadow:0 24px 70px rgba(11,38,60,.14)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",sans-serif;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:radial-gradient(#13202b .55px,transparent .55px);background-size:7px 7px;mix-blend-mode:multiply;z-index:10}
+a{color:inherit}
+.shell{width:min(1240px,calc(100% - 40px));margin:auto}
+.topbar{position:absolute;z-index:2;top:0;left:0;right:0;color:#fff;padding:22px 0}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+/* The emblem already has a transparent background, so it needs no colour filter.
+   An earlier brightness(0) invert(1) collapsed the logo's opaque white page and the
+   whitened artwork into one solid block. */
+.brand img{width:38px;height:44px;object-fit:contain;flex:none}
+.brand small{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.74;margin-top:-3px}
+.nav{display:flex;align-items:center;gap:24px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.nav a{opacity:.78;text-decoration:none}
+.nav a:hover{opacity:1}
+.lang{display:flex;align-items:center;gap:9px}
+.lang-label{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;opacity:.72;white-space:nowrap}
+.lang-label svg{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}
+.lang-toggle{display:flex;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:3px}
+.lang button{border:0;background:transparent;color:#fff;padding:5px 9px;border-radius:999px;cursor:pointer;font:inherit;font-size:10px}
+.lang button.active{background:#fff;color:var(--navy)}
+.hero{min-height:760px;background:var(--navy);color:#fff;position:relative;overflow:hidden;display:flex;align-items:center;padding:128px 0 74px}
+.hero::before{content:"";position:absolute;width:900px;height:900px;right:-220px;top:-340px;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 70px rgba(255,255,255,.025),0 0 0 140px rgba(255,255,255,.02)}
+.hero::after{content:"";position:absolute;inset:auto -10% 0;height:180px;background:linear-gradient(180deg,transparent,rgba(5,20,31,.5));clip-path:polygon(0 100%,100% 22%,100% 100%)}
+.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;align-items:center;gap:56px;position:relative;z-index:1}
+.eyebrow{font-size:11px;letter-spacing:.19em;text-transform:uppercase;font-weight:700;color:var(--gold)}
+.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(3.5rem,7.3vw,7.3rem);font-weight:400;line-height:.91;letter-spacing:-.06em;margin:22px 0 26px;max-width:760px}
+.hero h1 em{color:#f4c35d;font-style:normal}
+.hero-lede{font-size:clamp(1.05rem,1.7vw,1.35rem);color:rgba(255,255,255,.76);max-width:590px;margin:0 0 32px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid transparent;border-radius:999px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;transition:transform .2s,box-shadow .2s,background .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--gold);color:var(--navy);box-shadow:0 12px 24px rgba(216,155,49,.22)}
+.btn-secondary{color:#fff;border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.04)}
+.hero-note{margin-top:30px;display:flex;gap:18px;align-items:center;color:rgba(255,255,255,.65);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.hero-note::before{content:"";width:38px;height:1px;background:var(--gold)}
+.portrait-wrap{min-height:570px;position:relative;display:flex;align-items:end;justify-content:center}
+.portrait-wrap::before{content:"";position:absolute;width:380px;height:380px;border-radius:50%;background:var(--gold);top:35px;right:25px;opacity:.9}
+.portrait-wrap::after{content:"";position:absolute;width:420px;height:520px;border:1px solid rgba(255,255,255,.23);right:-20px;top:0;transform:rotate(8deg)}
+.portrait{position:relative;z-index:1;width:min(100%,520px);max-height:610px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 30px 35px rgba(0,0,0,.25));mix-blend-mode:screen}
+.portrait-caption{position:absolute;z-index:2;bottom:20px;left:0;max-width:240px;padding:14px 16px;background:rgba(255,253,248,.95);color:var(--ink);border-radius:3px;box-shadow:var(--shadow);font-size:12px}
+.portrait-caption strong{display:block;font-family:Georgia,serif;font-size:20px;font-weight:400}
+.motto{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-top:34px}
+.stats{background:var(--gold);color:var(--navy);position:relative;z-index:3;margin-top:-1px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{padding:24px 28px;border-right:1px solid rgba(11,38,60,.18)}
+.stat:last-child{border-right:0}
+.stat strong{display:block;font-family:Georgia,serif;font-size:2.25rem;font-weight:400;line-height:1}
+.stat span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-top:8px;font-weight:700}
+.section{padding:100px 0}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:38px}
+.section-head h2,.section-head h3{font-family:Georgia,serif;font-size:clamp(2.2rem,4vw,4rem);font-weight:400;line-height:.98;letter-spacing:-.05em;margin:12px 0 0;max-width:720px}
+.section-head p{color:var(--muted);max-width:360px;font-size:14px;margin:0}
+.light-rule{border-top:1px solid var(--line)}
+.intro-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:80px;align-items:start}
+.intro-copy{font-family:Georgia,serif;font-size:clamp(1.7rem,3vw,2.7rem);line-height:1.08;letter-spacing:-.04em;margin:0}
+.note-box{border-left:3px solid var(--gold);padding:8px 0 8px 22px;color:var(--muted);font-size:14px}
+.progress-path{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow);padding:22px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:60px}
+.path-step{padding:22px 20px;position:relative;min-height:180px}
+.path-step:not(:last-child)::after{content:"→";position:absolute;right:-13px;top:76px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--navy);font-size:19px;z-index:2}
+.step-no{font-size:10px;letter-spacing:.16em;color:var(--gold);font-weight:700}
+.path-step h3{font-family:Georgia,serif;font-size:1.4rem;font-weight:400;margin:18px 0 8px}
+.path-step p{font-size:13px;color:var(--muted);margin:0}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 22px}
+.filter{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 13px;font:inherit;font-size:11px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.filter.active,.filter:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.arrow-list{display:grid;gap:18px}
+.arrow-card{background:var(--white);border:1px solid var(--line);padding:0;overflow:hidden;box-shadow:0 12px 35px rgba(11,38,60,.05)}
+.arrow-head{display:flex;justify-content:space-between;align-items:center;padding:17px 22px;border-bottom:1px solid var(--line);background:#fbfaf6}
+.arrow-index{font-family:Georgia,serif;font-size:1.2rem;color:var(--gold)}
+.arrow-path{display:grid;grid-template-columns:1fr 28px 1.45fr 28px 1.2fr 28px 1.1fr;align-items:stretch;padding:22px}
+.path-node{padding:18px;min-width:0}
+.path-node:nth-child(odd){background:#f7f8f3;border:1px solid #e4e8df;border-radius:2px}
+.achievement-node{background:var(--green-soft)!important;border-color:#c9e0ce!important}
+.promise-node{background:#fff6e5!important;border-color:#efd9ac!important}
+.result-node{background:#eaf4f7!important;border-color:#c8e0e8!important}
+.path-arrow{display:grid;place-items:center;color:var(--gold);font-size:24px;padding-top:70px}
+.node-number{font-size:10px;color:var(--muted);letter-spacing:.15em}
+.path-node h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;line-height:1.1;margin:15px 0 9px}
+.path-node p{font-size:13px;line-height:1.45;margin:0 0 14px;color:#35434a}
+.node-tag{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-top:1px solid currentColor;padding-top:6px}
+.achievement-list{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:9px}
+.achievement-item{border-bottom:1px solid rgba(46,114,84,.22);padding-bottom:9px}
+.achievement-item:last-child{border-bottom:0;padding-bottom:0}
+.item-top{display:flex;align-items:start;justify-content:space-between;gap:10px}
+.item-top strong{font-size:12px;line-height:1.25}
+.achievement-item p{font-size:11px;margin:5px 0;color:#4b6259}
+.item-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:9px;color:#567064}
+.status{display:inline-block;white-space:nowrap;border-radius:999px;padding:3px 6px;font-size:8px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.status-progress{background:var(--green);color:#fff}
+.status-underway{background:var(--blue);color:#fff}
+.status-milestone{background:#765b9e;color:#fff}
+.status-promise{background:var(--gold);color:var(--navy)}
+.status-next{background:#b88920;color:#fff}
+.status-measured{background:#7a6c9b;color:#fff}
+.source-link{font-size:9px;text-decoration:none;color:var(--blue);font-weight:700;white-space:nowrap}
+.source-link:hover{text-decoration:underline}
+.empty-item{font-size:12px;color:var(--muted)}
+.lga-section{background:var(--navy);color:#fff;position:relative;overflow:hidden}
+.lga-section::before{content:"";position:absolute;width:600px;height:600px;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-180px;top:-260px;box-shadow:0 0 0 50px rgba(255,255,255,.025),0 0 0 100px rgba(255,255,255,.02)}
+.lga-section .section-head h2{color:#fff}
+.lga-section .section-head p{color:rgba(255,255,255,.65)}
+.lga-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative;z-index:1}
+.lga-tile{text-align:left;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;padding:18px 16px;min-height:105px;cursor:pointer;font:inherit;position:relative;transition:background .2s,transform .2s,border .2s}
+.lga-tile:hover,.lga-tile.active{background:rgba(216,155,49,.17);border-color:var(--gold);transform:translateY(-3px)}
+.lga-tile.lga-specific{border-color:rgba(216,155,49,.62);background:rgba(216,155,49,.08)}
+.lga-tile.lga-specific .lga-dot{box-shadow:0 0 0 4px rgba(216,155,49,.16)}
+.lga-tile strong{display:block;font-family:Georgia,serif;font-size:1.25rem;font-weight:400}
+.lga-tile small{display:block;color:rgba(255,255,255,.55);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-top:20px}
+.lga-dot{display:block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-bottom:12px}
+.lga-detail{margin-top:26px;border:1px solid rgba(255,255,255,.2);padding:25px;background:rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:30px;align-items:start}
+.lga-detail h3{font-family:Georgia,serif;font-size:2rem;font-weight:400;margin:0 0 8px}
+.lga-detail p{color:rgba(255,255,255,.66);font-size:14px;max-width:620px;margin:0}
+.lga-detail .detail-label{color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:.15em;white-space:nowrap}
+.governance-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:start}
+.governor-card{background:var(--navy);color:#fff;padding:16px;box-shadow:var(--shadow);position:relative}
+.governor-card img{width:100%;height:440px;object-fit:cover;object-position:center top;display:block;filter:saturate(.8)}
+.governor-caption{padding:18px 12px 12px;display:flex;justify-content:space-between;gap:12px;align-items:end}
+.governor-caption strong{font-family:Georgia,serif;font-size:1.7rem;font-weight:400}
+.governor-caption span{color:rgba(255,255,255,.55);font-size:10px;text-align:right;line-height:1.4}
+.governance-copy h3{font-family:Georgia,serif;font-size:clamp(2rem,4vw,3.8rem);font-weight:400;line-height:1;letter-spacing:-.05em;margin:0 0 20px}
+.governance-copy p{font-size:15px;color:var(--muted);max-width:560px}
+.continuity-list{display:grid;gap:12px;margin-top:28px}
+.continuity-item{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:16px 0;border-top:1px solid var(--line)}
+.continuity-item b{color:var(--gold);font-family:Georgia,serif;font-size:1.5rem;font-weight:400}
+.continuity-item span{font-size:13px}
+.agenda-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.agenda-card{min-height:250px;background:var(--white);border:1px solid var(--line);padding:20px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .2s,box-shadow .2s}
+.agenda-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.agenda-card .agenda-no{font-family:Georgia,serif;font-size:2.6rem;color:var(--gold);line-height:1}
+.agenda-card h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;line-height:1.1;margin:15px 0 8px}
+.agenda-card p{font-size:11px;color:var(--muted);margin:0}
+.sources-section{background:#ecebe4;padding:70px 0}
+.featured-section{padding:100px 0;background:#f1eee5;border-top:1px solid var(--line)}
+.featured-section .section-head h2{max-width:780px}
+.featured-carousel{border:1px solid var(--line);background:var(--white);padding:18px;box-shadow:var(--shadow)}
+.featured-carousel:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.featured-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.featured-scope-filters{display:flex;gap:8px;flex-wrap:wrap}
+.featured-scope-filter,.featured-control{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 12px;font:inherit;font-size:10px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
+.featured-scope-filter.active,.featured-scope-filter:hover,.featured-control:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.featured-controls{display:flex;align-items:center;gap:9px}
+.featured-control:disabled{opacity:.4;cursor:not-allowed}
+.featured-status{min-width:48px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);font-weight:700}
+.featured-slides{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:18px}
+.featured-slide{display:grid;grid-template-columns:minmax(240px,.9fr) minmax(0,1.1fr);gap:24px;padding:18px;border:1px solid var(--line);background:#fbfaf6}
+.featured-carousel-ready .featured-slide{display:none}
+.featured-carousel-ready .featured-slide.is-active{display:grid}
+.featured-media{margin:0;min-width:0}
+.featured-media img{display:block;width:100%;height:310px;object-fit:cover;background:#dfe8e5}
+.featured-media figcaption{font-size:10px;line-height:1.4;color:var(--muted);padding-top:8px}
+.featured-image-note{display:block;margin-top:8px;padding:6px 8px;background:#fff6e5;border:1px solid #efd9ac;color:#6d4a12;font-size:9px;line-height:1.35}
+.featured-slide-copy{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.featured-slide-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.featured-sector,.featured-scope-badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.featured-sector{background:var(--sky);color:var(--navy)}
+.featured-scope-badge{background:var(--gold-soft);color:#6d4a12}
+.featured-slide h3{font-family:Georgia,serif;font-size:clamp(1.7rem,3vw,2.6rem);font-weight:400;line-height:1.05;letter-spacing:-.04em;margin:18px 0 12px}
+.featured-caption{font-size:14px;line-height:1.5;color:#35434a;margin:0}
+.featured-source{margin-top:22px}
+.featured-pending-section .section-head p{max-width:500px}
+.requests-section{background:var(--white);border-top:1px solid var(--line)}
+.request-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);gap:28px;align-items:start}
+.request-form{background:#fbfaf6;border:1px solid var(--line);padding:clamp(20px,4vw,40px);box-shadow:var(--shadow);position:relative}
+.request-config-status{margin:0 0 26px;padding:12px 14px;border-left:3px solid var(--gold);background:var(--gold-soft);color:#5f4317;font-size:12px;font-weight:700}
+.request-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.request-field{display:grid;gap:8px;margin-bottom:18px;min-width:0}
+.request-field-wide{grid-column:1/-1}
+.request-field label,.request-contact-fields legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--navy)}
+.request-required{color:#9a351f}
+.request-field input,.request-field select,.request-field textarea{width:100%;border:1px solid #bfc7c6;border-radius:0;background:#fff;color:var(--ink);font:inherit;font-size:14px;padding:12px 13px;transition:border-color .2s,box-shadow .2s,background .2s}
+.request-field textarea{resize:vertical;min-height:145px}
+.request-field select{min-height:47px}
+.request-field input:hover,.request-field select:hover,.request-field textarea:hover{border-color:#829493}
+.request-field input:focus,.request-field select:focus,.request-field textarea:focus{outline:3px solid rgba(216,155,49,.38);outline-offset:2px;border-color:var(--blue);background:#fff}
+.request-field input:disabled,.request-field select:disabled{background:#ecebe4;color:#788086;cursor:not-allowed}
+.request-note{margin:-4px 0 20px;padding:12px 14px;background:#eef5f1;border-left:3px solid var(--green);color:#355448;font-size:11px;line-height:1.55}
+.request-contact-fields{margin:2px 0 20px;padding:20px;border:1px solid var(--line);background:#f3f1e9;min-width:0}
+.request-contact-fields legend{padding:0 8px}
+.request-consent{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start;margin:22px 0 12px}
+.request-consent input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--blue)}
+.request-consent label{font-size:12px;line-height:1.5;color:#35434a;cursor:pointer}
+.request-honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+.request-submit{border:0;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 10px 22px rgba(11,38,60,.18)}
+.request-submit:hover{background:var(--blue)}
+.request-submit:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.request-submit:disabled{opacity:.55;cursor:wait;transform:none}
+.request-status,.request-confirmation{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.5}
+.request-status{background:#ecebe4;border-left:3px solid #7b8589;color:#46545a}
+.request-status.is-error{background:#fff0eb;border-left-color:#9a351f;color:#7a2818}
+.request-confirmation{background:var(--green-soft);border-left:3px solid var(--green);color:#244d3a;font-weight:700}
+.request-status[hidden],.request-confirmation[hidden]{display:none}
+.request-aside{background:var(--navy);color:#fff;padding:8px 28px;box-shadow:var(--shadow)}
+.request-aside>div{padding:26px 0;border-bottom:1px solid rgba(255,255,255,.16)}
+.request-aside>div:last-child{border-bottom:0}
+.request-aside span{display:block;color:var(--gold);font-size:10px;letter-spacing:.16em;font-weight:700;margin-bottom:12px}
+.request-aside h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;margin:0 0 10px}
+.request-aside p{font-size:12px;line-height:1.6;color:rgba(255,255,255,.68);margin:0}
+.indicator-section{padding:100px 0;background:#eef5f1;border-top:1px solid var(--line)}
+.indicator-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.indicator-card{background:var(--white);border:1px solid var(--line);padding:20px;min-height:220px;box-shadow:0 12px 30px rgba(11,38,60,.05);display:flex;flex-direction:column}
+.indicator-top{display:flex;justify-content:space-between;align-items:start;gap:10px}
+.indicator-top .eyebrow{font-size:9px;letter-spacing:.12em}
+.indicator-card h3{font-family:Georgia,serif;font-size:1.25rem;font-weight:400;line-height:1.15;margin:20px 0 12px}
+.indicator-value{display:flex;align-items:baseline;gap:8px;color:var(--navy)}
+.indicator-value strong{font-family:Georgia,serif;font-size:1.7rem;font-weight:400}
+.indicator-value span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.indicator-card p{font-size:11px;color:var(--muted);line-height:1.45;margin:12px 0 16px}
+.indicator-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:auto;font-size:9px;color:var(--muted)}
+.source-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+.source-list li{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #d4d5cb;font-size:12px}
+.source-list li span:nth-child(2){display:grid;gap:3px}
+.source-list li small{font-size:9px;color:var(--muted)}
+.source-legend{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0 0;font-size:10px;color:var(--muted)}
+.source-grade{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700}
+.source-link{justify-self:end}
+.site-footer{background:#081d2c;color:#fff;padding:34px 0 28px}
+.footer-inner{display:flex;justify-content:space-between;gap:30px;align-items:center;flex-wrap:wrap}
+.footer-inner p{font-size:11px;color:rgba(255,255,255,.56);margin:0;max-width:650px}
+.footer-inner strong{font-family:Georgia,serif;font-size:1.3rem;font-weight:400;display:block;margin-bottom:6px}
+.deerflow{font-size:10px;color:rgba(255,255,255,.45);text-decoration:none;border:1px solid rgba(255,255,255,.2);padding:7px 10px;border-radius:999px;white-space:nowrap}
+.deerflow:hover{color:#fff;border-color:#fff}
+/* Sponsor slot. Deliberately reads as an unfilled placeholder: no invented name, no
+   invented contribution, no amount. The contribution line is a factual disclosure the
+   owner completes, not a claim of delivered achievement. */
+.sponsor{display:flex;gap:14px;align-items:center;max-width:400px;padding:12px 16px;border:1px dashed rgba(255,255,255,.28);border-radius:4px;background:rgba(255,255,255,.03)}
+.sponsor-photo{width:58px;height:58px;flex:none;border:1px dashed rgba(255,255,255,.3);border-radius:3px;display:grid;place-items:center;text-align:center;padding:4px}
+.sponsor-photo span{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);line-height:1.3}
+.sponsor-body{min-width:0}
+.sponsor-label{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}
+.sponsor-name{display:block;font-family:Georgia,serif;font-size:1.05rem;font-weight:400;color:#fff}
+.sponsor-contribution{display:block;font-size:11px;line-height:1.45;color:rgba(255,255,255,.72);margin-top:5px}
+.sponsor-contribution b{color:#fff;font-weight:700}
+.reveal{opacity:0;transform:translateY(15px);animation:rise .7s ease forwards;animation-delay:var(--delay,0s)}
+@keyframes rise{to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+@media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
+@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}}
+@media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-grid{grid-template-columns:repeat(4,1fr)}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
+@media (max-width:760px){.shell{width:min(100% - 28px,1240px)}.hero{min-height:auto;padding-top:112px;padding-bottom:54px}.hero-grid,.intro-grid,.governance-grid{grid-template-columns:1fr}.hero h1{font-size:clamp(3.2rem,16vw,5.5rem)}.portrait-wrap{min-height:390px;margin-top:20px}.portrait-wrap::before{width:280px;height:280px;right:4%}.portrait-wrap::after{width:320px;height:400px;right:1%}.portrait{max-height:420px}.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}.stat:nth-child(2){border-right:0}.section{padding:70px 0}.section-head{display:block}.section-head p{margin-top:18px}.progress-path{grid-template-columns:1fr;padding:16px}.path-step{min-height:0;padding:14px 16px 24px}.path-step:not(:last-child)::after{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}.arrow-head{padding:15px 16px}.arrow-path{display:block;padding:14px}.path-node{margin-bottom:10px;padding:16px}.path-arrow{padding:0;height:24px;transform:rotate(90deg)}.lga-grid{grid-template-columns:1fr 1fr}.lga-detail{display:block}.lga-detail .detail-label{display:block;margin-bottom:12px}.governor-card img{height:340px}.agenda-grid{grid-template-columns:1fr 1fr}.source-list{grid-template-columns:1fr}.footer-inner{display:block}.deerflow{display:inline-block;margin-top:20px}}"""
+
+SHELL_CSS = """
+/* --- shared multi-page shell ------------------------------------------- */
+.page-head{background:var(--navy);position:relative;z-index:2}
+/* position:relative, not static: the mobile panel is absolutely positioned at
+   top:100% of this bar and needs it as its containing block. */
+.page-head .topbar{position:relative;background:var(--navy);padding:18px 0}
+.page-hero{background:var(--navy);color:#fff;padding:56px 0 62px;position:relative;overflow:hidden}
+.page-hero::before{content:"";position:absolute;width:760px;height:760px;right:-200px;top:-420px;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 60px rgba(255,255,255,.025),0 0 0 120px rgba(255,255,255,.02)}
+.page-hero .shell{position:relative;z-index:1}
+.page-hero .eyebrow{color:var(--gold)}
+.page-hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(2.2rem,4.6vw,3.9rem);font-weight:400;line-height:1.02;letter-spacing:-.05em;margin:16px 0 18px;max-width:820px}
+.page-hero p{font-size:clamp(1rem,1.4vw,1.15rem);color:rgba(255,255,255,.76);max-width:640px;margin:0}
+.page-hero .crumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+.page-hero .crumbs a{color:rgba(255,255,255,.66);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.28);padding-bottom:2px}
+.page-hero .crumbs a:hover{color:#fff;border-color:#fff}
+.page-hero .crumbs span{color:rgba(255,255,255,.4)}
+
+/* Primary nav. Hidden below 1050px, where .navmenu takes over - without that,
+   phones get no navigation at all once the site has subpages. */
+.navmenu{display:none}
+.navmenu-toggle{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:7px 12px}
+.navmenu-toggle::-webkit-details-marker{display:none}
+.navmenu-toggle svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.navmenu-panel{position:absolute;left:0;right:0;top:100%;background:var(--navy);border-top:1px solid rgba(255,255,255,.12);box-shadow:0 22px 44px rgba(5,20,31,.4);padding:10px 0 16px}
+.navmenu-panel a{display:block;padding:11px 20px;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.82);text-decoration:none;border-left:2px solid transparent}
+.navmenu-panel a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.navmenu-panel a[aria-current="page"]{color:var(--gold);border-left-color:var(--gold)}
+
+/* Cross-links from the home page into the subpages. */
+.nav-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.nav-card{display:block;text-decoration:none;color:inherit;background:var(--white);border:1px solid var(--line);padding:24px 22px;box-shadow:0 12px 32px rgba(11,38,60,.05);transition:transform .2s,box-shadow .2s,border-color .2s}
+.nav-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--gold)}
+.nav-card .nav-card-no{font-size:10px;letter-spacing:.16em;color:var(--gold);font-weight:700}
+.nav-card h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;margin:12px 0 8px;letter-spacing:-.02em}
+.nav-card p{font-size:13px;color:var(--muted);margin:0}
+.nav-card .nav-card-go{display:inline-block;margin-top:14px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);font-weight:700}
+
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--gold);color:var(--navy);padding:10px 16px;z-index:50;font-size:12px;font-weight:700}
+.skip-link:focus{left:8px;top:8px}
+.nav a:focus-visible,.navmenu-toggle:focus-visible,.nav-card:focus-visible,.lang button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+@media (max-width:1050px){
+.navmenu{display:block}
+}
+@media (max-width:760px){
+.nav-cards{grid-template-columns:1fr}
+.page-hero{padding:40px 0 46px}
+.nav-card{padding:20px}
+}
+"""
+
+# Core script. Ships on EVERY page. renderFeatured is seeded as a no-op so the
+# carousel script can override it by assignment; setLanguage calls both hooks on
+# every page, and a ReferenceError here would kill the language toggle.
+SCRIPT_CORE = r"""
+const root=document.documentElement;
+let currentLanguage='en';
+let selectedLga='';
+let renderFeatured=()=>{};
+const renderLgaDetail=()=>{if(!selectedLga)return;const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const titleEl=document.getElementById('selected-lga');const copyEl=document.getElementById('selected-copy');if(!titleEl||!copyEl)return;const summary=currentLanguage==='ha'?btn.dataset.summaryHa:btn.dataset.summary;const promise=currentLanguage==='ha'?btn.dataset.promiseHa:btn.dataset.promise;const result=currentLanguage==='ha'?btn.dataset.resultHa:btn.dataset.result;titleEl.textContent=selectedLga;copyEl.textContent=currentLanguage==='ha'?selectedLga+': '+summary+' APM: '+promise+' Sami na gaba: '+result:selectedLga+': '+summary+' APM: '+promise+' Next result: '+result;};
+const LANGUAGE_KEY='apm-lang';
+const readStoredLanguage=()=>{try{const stored=window.localStorage.getItem(LANGUAGE_KEY);return stored==='ha'||stored==='en'?stored:null;}catch(error){return null;}};
+const storeLanguage=(lang)=>{try{window.localStorage.setItem(LANGUAGE_KEY,lang);}catch(error){/* blocked storage: the toggle still works for this page */}};
+const setLanguage=(lang,persist=true)=>{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;});document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',lang==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});document.querySelectorAll('[data-lang]').forEach(btn=>{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);};
+document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',currentLanguage==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});
+document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
+const storedLanguage=readStoredLanguage();if(storedLanguage)setLanguage(storedLanguage,false);
+document.querySelectorAll('[data-lga]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-lga]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');selectedLga=btn.dataset.lga;renderLgaDetail();}));
+"""
+
+SCRIPT_INDEX = r"""
+document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const filter=btn.dataset.filter;document.querySelectorAll('.arrow-card').forEach(card=>card.hidden=filter!=='all'&&card.dataset.sector!==filter);}));
+"""
+
+PAGE_NAV = (
+    ("index", "Home", "Gida"),
+    ("achievements", "Achievements", "Ayyuka da aka yi"),
+    ("atlas", "LGA atlas", "Taswirar LGA"),
+    ("poll", "Speak to us", "Yi magana da mu"),
+    ("agenda", "APM agenda", "Bayan-APM"),
+    ("sources", "Sources", "Bayane"),
+)
+
+MENU_ICON = ('<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+             '<path d="M4 7h16M4 12h16M4 17h16"/></svg>')
+
+
+def nav_links(active, css_class=""):
+    links = []
+    for slug, label_en, label_ha in PAGE_NAV:
+        current = ' aria-current="page"' if slug == active else ""
+        links.append(
+            f'<a class="{esc(css_class)}" href="{esc(slug)}.html"{current}>'
+            f'<span data-en="{esc(label_en)}" data-ha="{esc(label_ha)}">{esc(label_en)}</span></a>')
+    return "".join(links)
+
+
+def language_control():
+    return (
+        '<div class="lang">'
+        '<span class="lang-label" id="lang-label">'
+        '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+        '<circle cx="12" cy="12" r="9"/>'
+        '<path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg>'
+        f'{copy("Language", "Harshe")}</span>'
+        '<div class="lang-toggle" role="group" aria-labelledby="lang-label">'
+        '<button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>'
+        '<button type="button" data-lang="ha" aria-pressed="false">HA</button>'
+        '</div></div>')
+
+
+def topbar(active):
+    """Shared header. The desktop nav is hidden below 1050px, so the <details>
+    menu is the phone path; without it a phone cannot reach any subpage."""
+    return (
+        '<a class="skip-link" href="#main">Skip to content</a>'
+        '<div class="topbar"><div class="shell topbar-inner">'
+        '<a class="brand" href="index.html">'
+        '<img src="assets/brand/apm-emblem.png" width="38" height="44" '
+        'alt="Allied Peoples Movement emblem">'
+        '<small>Allied Peoples\' Movement</small></a>'
+        '<nav class="nav" data-aria-label-en="Primary navigation" '
+        'data-aria-label-ha="Babban menu" aria-label="Primary navigation">'
+        f'{nav_links(active)}</nav>'
+        f'<details class="navmenu"><summary class="navmenu-toggle">{MENU_ICON}'
+        f'<span>{copy("Menu", "Menu")}</span></summary>'
+        f'<div class="navmenu-panel">{nav_links(active)}</div></details>'
+        f'{language_control()}'
+        '</div></div>')
+
+
+def subpage_open(slug):
+    """Subpages have no dark hero, so the header needs its own opaque background.
+    .topbar is position:absolute with white text and would otherwise sit on the
+    cream page background."""
+    return f'<div class="page-head">{topbar(slug)}</div>'
+
+
+def page_hero(eyebrow_en, eyebrow_ha, title_en, title_ha, lede_en, lede_ha, crumb_en, crumb_ha):
+    return (
+        '<div class="page-hero"><div class="shell">'
+        f'<div class="eyebrow">{localized(eyebrow_en, eyebrow_ha)}</div>'
+        f'<h1>{localized(title_en, title_ha)}</h1>'
+        f'<p>{localized(lede_en, lede_ha)}</p>'
+        '<div class="crumbs"><a href="index.html">'
+        f'{copy("Home", "Gida")}</a><span>/</span>'
+        f'<span>{localized(crumb_en, crumb_ha)}</span></div>'
+        '</div></div>')
+
+
+def site_footer(built):
+    return (
+        '<footer class="site-footer"><div class="shell footer-inner">'
+        '<div><strong>APM Bauchi Progress &amp; Delivery</strong><p>'
+        f'{copy("Public-source campaign intelligence. Built", "Basirar gaggawa daga bayanan al\'umma. An gina a")} {esc(built)}. '
+        f'{copy("Public information and campaign materials are labelled separately; this page is not private polling.", "Bayanan al\'umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra\'yu na ɓoye ba.")}'
+        '</p></div>'
+        '<div class="sponsor"><div class="sponsor-photo">'
+        f'<span>{copy("Sponsor photo", "Hotun mai tallafi")}</span></div>'
+        '<div class="sponsor-body">'
+        f'<span class="sponsor-label">{copy("Sponsor", "Mai tallafi")}</span>'
+        f'<span class="sponsor-name">{copy("[ Sponsor name ]", "[ Suna na mai tallafi ]")}</span>'
+        f'<span class="sponsor-contribution">{copy("Contribution:", "Zuciya:")} <b>'
+        f'{copy("[ What was contributed and by whom — to be completed by the campaign team ]", "[ Abin da aka ba da da kuɗi — za a cika shi da hukumar gaggawa ]")}'
+        '</b></span></div></div>'
+        f'<a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" '
+        f'{attr("Created By Deerflow", "An ƙirƙira Deerflow")}>Created By Deerflow</a>'
+        '</div></footer>')
+
+
+def document(*, slug, title, description, body, scripts="", built=""):
+    """Assemble one page. The CSS is concatenated, never f-string interpolated, so
+    the stylesheet's braces are never treated as format placeholders."""
+    return (
+        '<!doctype html>\n<html lang="en">\n<head>\n'
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+        f'<meta name="description" content="{esc(description)}">\n'
+        '<link rel="icon" type="image/png" href="assets/brand/apm-emblem.png">\n'
+        f'<title>{esc(title)}</title>\n'
+        '<style>' + SITE_CSS + SHELL_CSS + '</style>\n'
+        '</head>\n'
+        f'<body class="page page--{esc(slug)}">\n'
+        f'{body}\n'
+        f'{site_footer(built)}\n'
+        '<script>' + SCRIPT_CORE + scripts + '</script>\n'
+        '</body>\n</html>\n'
+    )
+
+# ---------------------------------------------------------------------------
+# Page bodies
+# ---------------------------------------------------------------------------
+
+def _nav_cards():
+    cards = [
+        ("achievements", "01", "Achievements", "Ayyuka da aka yi",
+         "The five approved records, every public achievement, and the measurement ledger.",
+         "Mafada guda da aka amince, duk ayyuka na al'umma, da rajista na aunawa."),
+        ("atlas", "02", "LGA atlas", "Taswirar LGA",
+         "All 20 local government areas with their source-backed evidence rows.",
+         "LGA 20 da jimayin bayanai mai goyon bayan sauro."),
+        ("poll", "03", "Speak to us", "Yi magana da mu",
+         "Tell us one need in your area. No voter ID is ever requested.",
+         "Faƙa mana buƙatar daya a cikin wurin da kake. Babba wani ID na zabb'ar masu zayyawa a nemi."),
+        ("agenda", "04", "APM agenda", "Bayan-APM",
+         "The published campaign commitments, kept separate from achievements.",
+         "Alkawarin gaggawa da aka wallafa, an rabu da ayyuka da aka kammala."),
+        ("sources", "05", "Sources", "Bayane",
+         "Every record traced to a source, with the grading legend and method.",
+         "Kowane bayana yana da sauro, tare da ma'ana da hanyar tantawa."),
+    ]
+    items = []
+    for slug, number, label_en, label_ha, blurb_en, blurb_ha in cards:
+        items.append(
+            f'<a class="nav-card" href="{esc(slug)}.html">'
+            f'<span class="nav-card-no">{number}</span>'
+            f'<h3>{localized(label_en, label_ha)}</h3>'
+            f'<p>{localized(blurb_en, blurb_ha)}</p>'
+            f'<span class="nav-card-go">{copy("Open", "Buɗe")} &rarr;</span></a>')
+    return '<div class="nav-cards">' + "".join(items) + "</div>"
+
+
+def body_index(ctx):
+    stats = (
+        '<section class="stats"><div class="shell stats-grid">'
+        f'<div class="stat"><strong>{len(LGAS)}</strong><span>{copy("LGAs in the atlas", "LGA a cikin taswirar")}</span></div>'
+        f'<div class="stat"><strong>{ctx["achievement_count"]}</strong><span>{copy("Public records mapped", "Bayanan da aka nunawa")}</span></div>'
+        f'<div class="stat"><strong>{ctx["promise_count"]}</strong><span>{copy("APM commitments tracked", "Alkawarin APM da aka sa ido")}</span></div>'
+        f'<div class="stat"><strong>{len(ctx["indicator_rows"])}</strong><span>{copy("Outcome indicators", "Alamu na sakamako")}</span></div>'
+        '</div></section>')
+
+    hero = (
+        '<main id="main">'
+        '<header class="hero" id="top">'
+        + topbar("index") +
+        '<div class="shell hero-grid"><div>'
+        f'<div class="eyebrow">{copy("Official campaign record · Bauchi State", "Ƙaƙarar gaggawa · Bauchi State")}</div>'
+        f'<h1><span data-en="A Vision" data-ha="Vision">A Vision</span><br>'
+        f'<span data-en="for" data-ha="don">for</span> '
+        f'<em><span data-en="Progress." data-ha="Ci gaba.">Progress.</span></em></h1>'
+        f'<p class="hero-lede">{copy("A visual record of Bauchi’s public needs, the progress already made, and the work APM will carry forward.", "Ganiya da nuna da bukatar al’umma, ci gaban da aka yi, da aiki da APM za ci gaba da shi.")}</p>'
+        '<div class="hero-actions">'
+        f'<a class="btn btn-primary" href="achievements.html">{copy("Explore the progress", "Duba ci gaban")} <span>→</span></a>'
+        f'<a class="btn btn-secondary" href="atlas.html">{copy("View LGA atlas", "Duba taswirar LGA")}</a>'
+        f'<a class="btn btn-secondary" href="poll.html">{copy("Speak to us", "Yi magana da mu")}</a>'
+        '</div>'
+        f'<div class="motto" {attr("Integrity · Sacrifice · Service", "Integrity · Sacrifice · Service")}>Integrity · Sacrifice · Service</div>'
+        '</div><div class="portrait-wrap">'
+        '<img class="portrait" src="assets/brand/yakubu-adamu-hero.png" alt="Dr. Yakubu Adamu campaign portrait">'
+        '<div class="portrait-caption"><strong>Dr. Yakubu Adamu</strong>'
+        f'<span {attr("Bauchi State Governor candidate", "Mikaƙin gwamna jihada Bauchi")}>Bauchi State Governor candidate</span>'
+        '</div></div></div></header>')
+
+    sections = [
+        '<section class="section" id="progress"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("The delivery story", "Labari na isar da sabis")}</div>'
+        f'<h2>{copy("From public need to the next result.", "Daga buƙatar al\'umma zuwa sakamako na gaba.")}</h2></div>'
+        f'<p>{copy("The new dashboard keeps needs, public records, campaign commitments and future measures in one traceable story.", "Sabuwar dashboard tana buƙatar al\'umma, bayanan ci gabansu, alkawarin gaggawa da matakan nan zuwa cikin wataƙa mai sauri.")}</p>'
+        '</div><div class="progress-path">'
+        f'<div class="path-step"><span class="step-no">{copy("01 / NEED", "01 / BUƙATAR")}</span><h3>{copy("What matters?", "Me ya fi muhimmanci?")}</h3><p>{copy("Start with the everyday need.", "Fara da buƙatar rayuwar yau.")}</p></div>'
+        f'<div class="path-step"><span class="step-no">{copy("02 / RECORD", "02 / BAYANI")}</span><h3>{copy("What exists?", "Me yana nan?")}</h3><p>{copy("Show documented progress.", "Nuna ci gaban da aka tabbatar.")}</p></div>'
+        f'<div class="path-step"><span class="step-no">{copy("03 / PROMISE", "03 / ALKAWARI")}</span><h3>{copy("What comes next?", "Me zai zo bayan nan?")}</h3><p>{copy("Make the commitment clear.", "Sanya alkawarin a bayyana.")}</p></div>'
+        f'<div class="path-step"><span class="step-no">{copy("04 / RESULT", "04 / SAKAMAKO")}</span><h3>{copy("How will we know?", "Yaya za mu sani?")}</h3><p>{copy("Measure what changes.", "Auna abin da za ta canza.")}</p></div>'
+        '</div><div class="filter-row">'
+        f'<button class="filter active" type="button" data-filter="all" {attr("All records", "Dufin bayanai")}>All records</button>'
+        f'<button class="filter" type="button" data-filter="health" {attr("Health", "Lafiya")}>Health</button>'
+        f'<button class="filter" type="button" data-filter="education" {attr("Education", "Ilimi")}>Education</button>'
+        f'<button class="filter" type="button" data-filter="wash" {attr("Water & climate", "Ruwa da sauroyi")}>Water &amp; climate</button>'
+        f'<button class="filter" type="button" data-filter="governance" {attr("Governance", "Ganyayi")}>Governance</button>'
+        f'<button class="filter" type="button" data-filter="infrastructure" {attr("Infrastructure", "Infastructure")}>Infrastructure</button>'
+        '</div><div class="arrow-list">' + "".join(ctx["arrow_cards"]) + '</div></div></section>',
+
+        '<section class="section" id="continuity"><div class="shell governance-grid">'
+        '<div class="governor-card"><img src="assets/brand/bala-mohammed.png" alt="Governor Bala Mohammed">'
+        '<div class="governor-caption">'
+        f'<strong>{copy("Progress with continuity", "Ci gaba mai ci gaba")}</strong>'
+        f'<span {attr("Current Bauchi State administration and the next APM chapter", "Ggwamnatin Bauchi ta yanzu da sabon babban darasi na APM")}>Current Bauchi State administration and the next APM chapter</span>'
+        '</div></div><div class="governance-copy">'
+        f'<div class="eyebrow">{copy("Build on what is working", "Ci gaba kan abin da ke aiki")}</div>'
+        f'<h3>{copy("The next chapter should finish the journey.", "Babban sabo ya kamata ya kare adireshin da aka fara.")}</h3>'
+        f'<p>{copy("This landing page presents the current administration’s public record first, then shows where APM’s published commitments can complete, expand and measure the next priorities.", "Wannan shafi yana nuna bayanan gwamnati na yanzu da farko, sannan ya nuna inda alkawarin APM za ka ci gaba da shi, ya kuma yi aiki, ya sanya ido kan mabambanci na gaba.")}</p>'
+        '<div class="continuity-list">'
+        f'<div class="continuity-item"><b>01</b><span>{copy("Credit progress to the people and institutions delivering it.", "Mayar da ci gaban ga mutane da sashen da ke aiki.")}</span></div>'
+        f'<div class="continuity-item"><b>02</b><span>{copy("Show joint delivery honestly, including partners and public institutions.", "Nuna aiki tare da gaskiya, tare da abokan hulɗe da sashen gwamnati.")}</span></div>'
+        f'<div class="continuity-item"><b>03</b><span>{copy("Turn every promise into a result that can be tracked.", "Sanya kowane alkawari ya zama sakamako da za a iya sa shi ido a kai.")}</span></div>'
+        '</div></div></div></section>',
+
+        '<section class="section" id="pages"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("Go deeper", "Tafi ciki")}</div>'
+        f'<h2>{copy("Five pages, one record.", "Shafi biyu da daya, rubutanci daya.")}</h2></div>'
+        f'<p>{copy("Every page keeps its own sources. Nothing here is a private poll.", "Kowane shafi yana da sauro shi. Babu komi a ciki da yake private poll.")}</p>'
+        '</div>' + _nav_cards() + '</div></section>',
+    ]
+    return hero + stats + "".join(sections) + "</main>"
+
+
+def body_achievements(ctx):
+    header = subpage_open("achievements")
+    sections = [
+        ctx["featured_section"],
+        '<section class="section" id="records"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("Every public record", "Kowane bayanan al\'umma")}</div>'
+        f'<h2>{copy("All mapped achievements.", "Duk ayyuka da aka nunawa.")}</h2></div>'
+        f'<p>{copy("Each record keeps its own verification status, so an unverified claim is never shown as a completed project.", "Kowane bayana yana da yanayin tabbacinsa, don haka ba a nuna wanda ba a tabbatar a shi azaman aikin da aka kammala.")}</p>'
+        '</div><div class="arrow-list">' + "".join(ctx["arrow_cards"]) + '</div></div></section>',
+        ctx["indicator_section"],
+    ]
+    return (header + page_hero("Source-backed achievements", "Ayyuka da aka tabbatar",
+                      "What has actually been delivered.", "Abin da aka isar da shi gaske.",
+                      "Five approved records, every mapped public achievement, and the measurement ledger that separates reported outputs from outcomes still being measured.",
+                      "Mafada guda da aka amince, duk ayyukan da aka nunawa, da rajistan aunawa da yake bambanta abubuwan da aka isar da su da sakamako da kuma ake aunawa.",
+                      "Achievements", "Ayyuka")
+            + '<main id="main">' + "".join(sections) + "</main>")
+
+
+def body_atlas(ctx):
+    header = subpage_open("atlas")
+    section = (
+        '<section class="section lga-section" id="atlas"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("20 local government areas", "LGA 20")}</div>'
+        f'<h2>{copy("A 20-LGA evidence queue for Bauchi.", "Bita na bayanai ga LGA 20 a Bauchi.")}</h2></div>'
+        f'<p>{copy("All 20 LGAs have one curated source-backed evidence row. This is a starting evidence model, not comprehensive sector coverage for every community.", "Yanzu dukan LGA 20 suna da jimayi na bayanai mai goyon bayan sauro. Wannan ba cikakken bayanan kowane bangare ba.")}</p>'
+        '</div><div class="lga-grid">' + lga_atlas(ctx["lga_rows"]) + '</div>'
+        '<div class="lga-detail" id="lga-detail"><div>'
+        f'<div class="detail-label">{copy("Selected area · statewide evidence start", "Wanda za zaɓi · ci gaban jihada")}</div>'
+        '<h3 id="selected-lga">Bauchi</h3>'
+        '<p id="selected-copy" aria-live="polite" data-en="Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified." '
+        'data-ha="Zaɓi LGA don duba bita don bayanai. Ƙa bayanan farko ana sune a matsayin ci gaban jihada yayin da ake tabbatar da bayanan LGA.">Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified.</p>'
+        f'</div><span class="detail-label" {attr("20 LGAs · 1 evidence model", "LGA 20 · 1 tsarin tabbaci")}>20 LGAs · 1 evidence model</span>'
+        '</div></div></section>')
+    return (header + page_hero("LGA atlas", "Taswirar LGA",
+                      "Twenty local government areas.", "LGA ashirin.",
+                      "Every Bauchi LGA with its source-backed evidence row. Select an area to read what is recorded for it.",
+                      "Kowane LGA na Bauchi tare da jimayin bayanai mai goyon bayan sauro. Zaɓi wani area don karanta abin da aka record shi.",
+                      "LGA atlas", "Taswirar LGA")
+            + '<main id="main">' + section + "</main>")
+
+
+def body_poll(ctx):
+    header = subpage_open("poll")
+    note = (
+        '<section class="section" id="how"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("Before you send", "Kafin ka aika")}</div>'
+        f'<h2>{copy("What happens to this form.", "Abin da zai faru da wannan fom.")}</h2></div>'
+        f'<p>{copy("This form is not connected to a public endpoint yet, so nothing is sent from this build.", "Wannan fom ba a haɗa da wata adireshin da za a iya amfani ba tukuna, don haka ba a tura komai daga wannan gina.")}</p>'
+        '</div><div class="note-box">' + copy(
+            "No voter ID is requested. No electoral identity number is collected. Any confirmation "
+            "reference is a generated request tracking reference, not a voter ID.",
+            "Ba a nemi ID na zabb'ar masu zayyawa. Ba a tara lambar wayo da ke gano mutum. ID na tabbaci yana nufin bin buƙatar kawai, ba ID na zabb'ar masu zayyawa ba.") + '</div></div></section>')
+    return (header + page_hero("Speak to us", "Yi magana da mu",
+                      "Tell us one need in your area.", "Faƙa mana buƙatar daya a cikin wurin da kake.",
+                      "Choose your local government area and the specific thing that matters to you. Contact details are optional and are never shown publicly.",
+                      "Zaɓi LGA da kuma abin da ke muhimmanci maka. Bayanan hulɗe na zaɗi ne kuma ba a nuna su a fili ba.",
+                      "Speak to us", "Yi magana da mu")
+            + '<main id="main">' + ctx["request_section"] + note + "</main>")
+
+
+def body_agenda(ctx):
+    header = subpage_open("agenda")
+    cards = []
+    for idx, promise in enumerate(ctx["promise_rows"], 1):
+        sector = promise.get("sector", "")
+        label = SECTOR_LABELS.get(sector, sector.title())
+        ha = SECTOR_HA.get(sector, label)
+        clause = ' <span class="agenda-kind">' + copy("published clause", "bendi da aka wallafa") + "</span>" \
+            if promise.get("promise_type") == "Published commitment clause" else ""
+        cards.append(
+            f'<article class="agenda-card"><div><span class="agenda-no">0{idx}</span>'
+            f'<h3>{copy(label, ha)}</h3>'
+            f'<p>{localized(promise.get("promise_text", ""), promise.get("promise_text_ha", ""))}</p>'
+            f'<p class="agenda-type">{esc(promise.get("promise_type", ""))}{clause}</p>'
+            f'<p class="agenda-measure">{copy("Measured by:", "Ana aunawa da:")} '
+            f'{localized(promise.get("success_indicator", ""), promise.get("success_indicator_ha", ""))}</p>'
+            '</div>'
+            f'{source_link(promise.get("source_id", ""), ctx["sources"], "Campaign source", "Sauro gaggawa")}'
+            '</article>')
+    section = (
+        '<section class="section" id="agenda"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("Published campaign commitments", "Alkawarin gaggawa da aka wallafa")}</div>'
+        f'<h2>{copy("A focused agenda for the next Bauchi.", "ƙa agenda mai mayar hankali don Bauchi na gaba.")}</h2></div>'
+        f'<p>{copy("These are campaign commitments, not completed achievements. They are shown separately so the evidence story stays clear.", "Waannan alkawarin gaggawa ne, ba ayyuka da aka kammala ba. An nuna su a wuri dabewa don bayan ci gabansu ya kasance mai sauƙi.")}</p>'
+        '</div><div class="agenda-grid">' + "".join(cards) + '</div></div></section>')
+    return (header + page_hero("APM agenda", "Bayan-APM",
+                      "Published commitments.", "Alkawarin da aka wallafa.",
+                      "These are campaign commitments, not completed projects. One of them is a published clause rather than a standalone pillar, and it is labelled as such.",
+                      "Waannan alkawarin gaggawa ne, ba ayyuka da aka kammala ba. Dayan daga cikinsu shi ne bendi na alkawarin da aka wallafa, ba tsari mai zaman kansa ba, an nuna shi haka.",
+                      "APM agenda", "Bayan-APM")
+            + '<main id="main">' + section + "</main>")
+
+
+def body_sources(ctx):
+    header = subpage_open("sources")
+    archived = len(ctx["manifest_rows"])
+    pending = len(ctx["pending_review_rows"])
+    section = (
+        '<section class="sources-section" id="sources"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("Traceable by design", "An tsara shi don sa ido")}</div>'
+        f'<h2>{copy("Every record has a source.", "Kowane bayana yana da sauro.")}</h2></div>'
+        f'<p>{copy(f"{archived} source pages archived. {pending} candidate records are queued for source review before they can become achievements.", f"An ruƙe shafi {archived} na bayanai. An sanya bayanan {pending} a cikin bita kafin su iya zama ayyuka.")}</p>'
+        '</div>'
+        f'<p class="note-box">{copy("Source titles are citations and appear in the language they were published in. Our own notes, caveats and indicator values are translated.", "Sunan suna citations ne suna bayyana a cikin harshen da aka wallafa da su. Bayanan mu, gargaɗi da mu da aka nuna alamu suna an fassara.")}</p>'
+        '<ul class="source-list">' + source_footer(ctx["sources"]) + '</ul>'
+        '<div class="source-legend">'
+        f'<span><b>A</b> {copy("Primary or institutional record", "Bayanan gwamna ko instituciya")}</span>'
+        f'<span><b>B</b> {copy("Programme or corroborating evidence", "Shirin ko tabbacin da ke tabbatar")}</span>'
+        f'<span><b>D</b> {copy("Campaign material", "Kayan gaggawa")}</span>'
+        '</div></div></section>')
+    method = (
+        '<section class="section" id="method"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("Method", "Hanya")}</div>'
+        f'<h2>{copy("How this page is built.", "Yaya wannan shafi aka gina.")}</h2></div>'
+        f'<p>{copy("Every record on this site comes from a registered, archived public source. Missing data stays missing rather than being estimated.", "Kowane bayana a wannan shafi yana fito daga sauro na al'umma da aka yi riga da adana shi. Babin komai yake babi maimakon a yi kiyaye shi.")}</p>'
+        '</div><div class="progress-path">'
+        f'<div class="path-step"><span class="step-no">01</span><h3>{copy("Discover", "Nuna")}</h3><p>{copy("Public sources are found and archived with a content hash.", "An same bayanan al'umma an kuma adana tare da hash.")}</p></div>'
+        f'<div class="path-step"><span class="step-no">02</span><h3>{copy("Review", "Bita")}</h3><p>{copy("Each candidate is graded before it can become a record.", "Ana bambanta kowane gaskiya kafin ta iya zama bayana.")}</p></div>'
+        f'<div class="path-step"><span class="step-no">03</span><h3>{copy("Curate", "Zaɓa")}</h3><p>{copy("Records keep their own verification status and caveat.", "Bayanan sun riƙe yanayin tabbaccinsu da gargaɗi.")}</p></div>'
+        f'<div class="path-step"><span class="step-no">04</span><h3>{copy("Publish", "Wallafa")}</h3><p>{copy("A weekly build regenerates the pages from approved data.", "Gina mai yi kowane mako yana sake yin shafuka daga bayanan da aka amince.")}</p></div>'
+        '</div></div></section>')
+    return (header + page_hero("Sources &amp; method", "Bayane da hanya",
+                      "Every record has a source.", "Kowane bayana yana da sauro.",
+                      f"{len(ctx['sources'])} registered public sources, archived with content hashes, plus the grading legend and the build method.",
+                      f"{len(ctx['sources'])} bayanan al'umma da aka saita, an adana su tare da hash, tare da ma'ana da kuma hanya gina.",
+                      "Sources", "Bayane")
+            + '<main id="main">' + section + method + "</main>")
+
+
+PAGE_BUILDERS = {
+    "index": (body_index, "APM Bauchi Progress & Delivery",
+              "APM Bauchi Progress and Delivery: public needs, current achievements, campaign commitments and next results."),
+    "achievements": (body_achievements, "Achievements · APM Bauchi",
+                     "Five approved achievements, every mapped public record, and the APM Bauchi measurement ledger."),
+    "atlas": (body_atlas, "LGA atlas · APM Bauchi",
+              "All 20 Bauchi local government areas with source-backed evidence rows."),
+    "poll": (body_poll, "Speak to us · APM Bauchi",
+             "Tell APM Bauchi one need in your area. No voter ID is ever requested."),
+    "agenda": (body_agenda, "APM agenda · APM Bauchi",
+               "Published APM Bauchi campaign commitments, kept separate from completed achievements."),
+    "sources": (body_sources, "Sources & method · APM Bauchi",
+                f"{len(build_sources())} registered public sources for the APM Bauchi record, with the grading legend and build method."),
+}
+
+
+def load_context():
     sources = build_sources()
     needs = build_needs()
     promises = build_promises()
@@ -932,21 +1621,16 @@ def render():
     pending_review_rows = [row for row in review_rows if row.get("review_status") == "needs_review"]
     ward_data = load_lga_wards()
     ward_rows = ward_data[0] if ward_data else []
-    built = datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y · %H:%M UTC")
+    promise_rows = read_csv("promises.csv")
+
     arrow_cards = []
-    for sector in ["health", "education", "wash", "infrastructure", "governance", "livelihoods", "security", "agriculture"]:
+    for sector in ["health", "education", "wash", "infrastructure", "governance",
+                   "livelihoods", "security", "agriculture"]:
         rows = achievement_groups.get(sector, [])
         if sector in ["livelihoods", "security", "agriculture"] and not rows:
             continue
         arrow_cards.append(arrow_card(sector, needs.get(sector), promises.get(sector), rows, sources))
-    source_count = len(sources)
-    achievement_count = len(achievement_rows)
-    promise_count = len(read_csv("promises.csv"))
-    hero_image = "assets/brand/yakubu-adamu-hero.png"
-    portrait_image = "assets/brand/yakubu-adamu-portrait.png"
-    governor_image = "assets/brand/bala-mohammed.png"
-    indicator_section = f'''<section class="indicator-section" id="indicators"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Measurement ledger", "Rajista na aunawa")}</div><h2>{copy("Delivery becomes useful when results are visible.", "Isar da sabis tana da sauƙi idan an nuna sakamako.")}</h2></div><p>{copy("These indicators separate reported delivery outputs from the outcomes still being measured. Blank baselines remain blank by design.", "Wannan alamu na bambanta abubuwan da aka isar da sakamako da zuwa da ake aunawa. Babu komai a cikin tushen sai an gani.")}</p></div><div class="indicator-grid">{indicator_cards(indicator_rows, sources)}</div></div></section>'''
-    request_section = request_form_section(ward_rows)
+
     asset_rows = read_csv("asset_register.csv")
     featured_rows, featured_state = load_featured_achievements(achievement_rows, asset_rows, sources)
     if featured_rows:
@@ -956,304 +1640,65 @@ def render():
         featured_section = featured_pending_section()
     else:
         featured_section = ""
-    html_doc = f'''<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="APM Bauchi Progress and Delivery: public needs, current achievements, campaign commitments and next results.">
-<link rel="icon" type="image/png" href="assets/brand/apm-emblem.png">
-<title>APM Bauchi Progress &amp; Delivery</title>
-<style>
-:root{{--ink:#13202b;--navy:#0b263c;--blue:#145d86;--sky:#d9eff6;--gold:#d89b31;--gold-soft:#f5e6c4;--paper:#f7f4ed;--white:#fffdf8;--line:#d8d8cd;--muted:#6c7880;--green:#2e7254;--green-soft:#dcefe3;--shadow:0 24px 70px rgba(11,38,60,.14)}}
-*{{box-sizing:border-box}}
-html{{scroll-behavior:smooth}}
-body{{margin:0;background:var(--paper);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",sans-serif;line-height:1.55;overflow-x:hidden}}
-body::before{{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:radial-gradient(#13202b .55px,transparent .55px);background-size:7px 7px;mix-blend-mode:multiply;z-index:10}}
-a{{color:inherit}}
-.shell{{width:min(1240px,calc(100% - 40px));margin:auto}}
-.topbar{{position:absolute;z-index:2;top:0;left:0;right:0;color:#fff;padding:22px 0}}
-.topbar-inner{{display:flex;align-items:center;justify-content:space-between;gap:20px}}
-.brand{{display:flex;align-items:center;gap:12px;text-decoration:none}}
-/* The emblem already has a transparent background, so it needs no colour filter.
-   An earlier brightness(0) invert(1) collapsed the logo's opaque white page and the
-   whitened artwork into one solid block. */
-.brand img{{width:38px;height:44px;object-fit:contain;flex:none}}
-.brand small{{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.74;margin-top:-3px}}
-.nav{{display:flex;align-items:center;gap:24px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}}
-.nav a{{opacity:.78;text-decoration:none}}
-.nav a:hover{{opacity:1}}
-.lang{{display:flex;align-items:center;gap:9px}}
-.lang-label{{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;opacity:.72;white-space:nowrap}}
-.lang-label svg{{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}}
-.lang-toggle{{display:flex;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:3px}}
-.lang button{{border:0;background:transparent;color:#fff;padding:5px 9px;border-radius:999px;cursor:pointer;font:inherit;font-size:10px}}
-.lang button.active{{background:#fff;color:var(--navy)}}
-.hero{{min-height:760px;background:var(--navy);color:#fff;position:relative;overflow:hidden;display:flex;align-items:center;padding:128px 0 74px}}
-.hero::before{{content:"";position:absolute;width:900px;height:900px;right:-220px;top:-340px;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 70px rgba(255,255,255,.025),0 0 0 140px rgba(255,255,255,.02)}}
-.hero::after{{content:"";position:absolute;inset:auto -10% 0;height:180px;background:linear-gradient(180deg,transparent,rgba(5,20,31,.5));clip-path:polygon(0 100%,100% 22%,100% 100%)}}
-.hero-grid{{display:grid;grid-template-columns:1.02fr .98fr;align-items:center;gap:56px;position:relative;z-index:1}}
-.eyebrow{{font-size:11px;letter-spacing:.19em;text-transform:uppercase;font-weight:700;color:var(--gold)}}
-.hero h1{{font-family:Georgia,"Times New Roman",serif;font-size:clamp(3.5rem,7.3vw,7.3rem);font-weight:400;line-height:.91;letter-spacing:-.06em;margin:22px 0 26px;max-width:760px}}
-.hero h1 em{{color:#f4c35d;font-style:normal}}
-.hero-lede{{font-size:clamp(1.05rem,1.7vw,1.35rem);color:rgba(255,255,255,.76);max-width:590px;margin:0 0 32px}}
-.hero-actions{{display:flex;gap:12px;flex-wrap:wrap;align-items:center}}
-.btn{{display:inline-flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid transparent;border-radius:999px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;transition:transform .2s,box-shadow .2s,background .2s}}
-.btn:hover{{transform:translateY(-2px)}}
-.btn-primary{{background:var(--gold);color:var(--navy);box-shadow:0 12px 24px rgba(216,155,49,.22)}}
-.btn-secondary{{color:#fff;border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.04)}}
-.hero-note{{margin-top:30px;display:flex;gap:18px;align-items:center;color:rgba(255,255,255,.65);font-size:11px;letter-spacing:.08em;text-transform:uppercase}}
-.hero-note::before{{content:"";width:38px;height:1px;background:var(--gold)}}
-.portrait-wrap{{min-height:570px;position:relative;display:flex;align-items:end;justify-content:center}}
-.portrait-wrap::before{{content:"";position:absolute;width:380px;height:380px;border-radius:50%;background:var(--gold);top:35px;right:25px;opacity:.9}}
-.portrait-wrap::after{{content:"";position:absolute;width:420px;height:520px;border:1px solid rgba(255,255,255,.23);right:-20px;top:0;transform:rotate(8deg)}}
-.portrait{{position:relative;z-index:1;width:min(100%,520px);max-height:610px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 30px 35px rgba(0,0,0,.25));mix-blend-mode:screen}}
-.portrait-caption{{position:absolute;z-index:2;bottom:20px;left:0;max-width:240px;padding:14px 16px;background:rgba(255,253,248,.95);color:var(--ink);border-radius:3px;box-shadow:var(--shadow);font-size:12px}}
-.portrait-caption strong{{display:block;font-family:Georgia,serif;font-size:20px;font-weight:400}}
-.motto{{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-top:34px}}
-.stats{{background:var(--gold);color:var(--navy);position:relative;z-index:3;margin-top:-1px}}
-.stats-grid{{display:grid;grid-template-columns:repeat(4,1fr)}}
-.stat{{padding:24px 28px;border-right:1px solid rgba(11,38,60,.18)}}
-.stat:last-child{{border-right:0}}
-.stat strong{{display:block;font-family:Georgia,serif;font-size:2.25rem;font-weight:400;line-height:1}}
-.stat span{{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-top:8px;font-weight:700}}
-.section{{padding:100px 0}}
-.section-head{{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:38px}}
-.section-head h2,.section-head h3{{font-family:Georgia,serif;font-size:clamp(2.2rem,4vw,4rem);font-weight:400;line-height:.98;letter-spacing:-.05em;margin:12px 0 0;max-width:720px}}
-.section-head p{{color:var(--muted);max-width:360px;font-size:14px;margin:0}}
-.light-rule{{border-top:1px solid var(--line)}}
-.intro-grid{{display:grid;grid-template-columns:1.1fr .9fr;gap:80px;align-items:start}}
-.intro-copy{{font-family:Georgia,serif;font-size:clamp(1.7rem,3vw,2.7rem);line-height:1.08;letter-spacing:-.04em;margin:0}}
-.note-box{{border-left:3px solid var(--gold);padding:8px 0 8px 22px;color:var(--muted);font-size:14px}}
-.progress-path{{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow);padding:22px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:60px}}
-.path-step{{padding:22px 20px;position:relative;min-height:180px}}
-.path-step:not(:last-child)::after{{content:"→";position:absolute;right:-13px;top:76px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--navy);font-size:19px;z-index:2}}
-.step-no{{font-size:10px;letter-spacing:.16em;color:var(--gold);font-weight:700}}
-.path-step h3{{font-family:Georgia,serif;font-size:1.4rem;font-weight:400;margin:18px 0 8px}}
-.path-step p{{font-size:13px;color:var(--muted);margin:0}}
-.filter-row{{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 22px}}
-.filter{{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 13px;font:inherit;font-size:11px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}}
-.filter.active,.filter:hover{{background:var(--navy);border-color:var(--navy);color:#fff}}
-.arrow-list{{display:grid;gap:18px}}
-.arrow-card{{background:var(--white);border:1px solid var(--line);padding:0;overflow:hidden;box-shadow:0 12px 35px rgba(11,38,60,.05)}}
-.arrow-head{{display:flex;justify-content:space-between;align-items:center;padding:17px 22px;border-bottom:1px solid var(--line);background:#fbfaf6}}
-.arrow-index{{font-family:Georgia,serif;font-size:1.2rem;color:var(--gold)}}
-.arrow-path{{display:grid;grid-template-columns:1fr 28px 1.45fr 28px 1.2fr 28px 1.1fr;align-items:stretch;padding:22px}}
-.path-node{{padding:18px;min-width:0}}
-.path-node:nth-child(odd){{background:#f7f8f3;border:1px solid #e4e8df;border-radius:2px}}
-.achievement-node{{background:var(--green-soft)!important;border-color:#c9e0ce!important}}
-.promise-node{{background:#fff6e5!important;border-color:#efd9ac!important}}
-.result-node{{background:#eaf4f7!important;border-color:#c8e0e8!important}}
-.path-arrow{{display:grid;place-items:center;color:var(--gold);font-size:24px;padding-top:70px}}
-.node-number{{font-size:10px;color:var(--muted);letter-spacing:.15em}}
-.path-node h3{{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;line-height:1.1;margin:15px 0 9px}}
-.path-node p{{font-size:13px;line-height:1.45;margin:0 0 14px;color:#35434a}}
-.node-tag{{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-top:1px solid currentColor;padding-top:6px}}
-.achievement-list{{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:9px}}
-.achievement-item{{border-bottom:1px solid rgba(46,114,84,.22);padding-bottom:9px}}
-.achievement-item:last-child{{border-bottom:0;padding-bottom:0}}
-.item-top{{display:flex;align-items:start;justify-content:space-between;gap:10px}}
-.item-top strong{{font-size:12px;line-height:1.25}}
-.achievement-item p{{font-size:11px;margin:5px 0;color:#4b6259}}
-.item-meta{{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:9px;color:#567064}}
-.status{{display:inline-block;white-space:nowrap;border-radius:999px;padding:3px 6px;font-size:8px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}}
-.status-progress{{background:var(--green);color:#fff}}
-.status-underway{{background:var(--blue);color:#fff}}
-.status-milestone{{background:#765b9e;color:#fff}}
-.status-promise{{background:var(--gold);color:var(--navy)}}
-.status-next{{background:#b88920;color:#fff}}
-.status-measured{{background:#7a6c9b;color:#fff}}
-.source-link{{font-size:9px;text-decoration:none;color:var(--blue);font-weight:700;white-space:nowrap}}
-.source-link:hover{{text-decoration:underline}}
-.empty-item{{font-size:12px;color:var(--muted)}}
-.lga-section{{background:var(--navy);color:#fff;position:relative;overflow:hidden}}
-.lga-section::before{{content:"";position:absolute;width:600px;height:600px;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-180px;top:-260px;box-shadow:0 0 0 50px rgba(255,255,255,.025),0 0 0 100px rgba(255,255,255,.02)}}
-.lga-section .section-head h2{{color:#fff}}
-.lga-section .section-head p{{color:rgba(255,255,255,.65)}}
-.lga-grid{{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative;z-index:1}}
-.lga-tile{{text-align:left;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;padding:18px 16px;min-height:105px;cursor:pointer;font:inherit;position:relative;transition:background .2s,transform .2s,border .2s}}
-.lga-tile:hover,.lga-tile.active{{background:rgba(216,155,49,.17);border-color:var(--gold);transform:translateY(-3px)}}
-.lga-tile.lga-specific{{border-color:rgba(216,155,49,.62);background:rgba(216,155,49,.08)}}
-.lga-tile.lga-specific .lga-dot{{box-shadow:0 0 0 4px rgba(216,155,49,.16)}}
-.lga-tile strong{{display:block;font-family:Georgia,serif;font-size:1.25rem;font-weight:400}}
-.lga-tile small{{display:block;color:rgba(255,255,255,.55);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-top:20px}}
-.lga-dot{{display:block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-bottom:12px}}
-.lga-detail{{margin-top:26px;border:1px solid rgba(255,255,255,.2);padding:25px;background:rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:30px;align-items:start}}
-.lga-detail h3{{font-family:Georgia,serif;font-size:2rem;font-weight:400;margin:0 0 8px}}
-.lga-detail p{{color:rgba(255,255,255,.66);font-size:14px;max-width:620px;margin:0}}
-.lga-detail .detail-label{{color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:.15em;white-space:nowrap}}
-.governance-grid{{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:start}}
-.governor-card{{background:var(--navy);color:#fff;padding:16px;box-shadow:var(--shadow);position:relative}}
-.governor-card img{{width:100%;height:440px;object-fit:cover;object-position:center top;display:block;filter:saturate(.8)}}
-.governor-caption{{padding:18px 12px 12px;display:flex;justify-content:space-between;gap:12px;align-items:end}}
-.governor-caption strong{{font-family:Georgia,serif;font-size:1.7rem;font-weight:400}}
-.governor-caption span{{color:rgba(255,255,255,.55);font-size:10px;text-align:right;line-height:1.4}}
-.governance-copy h3{{font-family:Georgia,serif;font-size:clamp(2rem,4vw,3.8rem);font-weight:400;line-height:1;letter-spacing:-.05em;margin:0 0 20px}}
-.governance-copy p{{font-size:15px;color:var(--muted);max-width:560px}}
-.continuity-list{{display:grid;gap:12px;margin-top:28px}}
-.continuity-item{{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:16px 0;border-top:1px solid var(--line)}}
-.continuity-item b{{color:var(--gold);font-family:Georgia,serif;font-size:1.5rem;font-weight:400}}
-.continuity-item span{{font-size:13px}}
-.agenda-grid{{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}}
-.agenda-card{{min-height:250px;background:var(--white);border:1px solid var(--line);padding:20px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .2s,box-shadow .2s}}
-.agenda-card:hover{{transform:translateY(-4px);box-shadow:var(--shadow)}}
-.agenda-card .agenda-no{{font-family:Georgia,serif;font-size:2.6rem;color:var(--gold);line-height:1}}
-.agenda-card h3{{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;line-height:1.1;margin:15px 0 8px}}
-.agenda-card p{{font-size:11px;color:var(--muted);margin:0}}
-.sources-section{{background:#ecebe4;padding:70px 0}}
-.featured-section{{padding:100px 0;background:#f1eee5;border-top:1px solid var(--line)}}
-.featured-section .section-head h2{{max-width:780px}}
-.featured-carousel{{border:1px solid var(--line);background:var(--white);padding:18px;box-shadow:var(--shadow)}}
-.featured-carousel:focus-visible{{outline:3px solid var(--gold);outline-offset:4px}}
-.featured-toolbar{{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}}
-.featured-scope-filters{{display:flex;gap:8px;flex-wrap:wrap}}
-.featured-scope-filter,.featured-control{{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 12px;font:inherit;font-size:10px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--muted)}}
-.featured-scope-filter.active,.featured-scope-filter:hover,.featured-control:hover{{background:var(--navy);border-color:var(--navy);color:#fff}}
-.featured-controls{{display:flex;align-items:center;gap:9px}}
-.featured-control:disabled{{opacity:.4;cursor:not-allowed}}
-.featured-status{{min-width:48px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);font-weight:700}}
-.featured-slides{{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:18px}}
-.featured-slide{{display:grid;grid-template-columns:minmax(240px,.9fr) minmax(0,1.1fr);gap:24px;padding:18px;border:1px solid var(--line);background:#fbfaf6}}
-.featured-carousel-ready .featured-slide{{display:none}}
-.featured-carousel-ready .featured-slide.is-active{{display:grid}}
-.featured-media{{margin:0;min-width:0}}
-.featured-media img{{display:block;width:100%;height:310px;object-fit:cover;background:#dfe8e5}}
-.featured-media figcaption{{font-size:10px;line-height:1.4;color:var(--muted);padding-top:8px}}
-.featured-image-note{{display:block;margin-top:8px;padding:6px 8px;background:#fff6e5;border:1px solid #efd9ac;color:#6d4a12;font-size:9px;line-height:1.35}}
-.featured-slide-copy{{display:flex;flex-direction:column;justify-content:center;min-width:0}}
-.featured-slide-meta{{display:flex;gap:8px;flex-wrap:wrap;align-items:center}}
-.featured-sector,.featured-scope-badge{{display:inline-block;padding:4px 8px;border-radius:999px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}}
-.featured-sector{{background:var(--sky);color:var(--navy)}}
-.featured-scope-badge{{background:var(--gold-soft);color:#6d4a12}}
-.featured-slide h3{{font-family:Georgia,serif;font-size:clamp(1.7rem,3vw,2.6rem);font-weight:400;line-height:1.05;letter-spacing:-.04em;margin:18px 0 12px}}
-.featured-caption{{font-size:14px;line-height:1.5;color:#35434a;margin:0}}
-.featured-source{{margin-top:22px}}
-.featured-pending-section .section-head p{{max-width:500px}}
-.requests-section{{background:var(--white);border-top:1px solid var(--line)}}
-.request-layout{{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);gap:28px;align-items:start}}
-.request-form{{background:#fbfaf6;border:1px solid var(--line);padding:clamp(20px,4vw,40px);box-shadow:var(--shadow);position:relative}}
-.request-config-status{{margin:0 0 26px;padding:12px 14px;border-left:3px solid var(--gold);background:var(--gold-soft);color:#5f4317;font-size:12px;font-weight:700}}
-.request-grid{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}}
-.request-field{{display:grid;gap:8px;margin-bottom:18px;min-width:0}}
-.request-field-wide{{grid-column:1/-1}}
-.request-field label,.request-contact-fields legend{{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--navy)}}
-.request-required{{color:#9a351f}}
-.request-field input,.request-field select,.request-field textarea{{width:100%;border:1px solid #bfc7c6;border-radius:0;background:#fff;color:var(--ink);font:inherit;font-size:14px;padding:12px 13px;transition:border-color .2s,box-shadow .2s,background .2s}}
-.request-field textarea{{resize:vertical;min-height:145px}}
-.request-field select{{min-height:47px}}
-.request-field input:hover,.request-field select:hover,.request-field textarea:hover{{border-color:#829493}}
-.request-field input:focus,.request-field select:focus,.request-field textarea:focus{{outline:3px solid rgba(216,155,49,.38);outline-offset:2px;border-color:var(--blue);background:#fff}}
-.request-field input:disabled,.request-field select:disabled{{background:#ecebe4;color:#788086;cursor:not-allowed}}
-.request-note{{margin:-4px 0 20px;padding:12px 14px;background:#eef5f1;border-left:3px solid var(--green);color:#355448;font-size:11px;line-height:1.55}}
-.request-contact-fields{{margin:2px 0 20px;padding:20px;border:1px solid var(--line);background:#f3f1e9;min-width:0}}
-.request-contact-fields legend{{padding:0 8px}}
-.request-consent{{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start;margin:22px 0 12px}}
-.request-consent input{{width:20px;height:20px;margin:2px 0 0;accent-color:var(--blue)}}
-.request-consent label{{font-size:12px;line-height:1.5;color:#35434a;cursor:pointer}}
-.request-honeypot{{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}}
-.request-submit{{border:0;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 10px 22px rgba(11,38,60,.18)}}
-.request-submit:hover{{background:var(--blue)}}
-.request-submit:focus-visible{{outline:3px solid var(--gold);outline-offset:4px}}
-.request-submit:disabled{{opacity:.55;cursor:wait;transform:none}}
-.request-status,.request-confirmation{{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.5}}
-.request-status{{background:#ecebe4;border-left:3px solid #7b8589;color:#46545a}}
-.request-status.is-error{{background:#fff0eb;border-left-color:#9a351f;color:#7a2818}}
-.request-confirmation{{background:var(--green-soft);border-left:3px solid var(--green);color:#244d3a;font-weight:700}}
-.request-status[hidden],.request-confirmation[hidden]{{display:none}}
-.request-aside{{background:var(--navy);color:#fff;padding:8px 28px;box-shadow:var(--shadow)}}
-.request-aside>div{{padding:26px 0;border-bottom:1px solid rgba(255,255,255,.16)}}
-.request-aside>div:last-child{{border-bottom:0}}
-.request-aside span{{display:block;color:var(--gold);font-size:10px;letter-spacing:.16em;font-weight:700;margin-bottom:12px}}
-.request-aside h3{{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;margin:0 0 10px}}
-.request-aside p{{font-size:12px;line-height:1.6;color:rgba(255,255,255,.68);margin:0}}
-.indicator-section{{padding:100px 0;background:#eef5f1;border-top:1px solid var(--line)}}
-.indicator-grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}}
-.indicator-card{{background:var(--white);border:1px solid var(--line);padding:20px;min-height:220px;box-shadow:0 12px 30px rgba(11,38,60,.05);display:flex;flex-direction:column}}
-.indicator-top{{display:flex;justify-content:space-between;align-items:start;gap:10px}}
-.indicator-top .eyebrow{{font-size:9px;letter-spacing:.12em}}
-.indicator-card h3{{font-family:Georgia,serif;font-size:1.25rem;font-weight:400;line-height:1.15;margin:20px 0 12px}}
-.indicator-value{{display:flex;align-items:baseline;gap:8px;color:var(--navy)}}
-.indicator-value strong{{font-family:Georgia,serif;font-size:1.7rem;font-weight:400}}
-.indicator-value span{{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}}
-.indicator-card p{{font-size:11px;color:var(--muted);line-height:1.45;margin:12px 0 16px}}
-.indicator-meta{{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:auto;font-size:9px;color:var(--muted)}}
-.source-list{{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 32px}}
-.source-list li{{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #d4d5cb;font-size:12px}}
-.source-list li span:nth-child(2){{display:grid;gap:3px}}
-.source-list li small{{font-size:9px;color:var(--muted)}}
-.source-legend{{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0 0;font-size:10px;color:var(--muted)}}
-.source-grade{{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700}}
-.source-link{{justify-self:end}}
-.site-footer{{background:#081d2c;color:#fff;padding:34px 0 28px}}
-.footer-inner{{display:flex;justify-content:space-between;gap:30px;align-items:center;flex-wrap:wrap}}
-.footer-inner p{{font-size:11px;color:rgba(255,255,255,.56);margin:0;max-width:650px}}
-.footer-inner strong{{font-family:Georgia,serif;font-size:1.3rem;font-weight:400;display:block;margin-bottom:6px}}
-.deerflow{{font-size:10px;color:rgba(255,255,255,.45);text-decoration:none;border:1px solid rgba(255,255,255,.2);padding:7px 10px;border-radius:999px;white-space:nowrap}}
-.deerflow:hover{{color:#fff;border-color:#fff}}
-/* Sponsor slot. Deliberately reads as an unfilled placeholder: no invented name, no
-   invented contribution, no amount. The contribution line is a factual disclosure the
-   owner completes, not a claim of delivered achievement. */
-.sponsor{{display:flex;gap:14px;align-items:center;max-width:400px;padding:12px 16px;border:1px dashed rgba(255,255,255,.28);border-radius:4px;background:rgba(255,255,255,.03)}}
-.sponsor-photo{{width:58px;height:58px;flex:none;border:1px dashed rgba(255,255,255,.3);border-radius:3px;display:grid;place-items:center;text-align:center;padding:4px}}
-.sponsor-photo span{{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);line-height:1.3}}
-.sponsor-body{{min-width:0}}
-.sponsor-label{{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}}
-.sponsor-name{{display:block;font-family:Georgia,serif;font-size:1.05rem;font-weight:400;color:#fff}}
-.sponsor-contribution{{display:block;font-size:11px;line-height:1.45;color:rgba(255,255,255,.72);margin-top:5px}}
-.sponsor-contribution b{{color:#fff;font-weight:700}}
-.reveal{{opacity:0;transform:translateY(15px);animation:rise .7s ease forwards;animation-delay:var(--delay,0s)}}
-@keyframes rise{{to{{opacity:1;transform:translateY(0)}}}}
-@media (prefers-reduced-motion:reduce){{*{{scroll-behavior:auto!important;animation:none!important;transition:none!important}}.reveal{{opacity:1;transform:none}}}}
-@media (max-width:1050px){{.indicator-grid{{grid-template-columns:repeat(2,1fr)}}.featured-slide{{grid-template-columns:1fr}}.request-layout{{grid-template-columns:1fr}}.request-aside{{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}}.request-aside>div{{padding:20px 0;border-bottom:0}}}}
-@media (max-width:760px){{.indicator-section{{padding:70px 0}}.indicator-grid{{grid-template-columns:1fr}}.featured-section{{padding:70px 0}}.featured-carousel{{padding:12px}}.featured-toolbar{{align-items:flex-start;flex-direction:column}}.featured-scope-filters{{width:100%}}.featured-slide{{padding:14px}}.featured-media img{{height:240px}}.request-grid{{grid-template-columns:1fr}}.request-field-wide{{grid-column:auto}}.request-aside{{grid-template-columns:1fr;padding:8px 20px}}.request-form{{padding:18px}}.request-field input,.request-field select,.request-field textarea{{font-size:16px}}}}
-@media (max-width:1050px){{.nav{{display:none}}.hero-grid{{grid-template-columns:1fr .8fr;gap:20px}}.portrait-wrap{{min-height:470px}}.lga-grid{{grid-template-columns:repeat(4,1fr)}}.agenda-grid{{grid-template-columns:repeat(3,1fr)}}.arrow-path{{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}}}
-@media (max-width:760px){{.shell{{width:min(100% - 28px,1240px)}}.hero{{min-height:auto;padding-top:112px;padding-bottom:54px}}.hero-grid,.intro-grid,.governance-grid{{grid-template-columns:1fr}}.hero h1{{font-size:clamp(3.2rem,16vw,5.5rem)}}.portrait-wrap{{min-height:390px;margin-top:20px}}.portrait-wrap::before{{width:280px;height:280px;right:4%}}.portrait-wrap::after{{width:320px;height:400px;right:1%}}.portrait{{max-height:420px}}.stats-grid{{grid-template-columns:1fr 1fr}}.stat{{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}}.stat:nth-child(2){{border-right:0}}.section{{padding:70px 0}}.section-head{{display:block}}.section-head p{{margin-top:18px}}.progress-path{{grid-template-columns:1fr;padding:16px}}.path-step{{min-height:0;padding:14px 16px 24px}}.path-step:not(:last-child)::after{{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}}.arrow-head{{padding:15px 16px}}.arrow-path{{display:block;padding:14px}}.path-node{{margin-bottom:10px;padding:16px}}.path-arrow{{padding:0;height:24px;transform:rotate(90deg)}}.lga-grid{{grid-template-columns:1fr 1fr}}.lga-detail{{display:block}}.lga-detail .detail-label{{display:block;margin-bottom:12px}}.governor-card img{{height:340px}}.agenda-grid{{grid-template-columns:1fr 1fr}}.source-list{{grid-template-columns:1fr}}.footer-inner{{display:block}}.deerflow{{display:inline-block;margin-top:20px}}}}
-</style>
-</head>
-<body>
-<header class="hero" id="top">
-  <div class="topbar"><div class="shell topbar-inner"><a class="brand" href="#top"><img src="assets/brand/apm-emblem.png" width="38" height="44" alt="Allied Peoples Movement emblem"><small>Allied Peoples' Movement</small></a><nav class="nav"><a href="#progress">{copy("Progress", "Ci gaban")}</a><a href="#atlas">{copy("LGA atlas", "Taswirar LGA")}</a><a href="#continuity">{copy("Continuity", "Ci gaba")}</a><a href="#agenda">{copy("APM agenda", "Bayan-APM")}</a><a href="#indicators">{copy("Indicators", "Alamu")}</a><a href="#requests">{copy("Request", "Buƙatar")}</a><a href="#sources">{copy("Sources", "Bayane")}</a></nav><div class="lang"><span class="lang-label" id="lang-label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg>{copy("Language", "Harshe")}</span><div class="lang-toggle" role="group" aria-labelledby="lang-label"><button type="button" data-lang="en" class="active" aria-pressed="true">EN</button><button type="button" data-lang="ha" aria-pressed="false">HA</button></div></div></div></div>
-  <div class="shell hero-grid"><div><div class="eyebrow">{copy("Official campaign record · Bauchi State", "Ƙaƙarar gaggawa · Bauchi State")}</div><h1><span data-en="A Vision" data-ha="Vision">A Vision</span><br><span data-en="for" data-ha="don">for</span> <em><span data-en="Progress." data-ha="Ci gaba.">Progress.</span></em></h1><p class="hero-lede">{copy("A visual record of Bauchi’s public needs, the progress already made, and the work APM will carry forward.", "Ganiya da nuna da bukatar al’umma, ci gaban da aka yi, da aiki da APM za ci gaba da shi.")}</p><div class="hero-actions"><a class="btn btn-primary" href="#progress">{copy("Explore the progress", "Duba ci gaban")} <span>→</span></a><a class="btn btn-secondary" href="#atlas">{copy("View LGA atlas", "Duba taswirar LGA")}</a></div><div class="motto" {attr("Integrity · Sacrifice · Service", "Integrity · Sacrifice · Service")}>Integrity · Sacrifice · Service</div></div><div class="portrait-wrap"><img class="portrait" src="{hero_image}" alt="Dr. Yakubu Adamu campaign portrait"><div class="portrait-caption"><strong>Dr. Yakubu Adamu</strong><span {attr("Bauchi State Governor candidate", "Mikaƙin gwamna jihada Bauchi")}>Bauchi State Governor candidate</span></div></div></div>
-</header>
-<section class="stats"><div class="shell stats-grid"><div class="stat"><strong>{len(LGAS)}</strong><span>{copy("LGAs in the atlas", "LGA a cikin taswirar")}</span></div><div class="stat"><strong>{achievement_count}</strong><span>{copy("Public records mapped", "Bayanan da aka nunawa")}</span></div><div class="stat"><strong>{promise_count}</strong><span>{copy("APM commitments tracked", "Alkawarin APM da aka sa ido")}</span></div><div class="stat"><strong>{len(indicator_rows)}</strong><span>{copy("Outcome indicators", "Alamu na sakamako")}</span></div></div></section>
-<main>
-<section class="section" id="progress"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("The delivery story", "Labari na isar da sabis")}</div><h2>{copy("From public need to the next result.", "Daga buƙatar al'umma zuwa sakamako na gaba.")}</h2></div><p>{copy("The new dashboard keeps needs, public records, campaign commitments and future measures in one traceable story.", "Sabuwar dashboard tana buƙatar al'umma, bayanan ci gabansu, alkawarin gaggawa da matakan nan zuwa cikin wataƙa mai sauri.")}</p></div><div class="progress-path"><div class="path-step"><span class="step-no">{copy("01 / NEED", "01 / BUƙATAR")}</span><h3>{copy("What matters?", "Me ya fi muhimmanci?")}</h3><p>{copy("Start with the everyday need.", "Fara da buƙatar rayuwar yau.")}</p></div><div class="path-step"><span class="step-no">{copy("02 / RECORD", "02 / BAYANI")}</span><h3>{copy("What exists?", "Me yana nan?")}</h3><p>{copy("Show documented progress.", "Nuna ci gaban da aka tabbatar.")}</p></div><div class="path-step"><span class="step-no">{copy("03 / PROMISE", "03 / ALKAWARI")}</span><h3>{copy("What comes next?", "Me zai zo bayan nan?")}</h3><p>{copy("Make the commitment clear.", "Sanya alkawarin a bayyana.")}</p></div><div class="path-step"><span class="step-no">{copy("04 / RESULT", "04 / SAKAMAKO")}</span><h3>{copy("How will we know?", "Yaya za mu sani?")}</h3><p>{copy("Measure what changes.", "Auna abin da za ta canza.")}</p></div></div><div class="filter-row"><button class="filter active" type="button" data-filter="all" {attr("All records", "Dufin bayanai")}>All records</button><button class="filter" type="button" data-filter="health" {attr("Health", "Lafiya")}>Health</button><button class="filter" type="button" data-filter="education" {attr("Education", "Ilimi")}>Education</button><button class="filter" type="button" data-filter="wash" {attr("Water & climate", "Ruwa da sauroyi")}>Water & climate</button><button class="filter" type="button" data-filter="governance" {attr("Governance", "Gwaji")}>Governance</button><button class="filter" type="button" data-filter="infrastructure" {attr("Infrastructure", "Infastructure")}>Infrastructure</button></div><div class="arrow-list">{''.join(arrow_cards)}</div></div></section>
-<section class="section lga-section" id="atlas"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("20 local government areas", "LGA 20")}</div><h2>{copy("A 20-LGA evidence queue for Bauchi.", "Bita na bayanai ga LGA 20 a Bauchi.")}</h2></div><p>{copy("All 20 LGAs now have one curated source-backed evidence row. This is a starting evidence model, not comprehensive sector coverage for every community.", "Yanzu dukan LGA 20 suna da jimayi na bayanai mai goyon bayan sauro. Wannan ba cikakken bayanan kowane bangare ba.")}</p></div><div class="lga-grid">{lga_atlas(lga_rows)}</div><div class="lga-detail" id="lga-detail"><div><div class="detail-label">{copy("Selected area · statewide evidence start", "Wanda za zaɓi · ci gaban jihada")}</div><h3 id="selected-lga">Bauchi</h3><p id="selected-copy" aria-live="polite" data-en="Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified." data-ha="Zaɓi LGA don duba bita don bayanai. Ƙa bayanan farko ana sune a matsayin ci gaban jihada yayin da ake tabbatar da bayanan LGA.">Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified.</p></div><span class="detail-label" {attr("20 LGAs · 1 evidence model", "LGA 20 · 1 tsarin tabbaci")}>20 LGAs · 1 evidence model</span></div></div></section>
-<section class="section" id="continuity"><div class="shell governance-grid"><div class="governor-card"><img src="{governor_image}" alt="Governor Bala Mohammed"><div class="governor-caption"><strong>{copy("Progress with continuity", "Ci gaba mai ci gaba")}</strong><span {attr("Current Bauchi State administration and the next APM chapter", "Ggwamnatin Bauchi ta yanzu da sabon babban darasi na APM")}>Current Bauchi State administration and the next APM chapter</span></div></div><div class="governance-copy"><div class="eyebrow">{copy("Build on what is working", "Ci gaba kan abin da ke aiki")}</div><h3>{copy("The next chapter should finish the journey.", "Babban sabo ya kamata ya kare adireshin da aka fara.")}</h3><p>{copy("This landing page presents the current administration’s public record first, then shows where APM’s published commitments can complete, expand and measure the next priorities.", "Wannan shafi yana nuna bayanan gwamnati na yanzu da farko, sannan ya nuna inda alkawarin APM za ka ci gaba da shi, ya kuma yi aiki, ya sanya ido kan mabambanci na gaba.")}</p><div class="continuity-list"><div class="continuity-item"><b>01</b><span>{copy("Credit progress to the people and institutions delivering it.", "Mayar da ci gaban ga mutane da sashen da ke aiki.")}</span></div><div class="continuity-item"><b>02</b><span>{copy("Show joint delivery honestly, including partners and public institutions.", "Nuna aiki tare da gaskiya, tare da abokan hulɗe da sashen gwamnati.")}</span></div><div class="continuity-item"><b>03</b><span>{copy("Turn every promise into a result that can be tracked.", "Sanya kowane alkawari ya zama sakamako da za a iya sa shi ido a kai.")}</span></div></div></div></div></section>
-<section class="section" id="agenda"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Published campaign commitments", "Alkawarin gaggawa da aka wallafa")}</div><h2>{copy("A focused agenda for the next Bauchi.", "ƙa agenda mai mayar hankali don Bauchi na gaba.")}</h2></div><p>{copy("These are campaign commitments, not completed achievements. They are shown separately so the evidence story stays clear.", "Waannan alkawarin gaggawa ne, ba ayyuka da aka kammala ba. An nuna su a wuri dabewa don bayan ci gabansu ya kasance mai sauƙi.")}</p></div><div class="agenda-grid">'''
-    for idx, promise in enumerate(read_csv("promises.csv"), 1):
-        sector = promise.get("sector", "")
-        label = SECTOR_LABELS.get(sector, sector.title())
-        ha = SECTOR_HA.get(sector, label)
-        html_doc += f'''<article class="agenda-card"><div><span class="agenda-no">0{idx}</span><h3>{copy(label, ha)}</h3><p>{localized(promise.get("promise_text", ""), promise.get("promise_text_ha", ""))}</p></div>{source_link(promise.get("source_id", ""), sources, "Campaign source", "Sauro gaggawa")}</article>'''
-    html_doc += f'''</div></div></section>
-{featured_section}
-{indicator_section}
-{request_section}
-<section class="sources-section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Traceable by design", "An tsara shi don sa ido")}</div><h2>{copy("Every record has a source.", "Kowane bayana yana da sauro.")}</h2></div><p>{copy(f"{len(manifest_rows)} source pages archived. {len(pending_review_rows)} candidate records are queued for source review before they can become achievements.", f"An ruƙe shafi {len(manifest_rows)} na bayanai. An sanya bayanan {len(pending_review_rows)} a cikin bita kafin su iya zama ayyuka.")}</p></div><ul class="source-list">{source_footer(sources)}</ul><div class="source-legend"><span><b>A</b> {copy("Primary or institutional record", "Bayanan gwamna ko instituciya")}</span><span><b>B</b> {copy("Programme or corroborating evidence", "Shirin ko tabbacin da ke tabbatar")}</span><span><b>D</b> {copy("Campaign material", "Kayan gaggawa")}</span></div></div></section>
-</main>
-<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p>{copy("Public-source campaign intelligence. Built", "Basirar gaggawa daga bayanan al'umma. An gina a")} {built}. {copy("Public information and campaign materials are labelled separately; this page is not private polling.", "Bayanan al'umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra'yu na ɓoye ba.")}</p></div><div class="sponsor"><div class="sponsor-photo"><span>{copy("Sponsor photo", "Hotun mai tallafi")}</span></div><div class="sponsor-body"><span class="sponsor-label">{copy("Sponsor", "Mai tallafi")}</span><span class="sponsor-name">{copy("[ Sponsor name ]", "[ Suna na mai tallafi ]")}</span><span class="sponsor-contribution">{copy("Contribution:", "Zuciya:")} <b>{copy("[ What was contributed and by whom — to be completed by the campaign team ]", "[ Abin da aka ba da da kuɗi — za a cika shi da hukumar gaggawa ]")}</b></span></div></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" {attr("Created By Deerflow", "An ƙirƙira Deerflow")}>Created By Deerflow</a></div></footer>
-<script>
-const root=document.documentElement;
-let currentLanguage='en';
-{FEATURED_SCRIPT}
-let selectedLga='';
-const renderLgaDetail=()=>{{if(!selectedLga)return;const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const titleEl=document.getElementById('selected-lga');const copyEl=document.getElementById('selected-copy');if(!titleEl||!copyEl)return;const summary=currentLanguage==='ha'?btn.dataset.summaryHa:btn.dataset.summary;const promise=currentLanguage==='ha'?btn.dataset.promiseHa:btn.dataset.promise;const result=currentLanguage==='ha'?btn.dataset.resultHa:btn.dataset.result;titleEl.textContent=selectedLga;copyEl.textContent=currentLanguage==='ha'?selectedLga+': '+summary+' APM: '+promise+' Sami na gaba: '+result:selectedLga+': '+summary+' APM: '+promise+' Next result: '+result;}};
-const LANGUAGE_KEY='apm-lang';
-const readStoredLanguage=()=>{{try{{const stored=window.localStorage.getItem(LANGUAGE_KEY);return stored==='ha'||stored==='en'?stored:null;}}catch(error){{return null;}}}};
-const storeLanguage=(lang)=>{{try{{window.localStorage.setItem(LANGUAGE_KEY,lang);}}catch(error){{/* blocked storage: the toggle still works for this page */}}}};
-const setLanguage=(lang,persist=true)=>{{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en}});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;}});document.querySelectorAll('[data-lang]').forEach(btn=>{{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));}});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(lang==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);}};
-document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
-const storedLanguage=readStoredLanguage();if(storedLanguage)setLanguage(storedLanguage,false);
-document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const filter=btn.dataset.filter;document.querySelectorAll('.arrow-card').forEach(card=>card.hidden=filter!=='all'&&card.dataset.sector!==filter);}}));
-document.querySelectorAll('[data-lga]').forEach(btn=>btn.addEventListener('click',()=>{{document.querySelectorAll('[data-lga]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');selectedLga=btn.dataset.lga;renderLgaDetail();}}));
-{REQUEST_SCRIPT}
-</script>
-</body>
-</html>'''
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(html_doc, encoding="utf-8")
-    print(f"wrote {OUT} ({achievement_count} achievements, {promise_count} promises, {source_count} sources)")
+
+    return {
+        "sources": sources,
+        "lga_rows": lga_rows,
+        "indicator_rows": indicator_rows,
+        "manifest_rows": manifest_rows,
+        "pending_review_rows": pending_review_rows,
+        "promise_rows": promise_rows,
+        "arrow_cards": arrow_cards,
+        "featured_section": featured_section,
+        "indicator_section": (
+            '<section class="indicator-section" id="indicators"><div class="shell">'
+            '<div class="section-head"><div>'
+            f'<div class="eyebrow">{copy("Measurement ledger", "Rajista na aunawa")}</div>'
+            f'<h2>{copy("Delivery becomes useful when results are visible.", "Isar da sabis tana da sauƙi idan an nuna sakamako.")}</h2></div>'
+            f'<p>{copy("These indicators separate reported delivery outputs from the outcomes still being measured. Blank baselines remain blank by design.", "Wannan alamu na bambanta abubuwan da aka isar da sakamako da zuwa da ake aunawa. Babu komai a cikin tushen sai an gani.")}</p>'
+            '</div><div class="indicator-grid">' + indicator_cards(indicator_rows, sources) +
+            '</div></div></section>'),
+        "request_section": request_form_section(ward_rows),
+        "achievement_count": len(achievement_rows),
+        "promise_count": len(promise_rows),
+        "built": datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y · %H:%M UTC"),
+    }
+
+
+PAGE_SCRIPTS = {
+    "index": lambda: SCRIPT_INDEX,
+    "achievements": lambda: FEATURED_SCRIPT,
+    "poll": lambda: REQUEST_SCRIPT,
+}
+
+
+def render():
+    validate_data()
+    prepare_assets()
+    ctx = load_context()
+
+    written = []
+    for slug, (builder, title, description) in PAGE_BUILDERS.items():
+        scripts = PAGE_SCRIPTS.get(slug, lambda: "")()
+        html_doc = document(
+            slug=slug,
+            title=title,
+            description=description,
+            body=builder(ctx),
+            scripts=scripts,
+            built=ctx["built"],
+        )
+        target = DOCS / f"{slug}.html"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(html_doc, encoding="utf-8")
+        written.append(target)
+
+    # index.html is the site root; the slug loop already wrote it.
+    print(f"wrote {len(written)} pages to {DOCS} "
+          f"({ctx['achievement_count']} achievements, {ctx['promise_count']} promises, "
+          f"{len(ctx['sources'])} sources)")
+    for target in written:
+        print(f"  {target.name} {target.stat().st_size:,} bytes")
 
 
 if __name__ == "__main__":

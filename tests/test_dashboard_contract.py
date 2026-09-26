@@ -6,7 +6,8 @@ from src.dashboard import render
 
 class DashboardContractTests(unittest.TestCase):
     def test_language_toggle_preserves_selected_lga(self):
-        html = Path("docs/index.html").read_text(encoding="utf-8")
+        # S3 moved the LGA atlas onto its own page.
+        html = Path("docs/atlas.html").read_text(encoding="utf-8")
         self.assertIn("let selectedLga=''", html)
         self.assertIn("const renderLgaDetail=", html)
         self.assertIn("renderLgaDetail();", html)
@@ -26,7 +27,8 @@ class DashboardContractTests(unittest.TestCase):
                 self.assertEqual(names, [])
 
     def test_featured_section_is_rendered_from_current_data(self):
-        html = Path("docs/index.html").read_text(encoding="utf-8")
+        # S3 moved the featured carousel onto its own page.
+        html = Path("docs/achievements.html").read_text(encoding="utf-8")
         optional = render.read_optional_csv(render.FEATURED_ACHIEVEMENTS_FILE)
         if optional is None:
             self.assertNotIn('id="featured"', html)

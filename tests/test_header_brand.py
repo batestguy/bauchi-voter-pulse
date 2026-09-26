@@ -200,7 +200,8 @@ class PromiseIntegrityTests(unittest.TestCase):
         self.assertNotEqual(wash["promise_text"], rows["promise-infrastructure"]["promise_text"])
 
     def test_agenda_renders_each_promise_once(self):
-        html = PAGE.read_text(encoding="utf-8")
+        # S3 moved the agenda onto its own page.
+        html = Path("docs/agenda.html").read_text(encoding="utf-8")
         cards = re.findall(r'<article class="agenda-card">', html)
         self.assertEqual(len(cards), len(render.read_csv("promises.csv")))
 

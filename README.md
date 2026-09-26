@@ -10,7 +10,16 @@ The new interface uses the official APM identity and approved campaign assets, p
 
 ## Product
 
-- `docs/index.html` — generated interactive landing page, five-slide featured carousel, RA-dependent request form, and aggregate-ready static shell
+The site is **six flat pages** generated from one renderer:
+
+| Page | Contents |
+|---|---|
+| `docs/index.html` | Hero, four-step story, sector filter, continuity framing, cards into every subpage |
+| `docs/achievements.html` | Featured carousel, all 25 achievement records, measurement ledger |
+| `docs/atlas.html` | 20-LGA selector with source-backed evidence rows (map arrives in S4) |
+| `docs/poll.html` | The bilingual need-request form (the poll arrives in S5) |
+| `docs/agenda.html` | The published campaign commitments |
+| `docs/sources.html` | Source register, grading legend, build method |
 - `src/dashboard/render.py` — static generator/validator for delivery data, carousel, LGA/RA selector, and bilingual request form
 - `data/delivery/` — sources, needs, achievements, promises, indicators, featured achievements, provisional electoral RAs, LGA queue, asset register, source snapshots and review queue
 - `src/requests/` — private request validation and privacy-safe aggregation contracts
@@ -34,8 +43,8 @@ python src/dashboard/render.py
 python -m http.server 8766 --directory docs
 ```
 
-Open `http://127.0.0.1:8766/index.html`. The suite is **87 `unittest` tests**; no pytest,
-lint or typecheck suite is installed.
+Open `http://127.0.0.1:8766/index.html`, then follow the nav to the other five pages.
+The suite is **115 `unittest` tests**; no pytest, lint or typecheck suite is installed.
 
 The local page includes the interactive in-page carousel and bilingual request
 form. The form's submit control is disabled until an approved HTTPS Google Apps
@@ -68,16 +77,13 @@ with no new rights cleared; its `approval_note` still needs owner ratification.
 
 ## Next implementation phase
 
-The next phase is the **six-page split**: `index.html`, `achievements.html`, `atlas.html`
-with a Bauchi LGA map, `poll.html`, `agenda.html` and `sources.html`, sharing one header,
-footer and language control. After that come the map and the opinion poll.
+The six-page split has shipped. Next is **S4, the Bauchi LGA map** on `atlas.html`
+(real boundaries from a CC BY 4.0 source, registered and attributed), then **S5, the
+opinion poll** on `poll.html`.
 
-⚠️ Two silent release-breaking traps fire when that lands, both written up in
-`HANDOFF.md` §20: the weekly cron stages only `docs/index.html`, and this file's
-staging allowlist in `HANDOFF.md` §18 names only `docs/index.html`. Fix both in the
-same change as the split.
-
-The deferred full-screen achievement viewer remains out of scope until the split ships.
+⚠️ Both former release traps are closed and test-guarded: the weekly cron stages
+`docs/*.html` and fails if any page is missing, and the staging allowlist in
+`HANDOFF.md` §18 names all six. See `HANDOFF.md` §20.
 
 ## Handoff
 
@@ -86,9 +92,9 @@ release counts, validation evidence, known limitations, preserved local work and
 prioritized next steps. Start with `SITE_EXPANSION_PLAN.md`.
 
 The current public release is live at
-`https://batestguy.github.io/bauchi-voter-pulse/`. **It does not yet include the
-September 2026 header, bilingual or promise fixes — those are committed locally and
-unpushed.**
+`https://batestguy.github.io/bauchi-voter-pulse/`. **It is still the old single-page
+release.** The header, bilingual, promise and six-page work is committed locally and
+unpushed, so the live site has not changed.
 
 ## Project history
 

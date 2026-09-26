@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Tell APM Bauchi one need in your area. No voter ID is ever requested.">
+<link rel="icon" type="image/png" href="assets/brand/apm-emblem.png">
+<title>Speak to us · APM Bauchi</title>
+<style>:root{--ink:#13202b;--navy:#0b263c;--blue:#145d86;--sky:#d9eff6;--gold:#d89b31;--gold-soft:#f5e6c4;--paper:#f7f4ed;--white:#fffdf8;--line:#d8d8cd;--muted:#6c7880;--green:#2e7254;--green-soft:#dcefe3;--shadow:0 24px 70px rgba(11,38,60,.14)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",sans-serif;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:radial-gradient(#13202b .55px,transparent .55px);background-size:7px 7px;mix-blend-mode:multiply;z-index:10}
+a{color:inherit}
+.shell{width:min(1240px,calc(100% - 40px));margin:auto}
+.topbar{position:absolute;z-index:2;top:0;left:0;right:0;color:#fff;padding:22px 0}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+/* The emblem already has a transparent background, so it needs no colour filter.
+   An earlier brightness(0) invert(1) collapsed the logo's opaque white page and the
+   whitened artwork into one solid block. */
+.brand img{width:38px;height:44px;object-fit:contain;flex:none}
+.brand small{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.74;margin-top:-3px}
+.nav{display:flex;align-items:center;gap:24px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.nav a{opacity:.78;text-decoration:none}
+.nav a:hover{opacity:1}
+.lang{display:flex;align-items:center;gap:9px}
+.lang-label{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;opacity:.72;white-space:nowrap}
+.lang-label svg{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}
+.lang-toggle{display:flex;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:3px}
+.lang button{border:0;background:transparent;color:#fff;padding:5px 9px;border-radius:999px;cursor:pointer;font:inherit;font-size:10px}
+.lang button.active{background:#fff;color:var(--navy)}
+.hero{min-height:760px;background:var(--navy);color:#fff;position:relative;overflow:hidden;display:flex;align-items:center;padding:128px 0 74px}
+.hero::before{content:"";position:absolute;width:900px;height:900px;right:-220px;top:-340px;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 70px rgba(255,255,255,.025),0 0 0 140px rgba(255,255,255,.02)}
+.hero::after{content:"";position:absolute;inset:auto -10% 0;height:180px;background:linear-gradient(180deg,transparent,rgba(5,20,31,.5));clip-path:polygon(0 100%,100% 22%,100% 100%)}
+.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;align-items:center;gap:56px;position:relative;z-index:1}
+.eyebrow{font-size:11px;letter-spacing:.19em;text-transform:uppercase;font-weight:700;color:var(--gold)}
+.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(3.5rem,7.3vw,7.3rem);font-weight:400;line-height:.91;letter-spacing:-.06em;margin:22px 0 26px;max-width:760px}
+.hero h1 em{color:#f4c35d;font-style:normal}
+.hero-lede{font-size:clamp(1.05rem,1.7vw,1.35rem);color:rgba(255,255,255,.76);max-width:590px;margin:0 0 32px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid transparent;border-radius:999px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;transition:transform .2s,box-shadow .2s,background .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--gold);color:var(--navy);box-shadow:0 12px 24px rgba(216,155,49,.22)}
+.btn-secondary{color:#fff;border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.04)}
+.hero-note{margin-top:30px;display:flex;gap:18px;align-items:center;color:rgba(255,255,255,.65);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.hero-note::before{content:"";width:38px;height:1px;background:var(--gold)}
+.portrait-wrap{min-height:570px;position:relative;display:flex;align-items:end;justify-content:center}
+.portrait-wrap::before{content:"";position:absolute;width:380px;height:380px;border-radius:50%;background:var(--gold);top:35px;right:25px;opacity:.9}
+.portrait-wrap::after{content:"";position:absolute;width:420px;height:520px;border:1px solid rgba(255,255,255,.23);right:-20px;top:0;transform:rotate(8deg)}
+.portrait{position:relative;z-index:1;width:min(100%,520px);max-height:610px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 30px 35px rgba(0,0,0,.25));mix-blend-mode:screen}
+.portrait-caption{position:absolute;z-index:2;bottom:20px;left:0;max-width:240px;padding:14px 16px;background:rgba(255,253,248,.95);color:var(--ink);border-radius:3px;box-shadow:var(--shadow);font-size:12px}
+.portrait-caption strong{display:block;font-family:Georgia,serif;font-size:20px;font-weight:400}
+.motto{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-top:34px}
+.stats{background:var(--gold);color:var(--navy);position:relative;z-index:3;margin-top:-1px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{padding:24px 28px;border-right:1px solid rgba(11,38,60,.18)}
+.stat:last-child{border-right:0}
+.stat strong{display:block;font-family:Georgia,serif;font-size:2.25rem;font-weight:400;line-height:1}
+.stat span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-top:8px;font-weight:700}
+.section{padding:100px 0}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:38px}
+.section-head h2,.section-head h3{font-family:Georgia,serif;font-size:clamp(2.2rem,4vw,4rem);font-weight:400;line-height:.98;letter-spacing:-.05em;margin:12px 0 0;max-width:720px}
+.section-head p{color:var(--muted);max-width:360px;font-size:14px;margin:0}
+.light-rule{border-top:1px solid var(--line)}
+.intro-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:80px;align-items:start}
+.intro-copy{font-family:Georgia,serif;font-size:clamp(1.7rem,3vw,2.7rem);line-height:1.08;letter-spacing:-.04em;margin:0}
+.note-box{border-left:3px solid var(--gold);padding:8px 0 8px 22px;color:var(--muted);font-size:14px}
+.progress-path{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow);padding:22px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:60px}
+.path-step{padding:22px 20px;position:relative;min-height:180px}
+.path-step:not(:last-child)::after{content:"→";position:absolute;right:-13px;top:76px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--navy);font-size:19px;z-index:2}
+.step-no{font-size:10px;letter-spacing:.16em;color:var(--gold);font-weight:700}
+.path-step h3{font-family:Georgia,serif;font-size:1.4rem;font-weight:400;margin:18px 0 8px}
+.path-step p{font-size:13px;color:var(--muted);margin:0}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 22px}
+.filter{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 13px;font:inherit;font-size:11px;cursor:pointer;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.filter.active,.filter:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.arrow-list{display:grid;gap:18px}
+.arrow-card{background:var(--white);border:1px solid var(--line);padding:0;overflow:hidden;box-shadow:0 12px 35px rgba(11,38,60,.05)}
+.arrow-head{display:flex;justify-content:space-between;align-items:center;padding:17px 22px;border-bottom:1px solid var(--line);background:#fbfaf6}
+.arrow-index{font-family:Georgia,serif;font-size:1.2rem;color:var(--gold)}
+.arrow-path{display:grid;grid-template-columns:1fr 28px 1.45fr 28px 1.2fr 28px 1.1fr;align-items:stretch;padding:22px}
+.path-node{padding:18px;min-width:0}
+.path-node:nth-child(odd){background:#f7f8f3;border:1px solid #e4e8df;border-radius:2px}
+.achievement-node{background:var(--green-soft)!important;border-color:#c9e0ce!important}
+.promise-node{background:#fff6e5!important;border-color:#efd9ac!important}
+.result-node{background:#eaf4f7!important;border-color:#c8e0e8!important}
+.path-arrow{display:grid;place-items:center;color:var(--gold);font-size:24px;padding-top:70px}
+.node-number{font-size:10px;color:var(--muted);letter-spacing:.15em}
+.path-node h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;line-height:1.1;margin:15px 0 9px}
+.path-node p{font-size:13px;line-height:1.45;margin:0 0 14px;color:#35434a}
+.node-tag{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-top:1px solid currentColor;padding-top:6px}
+.achievement-list{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:9px}
+.achievement-item{border-bottom:1px solid rgba(46,114,84,.22);padding-bottom:9px}
+.achievement-item:last-child{border-bottom:0;padding-bottom:0}
+.item-top{display:flex;align-items:start;justify-content:space-between;gap:10px}
+.item-top strong{font-size:12px;line-height:1.25}
+.achievement-item p{font-size:11px;margin:5px 0;color:#4b6259}
+.item-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:9px;color:#567064}
+.status{display:inline-block;white-space:nowrap;border-radius:999px;padding:3px 6px;font-size:8px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.status-progress{background:var(--green);color:#fff}
+.status-underway{background:var(--blue);color:#fff}
+.status-milestone{background:#765b9e;color:#fff}
+.status-promise{background:var(--gold);color:var(--navy)}
+.status-next{background:#b88920;color:#fff}
+.status-measured{background:#7a6c9b;color:#fff}
+.source-link{font-size:9px;text-decoration:none;color:var(--blue);font-weight:700;white-space:nowrap}
+.source-link:hover{text-decoration:underline}
+.empty-item{font-size:12px;color:var(--muted)}
+.lga-section{background:var(--navy);color:#fff;position:relative;overflow:hidden}
+.lga-section::before{content:"";position:absolute;width:600px;height:600px;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-180px;top:-260px;box-shadow:0 0 0 50px rgba(255,255,255,.025),0 0 0 100px rgba(255,255,255,.02)}
+.lga-section .section-head h2{color:#fff}
+.lga-section .section-head p{color:rgba(255,255,255,.65)}
+.lga-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative;z-index:1}
+.lga-tile{text-align:left;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;padding:18px 16px;min-height:105px;cursor:pointer;font:inherit;position:relative;transition:background .2s,transform .2s,border .2s}
+.lga-tile:hover,.lga-tile.active{background:rgba(216,155,49,.17);border-color:var(--gold);transform:translateY(-3px)}
+.lga-tile.lga-specific{border-color:rgba(216,155,49,.62);background:rgba(216,155,49,.08)}
+.lga-tile.lga-specific .lga-dot{box-shadow:0 0 0 4px rgba(216,155,49,.16)}
+.lga-tile strong{display:block;font-family:Georgia,serif;font-size:1.25rem;font-weight:400}
+.lga-tile small{display:block;color:rgba(255,255,255,.55);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-top:20px}
+.lga-dot{display:block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-bottom:12px}
+.lga-detail{margin-top:26px;border:1px solid rgba(255,255,255,.2);padding:25px;background:rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:30px;align-items:start}
+.lga-detail h3{font-family:Georgia,serif;font-size:2rem;font-weight:400;margin:0 0 8px}
+.lga-detail p{color:rgba(255,255,255,.66);font-size:14px;max-width:620px;margin:0}
+.lga-detail .detail-label{color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:.15em;white-space:nowrap}
+.governance-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:start}
+.governor-card{background:var(--navy);color:#fff;padding:16px;box-shadow:var(--shadow);position:relative}
+.governor-card img{width:100%;height:440px;object-fit:cover;object-position:center top;display:block;filter:saturate(.8)}
+.governor-caption{padding:18px 12px 12px;display:flex;justify-content:space-between;gap:12px;align-items:end}
+.governor-caption strong{font-family:Georgia,serif;font-size:1.7rem;font-weight:400}
+.governor-caption span{color:rgba(255,255,255,.55);font-size:10px;text-align:right;line-height:1.4}
+.governance-copy h3{font-family:Georgia,serif;font-size:clamp(2rem,4vw,3.8rem);font-weight:400;line-height:1;letter-spacing:-.05em;margin:0 0 20px}
+.governance-copy p{font-size:15px;color:var(--muted);max-width:560px}
+.continuity-list{display:grid;gap:12px;margin-top:28px}
+.continuity-item{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:16px 0;border-top:1px solid var(--line)}
+.continuity-item b{color:var(--gold);font-family:Georgia,serif;font-size:1.5rem;font-weight:400}
+.continuity-item span{font-size:13px}
+.agenda-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.agenda-card{min-height:250px;background:var(--white);border:1px solid var(--line);padding:20px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .2s,box-shadow .2s}
+.agenda-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.agenda-card .agenda-no{font-family:Georgia,serif;font-size:2.6rem;color:var(--gold);line-height:1}
+.agenda-card h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;line-height:1.1;margin:15px 0 8px}
+.agenda-card p{font-size:11px;color:var(--muted);margin:0}
+.sources-section{background:#ecebe4;padding:70px 0}
+.featured-section{padding:100px 0;background:#f1eee5;border-top:1px solid var(--line)}
+.featured-section .section-head h2{max-width:780px}
+.featured-carousel{border:1px solid var(--line);background:var(--white);padding:18px;box-shadow:var(--shadow)}
+.featured-carousel:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.featured-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.featured-scope-filters{display:flex;gap:8px;flex-wrap:wrap}
+.featured-scope-filter,.featured-control{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 12px;font:inherit;font-size:10px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
+.featured-scope-filter.active,.featured-scope-filter:hover,.featured-control:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.featured-controls{display:flex;align-items:center;gap:9px}
+.featured-control:disabled{opacity:.4;cursor:not-allowed}
+.featured-status{min-width:48px;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);font-weight:700}
+.featured-slides{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:18px}
+.featured-slide{display:grid;grid-template-columns:minmax(240px,.9fr) minmax(0,1.1fr);gap:24px;padding:18px;border:1px solid var(--line);background:#fbfaf6}
+.featured-carousel-ready .featured-slide{display:none}
+.featured-carousel-ready .featured-slide.is-active{display:grid}
+.featured-media{margin:0;min-width:0}
+.featured-media img{display:block;width:100%;height:310px;object-fit:cover;background:#dfe8e5}
+.featured-media figcaption{font-size:10px;line-height:1.4;color:var(--muted);padding-top:8px}
+.featured-image-note{display:block;margin-top:8px;padding:6px 8px;background:#fff6e5;border:1px solid #efd9ac;color:#6d4a12;font-size:9px;line-height:1.35}
+.featured-slide-copy{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.featured-slide-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.featured-sector,.featured-scope-badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.featured-sector{background:var(--sky);color:var(--navy)}
+.featured-scope-badge{background:var(--gold-soft);color:#6d4a12}
+.featured-slide h3{font-family:Georgia,serif;font-size:clamp(1.7rem,3vw,2.6rem);font-weight:400;line-height:1.05;letter-spacing:-.04em;margin:18px 0 12px}
+.featured-caption{font-size:14px;line-height:1.5;color:#35434a;margin:0}
+.featured-source{margin-top:22px}
+.featured-pending-section .section-head p{max-width:500px}
+.requests-section{background:var(--white);border-top:1px solid var(--line)}
+.request-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);gap:28px;align-items:start}
+.request-form{background:#fbfaf6;border:1px solid var(--line);padding:clamp(20px,4vw,40px);box-shadow:var(--shadow);position:relative}
+.request-config-status{margin:0 0 26px;padding:12px 14px;border-left:3px solid var(--gold);background:var(--gold-soft);color:#5f4317;font-size:12px;font-weight:700}
+.request-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.request-field{display:grid;gap:8px;margin-bottom:18px;min-width:0}
+.request-field-wide{grid-column:1/-1}
+.request-field label,.request-contact-fields legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--navy)}
+.request-required{color:#9a351f}
+.request-field input,.request-field select,.request-field textarea{width:100%;border:1px solid #bfc7c6;border-radius:0;background:#fff;color:var(--ink);font:inherit;font-size:14px;padding:12px 13px;transition:border-color .2s,box-shadow .2s,background .2s}
+.request-field textarea{resize:vertical;min-height:145px}
+.request-field select{min-height:47px}
+.request-field input:hover,.request-field select:hover,.request-field textarea:hover{border-color:#829493}
+.request-field input:focus,.request-field select:focus,.request-field textarea:focus{outline:3px solid rgba(216,155,49,.38);outline-offset:2px;border-color:var(--blue);background:#fff}
+.request-field input:disabled,.request-field select:disabled{background:#ecebe4;color:#788086;cursor:not-allowed}
+.request-note{margin:-4px 0 20px;padding:12px 14px;background:#eef5f1;border-left:3px solid var(--green);color:#355448;font-size:11px;line-height:1.55}
+.request-contact-fields{margin:2px 0 20px;padding:20px;border:1px solid var(--line);background:#f3f1e9;min-width:0}
+.request-contact-fields legend{padding:0 8px}
+.request-consent{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start;margin:22px 0 12px}
+.request-consent input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--blue)}
+.request-consent label{font-size:12px;line-height:1.5;color:#35434a;cursor:pointer}
+.request-honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+.request-submit{border:0;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 10px 22px rgba(11,38,60,.18)}
+.request-submit:hover{background:var(--blue)}
+.request-submit:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.request-submit:disabled{opacity:.55;cursor:wait;transform:none}
+.request-status,.request-confirmation{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.5}
+.request-status{background:#ecebe4;border-left:3px solid #7b8589;color:#46545a}
+.request-status.is-error{background:#fff0eb;border-left-color:#9a351f;color:#7a2818}
+.request-confirmation{background:var(--green-soft);border-left:3px solid var(--green);color:#244d3a;font-weight:700}
+.request-status[hidden],.request-confirmation[hidden]{display:none}
+.request-aside{background:var(--navy);color:#fff;padding:8px 28px;box-shadow:var(--shadow)}
+.request-aside>div{padding:26px 0;border-bottom:1px solid rgba(255,255,255,.16)}
+.request-aside>div:last-child{border-bottom:0}
+.request-aside span{display:block;color:var(--gold);font-size:10px;letter-spacing:.16em;font-weight:700;margin-bottom:12px}
+.request-aside h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;margin:0 0 10px}
+.request-aside p{font-size:12px;line-height:1.6;color:rgba(255,255,255,.68);margin:0}
+.indicator-section{padding:100px 0;background:#eef5f1;border-top:1px solid var(--line)}
+.indicator-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.indicator-card{background:var(--white);border:1px solid var(--line);padding:20px;min-height:220px;box-shadow:0 12px 30px rgba(11,38,60,.05);display:flex;flex-direction:column}
+.indicator-top{display:flex;justify-content:space-between;align-items:start;gap:10px}
+.indicator-top .eyebrow{font-size:9px;letter-spacing:.12em}
+.indicator-card h3{font-family:Georgia,serif;font-size:1.25rem;font-weight:400;line-height:1.15;margin:20px 0 12px}
+.indicator-value{display:flex;align-items:baseline;gap:8px;color:var(--navy)}
+.indicator-value strong{font-family:Georgia,serif;font-size:1.7rem;font-weight:400}
+.indicator-value span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.indicator-card p{font-size:11px;color:var(--muted);line-height:1.45;margin:12px 0 16px}
+.indicator-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:auto;font-size:9px;color:var(--muted)}
+.source-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+.source-list li{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #d4d5cb;font-size:12px}
+.source-list li span:nth-child(2){display:grid;gap:3px}
+.source-list li small{font-size:9px;color:var(--muted)}
+.source-legend{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0 0;font-size:10px;color:var(--muted)}
+.source-grade{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700}
+.source-link{justify-self:end}
+.site-footer{background:#081d2c;color:#fff;padding:34px 0 28px}
+.footer-inner{display:flex;justify-content:space-between;gap:30px;align-items:center;flex-wrap:wrap}
+.footer-inner p{font-size:11px;color:rgba(255,255,255,.56);margin:0;max-width:650px}
+.footer-inner strong{font-family:Georgia,serif;font-size:1.3rem;font-weight:400;display:block;margin-bottom:6px}
+.deerflow{font-size:10px;color:rgba(255,255,255,.45);text-decoration:none;border:1px solid rgba(255,255,255,.2);padding:7px 10px;border-radius:999px;white-space:nowrap}
+.deerflow:hover{color:#fff;border-color:#fff}
+/* Sponsor slot. Deliberately reads as an unfilled placeholder: no invented name, no
+   invented contribution, no amount. The contribution line is a factual disclosure the
+   owner completes, not a claim of delivered achievement. */
+.sponsor{display:flex;gap:14px;align-items:center;max-width:400px;padding:12px 16px;border:1px dashed rgba(255,255,255,.28);border-radius:4px;background:rgba(255,255,255,.03)}
+.sponsor-photo{width:58px;height:58px;flex:none;border:1px dashed rgba(255,255,255,.3);border-radius:3px;display:grid;place-items:center;text-align:center;padding:4px}
+.sponsor-photo span{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);line-height:1.3}
+.sponsor-body{min-width:0}
+.sponsor-label{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}
+.sponsor-name{display:block;font-family:Georgia,serif;font-size:1.05rem;font-weight:400;color:#fff}
+.sponsor-contribution{display:block;font-size:11px;line-height:1.45;color:rgba(255,255,255,.72);margin-top:5px}
+.sponsor-contribution b{color:#fff;font-weight:700}
+.reveal{opacity:0;transform:translateY(15px);animation:rise .7s ease forwards;animation-delay:var(--delay,0s)}
+@keyframes rise{to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+@media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
+@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}}
+@media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-grid{grid-template-columns:repeat(4,1fr)}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
+@media (max-width:760px){.shell{width:min(100% - 28px,1240px)}.hero{min-height:auto;padding-top:112px;padding-bottom:54px}.hero-grid,.intro-grid,.governance-grid{grid-template-columns:1fr}.hero h1{font-size:clamp(3.2rem,16vw,5.5rem)}.portrait-wrap{min-height:390px;margin-top:20px}.portrait-wrap::before{width:280px;height:280px;right:4%}.portrait-wrap::after{width:320px;height:400px;right:1%}.portrait{max-height:420px}.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}.stat:nth-child(2){border-right:0}.section{padding:70px 0}.section-head{display:block}.section-head p{margin-top:18px}.progress-path{grid-template-columns:1fr;padding:16px}.path-step{min-height:0;padding:14px 16px 24px}.path-step:not(:last-child)::after{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}.arrow-head{padding:15px 16px}.arrow-path{display:block;padding:14px}.path-node{margin-bottom:10px;padding:16px}.path-arrow{padding:0;height:24px;transform:rotate(90deg)}.lga-grid{grid-template-columns:1fr 1fr}.lga-detail{display:block}.lga-detail .detail-label{display:block;margin-bottom:12px}.governor-card img{height:340px}.agenda-grid{grid-template-columns:1fr 1fr}.source-list{grid-template-columns:1fr}.footer-inner{display:block}.deerflow{display:inline-block;margin-top:20px}}
+/* --- shared multi-page shell ------------------------------------------- */
+.page-head{background:var(--navy);position:relative;z-index:2}
+/* position:relative, not static: the mobile panel is absolutely positioned at
+   top:100% of this bar and needs it as its containing block. */
+.page-head .topbar{position:relative;background:var(--navy);padding:18px 0}
+.page-hero{background:var(--navy);color:#fff;padding:56px 0 62px;position:relative;overflow:hidden}
+.page-hero::before{content:"";position:absolute;width:760px;height:760px;right:-200px;top:-420px;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 60px rgba(255,255,255,.025),0 0 0 120px rgba(255,255,255,.02)}
+.page-hero .shell{position:relative;z-index:1}
+.page-hero .eyebrow{color:var(--gold)}
+.page-hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(2.2rem,4.6vw,3.9rem);font-weight:400;line-height:1.02;letter-spacing:-.05em;margin:16px 0 18px;max-width:820px}
+.page-hero p{font-size:clamp(1rem,1.4vw,1.15rem);color:rgba(255,255,255,.76);max-width:640px;margin:0}
+.page-hero .crumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+.page-hero .crumbs a{color:rgba(255,255,255,.66);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.28);padding-bottom:2px}
+.page-hero .crumbs a:hover{color:#fff;border-color:#fff}
+.page-hero .crumbs span{color:rgba(255,255,255,.4)}
+
+/* Primary nav. Hidden below 1050px, where .navmenu takes over - without that,
+   phones get no navigation at all once the site has subpages. */
+.navmenu{display:none}
+.navmenu-toggle{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:7px 12px}
+.navmenu-toggle::-webkit-details-marker{display:none}
+.navmenu-toggle svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.navmenu-panel{position:absolute;left:0;right:0;top:100%;background:var(--navy);border-top:1px solid rgba(255,255,255,.12);box-shadow:0 22px 44px rgba(5,20,31,.4);padding:10px 0 16px}
+.navmenu-panel a{display:block;padding:11px 20px;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.82);text-decoration:none;border-left:2px solid transparent}
+.navmenu-panel a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.navmenu-panel a[aria-current="page"]{color:var(--gold);border-left-color:var(--gold)}
+
+/* Cross-links from the home page into the subpages. */
+.nav-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.nav-card{display:block;text-decoration:none;color:inherit;background:var(--white);border:1px solid var(--line);padding:24px 22px;box-shadow:0 12px 32px rgba(11,38,60,.05);transition:transform .2s,box-shadow .2s,border-color .2s}
+.nav-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--gold)}
+.nav-card .nav-card-no{font-size:10px;letter-spacing:.16em;color:var(--gold);font-weight:700}
+.nav-card h3{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;margin:12px 0 8px;letter-spacing:-.02em}
+.nav-card p{font-size:13px;color:var(--muted);margin:0}
+.nav-card .nav-card-go{display:inline-block;margin-top:14px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);font-weight:700}
+
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--gold);color:var(--navy);padding:10px 16px;z-index:50;font-size:12px;font-weight:700}
+.skip-link:focus{left:8px;top:8px}
+.nav a:focus-visible,.navmenu-toggle:focus-visible,.nav-card:focus-visible,.lang button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+@media (max-width:1050px){
+.navmenu{display:block}
+}
+@media (max-width:760px){
+.nav-cards{grid-template-columns:1fr}
+.page-hero{padding:40px 0 46px}
+.nav-card{padding:20px}
+}
+</style>
+</head>
+<body class="page page--poll">
+<div class="page-head"><a class="skip-link" href="#main">Skip to content</a><div class="topbar"><div class="shell topbar-inner"><a class="brand" href="index.html"><img src="assets/brand/apm-emblem.png" width="38" height="44" alt="Allied Peoples Movement emblem"><small>Allied Peoples' Movement</small></a><nav class="nav" data-aria-label-en="Primary navigation" data-aria-label-ha="Babban menu" aria-label="Primary navigation"><a class="" href="index.html"><span data-en="Home" data-ha="Gida">Home</span></a><a class="" href="achievements.html"><span data-en="Achievements" data-ha="Ayyuka da aka yi">Achievements</span></a><a class="" href="atlas.html"><span data-en="LGA atlas" data-ha="Taswirar LGA">LGA atlas</span></a><a class="" href="poll.html" aria-current="page"><span data-en="Speak to us" data-ha="Yi magana da mu">Speak to us</span></a><a class="" href="agenda.html"><span data-en="APM agenda" data-ha="Bayan-APM">APM agenda</span></a><a class="" href="sources.html"><span data-en="Sources" data-ha="Bayane">Sources</span></a></nav><details class="navmenu"><summary class="navmenu-toggle"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span><span data-en="Menu" data-ha="Menu">Menu</span></span></summary><div class="navmenu-panel"><a class="" href="index.html"><span data-en="Home" data-ha="Gida">Home</span></a><a class="" href="achievements.html"><span data-en="Achievements" data-ha="Ayyuka da aka yi">Achievements</span></a><a class="" href="atlas.html"><span data-en="LGA atlas" data-ha="Taswirar LGA">LGA atlas</span></a><a class="" href="poll.html" aria-current="page"><span data-en="Speak to us" data-ha="Yi magana da mu">Speak to us</span></a><a class="" href="agenda.html"><span data-en="APM agenda" data-ha="Bayan-APM">APM agenda</span></a><a class="" href="sources.html"><span data-en="Sources" data-ha="Bayane">Sources</span></a></div></details><div class="lang"><span class="lang-label" id="lang-label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg><span data-en="Language" data-ha="Harshe">Language</span></span><div class="lang-toggle" role="group" aria-labelledby="lang-label"><button type="button" data-lang="en" class="active" aria-pressed="true">EN</button><button type="button" data-lang="ha" aria-pressed="false">HA</button></div></div></div></div></div><div class="page-hero"><div class="shell"><div class="eyebrow"><span data-en="Speak to us" data-ha="Yi magana da mu">Speak to us</span></div><h1><span data-en="Tell us one need in your area." data-ha="Faƙa mana buƙatar daya a cikin wurin da kake.">Tell us one need in your area.</span></h1><p><span data-en="Choose your local government area and the specific thing that matters to you. Contact details are optional and are never shown publicly." data-ha="Zaɓi LGA da kuma abin da ke muhimmanci maka. Bayanan hulɗe na zaɗi ne kuma ba a nuna su a fili ba.">Choose your local government area and the specific thing that matters to you. Contact details are optional and are never shown publicly.</span></p><div class="crumbs"><a href="index.html"><span data-en="Home" data-ha="Gida">Home</span></a><span>/</span><span><span data-en="Speak to us" data-ha="Yi magana da mu">Speak to us</span></span></div></div></div><main id="main">
+<section class="section requests-section" id="requests" aria-labelledby="requests-title">
+  <div class="shell">
+    <div class="section-head">
+      <div><div class="eyebrow"><span data-en="One primary request" data-ha="Babban buƙatar daya">One primary request</span></div><h2 id="requests-title"><span data-en="Tell us one need in your area." data-ha="Faɗa mana buƙatar daya a cikin wurin da kake.">Tell us one need in your area.</span></h2></div>
+      <p><span data-en="Submit one clear request. Follow-up details are optional, and any confirmation ID is only a generated request tracking reference—not a voter ID." data-ha="Aika buƙatar daya mai bayani. Bayanan binfollow-up ba gangan ba, kuma ID na tabbaci yana nufin bin buƙatar kawai, ba ID na zabb&#x27;ar masu zayyawa ba.">Submit one clear request. Follow-up details are optional, and any confirmation ID is only a generated request tracking reference—not a voter ID.</span></p>
+    </div>
+    <div class="request-layout">
+      <form class="request-form" id="public-request-form" method="post" action="about:blank" onsubmit="return false" data-request-form data-request-endpoint="" data-request-configured="false" aria-describedby="request-config-status request-ra-note request-identity-note">
+        <p class="request-config-status" id="request-config-status" data-request-config-status data-en="Submission is unavailable in this local preview because no Apps Script endpoint is configured. No request is being sent." data-ha="Ba a samu buƙatar a wannan haskawa na gari ba saboda babu wata adireshin Apps Script da aka saita. A ba a tura buƙatar.">Submission is unavailable in this local preview because no Apps Script endpoint is configured. No request is being sent.</p>
+        <div class="request-grid">
+          <div class="request-field">
+            <label for="request-lga"><span data-en="LGA" data-ha="LGA">LGA</span> <span class="request-required" aria-hidden="true">*</span></label>
+            <select id="request-lga" name="lga" required>
+              <option value="" data-en="Choose LGA" data-ha="Zaɓi LGA" selected>Choose LGA</option>
+              <option value="Alkaleri">Alkaleri</option><option value="Bauchi">Bauchi</option><option value="Bogoro">Bogoro</option><option value="Dambam">Dambam</option><option value="Darazo">Darazo</option><option value="Dass">Dass</option><option value="Gamawa">Gamawa</option><option value="Ganjuwa">Ganjuwa</option><option value="Giade">Giade</option><option value="Itas-Gadau">Itas-Gadau</option><option value="Jamaare">Jamaare</option><option value="Katagum">Katagum</option><option value="Kirfi">Kirfi</option><option value="Misau">Misau</option><option value="Ningi">Ningi</option><option value="Shira">Shira</option><option value="Tafawa-Balewa">Tafawa-Balewa</option><option value="Toro">Toro</option><option value="Warji">Warji</option><option value="Zaki">Zaki</option>
+            </select>
+          </div>
+          <div class="request-field">
+            <label for="request-ward-code"><span data-en="Registration area (RA)" data-ha="Wurin ƙaura zaye (RA)">Registration area (RA)</span> <span class="request-required" aria-hidden="true">*</span></label>
+            <select id="request-ward-code" name="ward_code" required disabled>
+              <option value="" data-en="Choose a registration area" data-ha="Zaɓi wurin ƙaura zaye" selected>Choose a registration area</option>
+              <option data-request-ra-lga="Alkaleri" value="RA-001" data-en="Alkaleri" data-ha="Alkaleri">Alkaleri</option><option data-request-ra-lga="Alkaleri" value="RA-002" data-en="Pali" data-ha="Pali">Pali</option><option data-request-ra-lga="Alkaleri" value="RA-003" data-en="Gar" data-ha="Gar">Gar</option><option data-request-ra-lga="Alkaleri" value="RA-004" data-en="Gwaram" data-ha="Gwaram">Gwaram</option><option data-request-ra-lga="Alkaleri" value="RA-005" data-en="Maimadi" data-ha="Maimadi">Maimadi</option><option data-request-ra-lga="Alkaleri" value="RA-006" data-en="Dan Kungibar" data-ha="Dan Kungibar">Dan Kungibar</option><option data-request-ra-lga="Alkaleri" value="RA-007" data-en="Birin/Gigara/Yankari" data-ha="Birin/Gigara/Yankari">Birin/Gigara/Yankari</option><option data-request-ra-lga="Alkaleri" value="RA-008" data-en="Yuli/Lim" data-ha="Yuli/Lim">Yuli/Lim</option><option data-request-ra-lga="Alkaleri" value="RA-009" data-en="Futuk" data-ha="Futuk">Futuk</option><option data-request-ra-lga="Alkaleri" value="RA-010" data-en="Yalo" data-ha="Yalo">Yalo</option><option data-request-ra-lga="Alkaleri" value="RA-011" data-en="Gwana/Mansur" data-ha="Gwana/Mansur">Gwana/Mansur</option><option data-request-ra-lga="Bauchi" value="RA-012" data-en="Majidadi A" data-ha="Majidadi A">Majidadi A</option><option data-request-ra-lga="Bauchi" value="RA-013" data-en="Majidadi B" data-ha="Majidadi B">Majidadi B</option><option data-request-ra-lga="Bauchi" value="RA-014" data-en="Makama/Sarki Baki" data-ha="Makama/Sarki Baki">Makama/Sarki Baki</option><option data-request-ra-lga="Bauchi" value="RA-015" data-en="Zungur/Liman Katagum" data-ha="Zungur/Liman Katagum">Zungur/Liman Katagum</option><option data-request-ra-lga="Bauchi" value="RA-016" data-en="Mun/Munsal" data-ha="Mun/Munsal">Mun/Munsal</option><option data-request-ra-lga="Bauchi" value="RA-017" data-en="Dandango/Yamrat" data-ha="Dandango/Yamrat">Dandango/Yamrat</option><option data-request-ra-lga="Bauchi" value="RA-018" data-en="Birshi/Miri" data-ha="Birshi/Miri">Birshi/Miri</option><option data-request-ra-lga="Bauchi" value="RA-019" data-en="Kundum/Durum" data-ha="Kundum/Durum">Kundum/Durum</option><option data-request-ra-lga="Bauchi" value="RA-020" data-en="Kangyare/Turwun" data-ha="Kangyare/Turwun">Kangyare/Turwun</option><option data-request-ra-lga="Bauchi" value="RA-021" data-en="Galambi/Gwaskwaram" data-ha="Galambi/Gwaskwaram">Galambi/Gwaskwaram</option><option data-request-ra-lga="Bauchi" value="RA-022" data-en="Dan’Iya Hardo" data-ha="Dan’Iya Hardo">Dan’Iya Hardo</option><option data-request-ra-lga="Bauchi" value="RA-023" data-en="Dawaki" data-ha="Dawaki">Dawaki</option><option data-request-ra-lga="Bogoro" value="RA-024" data-en="Bogoro A" data-ha="Bogoro A">Bogoro A</option><option data-request-ra-lga="Bogoro" value="RA-025" data-en="Bogoro B" data-ha="Bogoro B">Bogoro B</option><option data-request-ra-lga="Bogoro" value="RA-026" data-en="Bogoro C" data-ha="Bogoro C">Bogoro C</option><option data-request-ra-lga="Bogoro" value="RA-027" data-en="Bogoro D" data-ha="Bogoro D">Bogoro D</option><option data-request-ra-lga="Bogoro" value="RA-028" data-en="Boi A" data-ha="Boi A">Boi A</option><option data-request-ra-lga="Bogoro" value="RA-029" data-en="Boi B" data-ha="Boi B">Boi B</option><option data-request-ra-lga="Bogoro" value="RA-030" data-en="Boi C" data-ha="Boi C">Boi C</option><option data-request-ra-lga="Bogoro" value="RA-031" data-en="Lusa A" data-ha="Lusa A">Lusa A</option><option data-request-ra-lga="Bogoro" value="RA-032" data-en="Lusa B" data-ha="Lusa B">Lusa B</option><option data-request-ra-lga="Bogoro" value="RA-033" data-en="Lusa C" data-ha="Lusa C">Lusa C</option><option data-request-ra-lga="Dambam" value="RA-034" data-en="Garuza" data-ha="Garuza">Garuza</option><option data-request-ra-lga="Dambam" value="RA-035" data-en="Gurbana" data-ha="Gurbana">Gurbana</option><option data-request-ra-lga="Dambam" value="RA-036" data-en="Dambam" data-ha="Dambam">Dambam</option><option data-request-ra-lga="Dambam" value="RA-037" data-en="Yanda" data-ha="Yanda">Yanda</option><option data-request-ra-lga="Dambam" value="RA-038" data-en="Yame" data-ha="Yame">Yame</option><option data-request-ra-lga="Dambam" value="RA-039" data-en="Dagauda" data-ha="Dagauda">Dagauda</option><option data-request-ra-lga="Dambam" value="RA-040" data-en="Gargawa" data-ha="Gargawa">Gargawa</option><option data-request-ra-lga="Dambam" value="RA-041" data-en="Zaura" data-ha="Zaura">Zaura</option><option data-request-ra-lga="Dambam" value="RA-042" data-en="Jalam Central" data-ha="Jalam Central">Jalam Central</option><option data-request-ra-lga="Dambam" value="RA-043" data-en="Jalam East" data-ha="Jalam East">Jalam East</option><option data-request-ra-lga="Darazo" value="RA-044" data-en="Darajo" data-ha="Darajo">Darajo</option><option data-request-ra-lga="Darazo" value="RA-045" data-en="Tauya" data-ha="Tauya">Tauya</option><option data-request-ra-lga="Darazo" value="RA-046" data-en="Gabarin" data-ha="Gabarin">Gabarin</option><option data-request-ra-lga="Darazo" value="RA-047" data-en="Konkiyal" data-ha="Konkiyal">Konkiyal</option><option data-request-ra-lga="Darazo" value="RA-048" data-en="Lago" data-ha="Lago">Lago</option><option data-request-ra-lga="Darazo" value="RA-049" data-en="Sade" data-ha="Sade">Sade</option><option data-request-ra-lga="Darazo" value="RA-050" data-en="Lanzai" data-ha="Lanzai">Lanzai</option><option data-request-ra-lga="Darazo" value="RA-051" data-en="Yautare" data-ha="Yautare">Yautare</option><option data-request-ra-lga="Darazo" value="RA-052" data-en="Gabciyari" data-ha="Gabciyari">Gabciyari</option><option data-request-ra-lga="Darazo" value="RA-053" data-en="Wahu" data-ha="Wahu">Wahu</option><option data-request-ra-lga="Darazo" value="RA-054" data-en="Papa" data-ha="Papa">Papa</option><option data-request-ra-lga="Dass" value="RA-055" data-en="Bagel/Bajar" data-ha="Bagel/Bajar">Bagel/Bajar</option><option data-request-ra-lga="Dass" value="RA-056" data-en="Bundot" data-ha="Bundot">Bundot</option><option data-request-ra-lga="Dass" value="RA-057" data-en="Bununu Central" data-ha="Bununu Central">Bununu Central</option><option data-request-ra-lga="Dass" value="RA-058" data-en="Bununu South" data-ha="Bununu South">Bununu South</option><option data-request-ra-lga="Dass" value="RA-059" data-en="Baraza" data-ha="Baraza">Baraza</option><option data-request-ra-lga="Dass" value="RA-060" data-en="Dott" data-ha="Dott">Dott</option><option data-request-ra-lga="Dass" value="RA-061" data-en="Durr" data-ha="Durr">Durr</option><option data-request-ra-lga="Dass" value="RA-062" data-en="Polchi" data-ha="Polchi">Polchi</option><option data-request-ra-lga="Dass" value="RA-063" data-en="Wandi" data-ha="Wandi">Wandi</option><option data-request-ra-lga="Dass" value="RA-064" data-en="Zumbul/Lukshi" data-ha="Zumbul/Lukshi">Zumbul/Lukshi</option><option data-request-ra-lga="Gamawa" value="RA-065" data-en="Gamawa" data-ha="Gamawa">Gamawa</option><option data-request-ra-lga="Gamawa" value="RA-066" data-en="Kafin Romi" data-ha="Kafin Romi">Kafin Romi</option><option data-request-ra-lga="Gamawa" value="RA-067" data-en="Gololo" data-ha="Gololo">Gololo</option><option data-request-ra-lga="Gamawa" value="RA-068" data-en="Kubdiya" data-ha="Kubdiya">Kubdiya</option><option data-request-ra-lga="Gamawa" value="RA-069" data-en="Alagarno/Jadori" data-ha="Alagarno/Jadori">Alagarno/Jadori</option><option data-request-ra-lga="Gamawa" value="RA-070" data-en="Tumbi" data-ha="Tumbi">Tumbi</option><option data-request-ra-lga="Gamawa" value="RA-071" data-en="Udubo" data-ha="Udubo">Udubo</option><option data-request-ra-lga="Gamawa" value="RA-072" data-en="Tarmasuwa" data-ha="Tarmasuwa">Tarmasuwa</option><option data-request-ra-lga="Gamawa" value="RA-073" data-en="Raga" data-ha="Raga">Raga</option><option data-request-ra-lga="Gamawa" value="RA-074" data-en="Gadiya" data-ha="Gadiya">Gadiya</option><option data-request-ra-lga="Gamawa" value="RA-075" data-en="Zindi" data-ha="Zindi">Zindi</option><option data-request-ra-lga="Ganjuwa" value="RA-076" data-en="Ganjuwa" data-ha="Ganjuwa">Ganjuwa</option><option data-request-ra-lga="Ganjuwa" value="RA-077" data-en="Gungura" data-ha="Gungura">Gungura</option><option data-request-ra-lga="Ganjuwa" value="RA-078" data-en="Kafin Madaki" data-ha="Kafin Madaki">Kafin Madaki</option><option data-request-ra-lga="Ganjuwa" value="RA-079" data-en="Kariya" data-ha="Kariya">Kariya</option><option data-request-ra-lga="Ganjuwa" value="RA-080" data-en="Kubi East" data-ha="Kubi East">Kubi East</option><option data-request-ra-lga="Ganjuwa" value="RA-081" data-en="Kubi West" data-ha="Kubi West">Kubi West</option><option data-request-ra-lga="Ganjuwa" value="RA-082" data-en="Miya East" data-ha="Miya East">Miya East</option><option data-request-ra-lga="Ganjuwa" value="RA-083" data-en="Miya West" data-ha="Miya West">Miya West</option><option data-request-ra-lga="Ganjuwa" value="RA-084" data-en="Nasarawa North" data-ha="Nasarawa North">Nasarawa North</option><option data-request-ra-lga="Ganjuwa" value="RA-085" data-en="Nasarawa South" data-ha="Nasarawa South">Nasarawa South</option><option data-request-ra-lga="Ganjuwa" value="RA-086" data-en="Yali" data-ha="Yali">Yali</option><option data-request-ra-lga="Giade" value="RA-087" data-en="Chinkani" data-ha="Chinkani">Chinkani</option><option data-request-ra-lga="Giade" value="RA-088" data-en="Sabon Sara" data-ha="Sabon Sara">Sabon Sara</option><option data-request-ra-lga="Giade" value="RA-089" data-en="Doguwa Central" data-ha="Doguwa Central">Doguwa Central</option><option data-request-ra-lga="Giade" value="RA-090" data-en="Doguwa South" data-ha="Doguwa South">Doguwa South</option><option data-request-ra-lga="Giade" value="RA-091" data-en="Giade" data-ha="Giade">Giade</option><option data-request-ra-lga="Giade" value="RA-092" data-en="Isawa" data-ha="Isawa">Isawa</option><option data-request-ra-lga="Giade" value="RA-093" data-en="Uzum A" data-ha="Uzum A">Uzum A</option><option data-request-ra-lga="Giade" value="RA-094" data-en="Uzum B" data-ha="Uzum B">Uzum B</option><option data-request-ra-lga="Giade" value="RA-095" data-en="Zabi" data-ha="Zabi">Zabi</option><option data-request-ra-lga="Giade" value="RA-096" data-en="Zirami" data-ha="Zirami">Zirami</option><option data-request-ra-lga="Itas-Gadau" value="RA-097" data-en="Itas" data-ha="Itas">Itas</option><option data-request-ra-lga="Itas-Gadau" value="RA-098" data-en="Mashema" data-ha="Mashema">Mashema</option><option data-request-ra-lga="Itas-Gadau" value="RA-099" data-en="Gwarai" data-ha="Gwarai">Gwarai</option><option data-request-ra-lga="Itas-Gadau" value="RA-100" data-en="Abdallawa/Magarya" data-ha="Abdallawa/Magarya">Abdallawa/Magarya</option><option data-request-ra-lga="Itas-Gadau" value="RA-101" data-en="Buzawa" data-ha="Buzawa">Buzawa</option><option data-request-ra-lga="Itas-Gadau" value="RA-102" data-en="Bilkicheri" data-ha="Bilkicheri">Bilkicheri</option><option data-request-ra-lga="Itas-Gadau" value="RA-103" data-en="Bambal" data-ha="Bambal">Bambal</option><option data-request-ra-lga="Itas-Gadau" value="RA-104" data-en="Gadau" data-ha="Gadau">Gadau</option><option data-request-ra-lga="Itas-Gadau" value="RA-105" data-en="Kashuri" data-ha="Kashuri">Kashuri</option><option data-request-ra-lga="Itas-Gadau" value="RA-106" data-en="Zubuki" data-ha="Zubuki">Zubuki</option><option data-request-ra-lga="Jamaare" value="RA-107" data-en="Jama’are A" data-ha="Jama’are A">Jama’are A</option><option data-request-ra-lga="Jamaare" value="RA-108" data-en="Jama’are B" data-ha="Jama’are B">Jama’are B</option><option data-request-ra-lga="Jamaare" value="RA-109" data-en="Jama’are C" data-ha="Jama’are C">Jama’are C</option><option data-request-ra-lga="Jamaare" value="RA-110" data-en="Jama’are D" data-ha="Jama’are D">Jama’are D</option><option data-request-ra-lga="Jamaare" value="RA-111" data-en="Dogon Jeji A" data-ha="Dogon Jeji A">Dogon Jeji A</option><option data-request-ra-lga="Jamaare" value="RA-112" data-en="Dogon Jeji B" data-ha="Dogon Jeji B">Dogon Jeji B</option><option data-request-ra-lga="Jamaare" value="RA-113" data-en="Dogon Jeji C" data-ha="Dogon Jeji C">Dogon Jeji C</option><option data-request-ra-lga="Jamaare" value="RA-114" data-en="Hanafari" data-ha="Hanafari">Hanafari</option><option data-request-ra-lga="Jamaare" value="RA-115" data-en="Galdimari" data-ha="Galdimari">Galdimari</option><option data-request-ra-lga="Jamaare" value="RA-116" data-en="Jurara" data-ha="Jurara">Jurara</option><option data-request-ra-lga="Katagum" value="RA-117" data-en="Bulkachuwa/Dagaro" data-ha="Bulkachuwa/Dagaro">Bulkachuwa/Dagaro</option><option data-request-ra-lga="Katagum" value="RA-118" data-en="Buskuri" data-ha="Buskuri">Buskuri</option><option data-request-ra-lga="Katagum" value="RA-119" data-en="Chinade" data-ha="Chinade">Chinade</option><option data-request-ra-lga="Katagum" value="RA-120" data-en="Gambaki/Bidir" data-ha="Gambaki/Bidir">Gambaki/Bidir</option><option data-request-ra-lga="Katagum" value="RA-121" data-en="Madachi/Gangai" data-ha="Madachi/Gangai">Madachi/Gangai</option><option data-request-ra-lga="Katagum" value="RA-122" data-en="Madangala" data-ha="Madangala">Madangala</option><option data-request-ra-lga="Katagum" value="RA-123" data-en="Madara" data-ha="Madara">Madara</option><option data-request-ra-lga="Katagum" value="RA-124" data-en="Nasarawa Bakin Kasuwa" data-ha="Nasarawa Bakin Kasuwa">Nasarawa Bakin Kasuwa</option><option data-request-ra-lga="Katagum" value="RA-125" data-en="Ragwam/Magonshi" data-ha="Ragwam/Magonshi">Ragwam/Magonshi</option><option data-request-ra-lga="Katagum" value="RA-126" data-en="Tsakwa Kofar Gabas/Kofar Kuka" data-ha="Tsakwa Kofar Gabas/Kofar Kuka">Tsakwa Kofar Gabas/Kofar Kuka</option><option data-request-ra-lga="Katagum" value="RA-127" data-en="Yayu" data-ha="Yayu">Yayu</option><option data-request-ra-lga="Kirfi" value="RA-128" data-en="Badara" data-ha="Badara">Badara</option><option data-request-ra-lga="Kirfi" value="RA-129" data-en="Bara" data-ha="Bara">Bara</option><option data-request-ra-lga="Kirfi" value="RA-130" data-en="Beni A" data-ha="Beni A">Beni A</option><option data-request-ra-lga="Kirfi" value="RA-131" data-en="Beni B" data-ha="Beni B">Beni B</option><option data-request-ra-lga="Kirfi" value="RA-132" data-en="Dewu Central" data-ha="Dewu Central">Dewu Central</option><option data-request-ra-lga="Kirfi" value="RA-133" data-en="Dewu East" data-ha="Dewu East">Dewu East</option><option data-request-ra-lga="Kirfi" value="RA-134" data-en="Kirfi" data-ha="Kirfi">Kirfi</option><option data-request-ra-lga="Kirfi" value="RA-135" data-en="Shango" data-ha="Shango">Shango</option><option data-request-ra-lga="Kirfi" value="RA-136" data-en="Tubule" data-ha="Tubule">Tubule</option><option data-request-ra-lga="Kirfi" value="RA-137" data-en="Wanka" data-ha="Wanka">Wanka</option><option data-request-ra-lga="Misau" value="RA-138" data-en="Zadawa" data-ha="Zadawa">Zadawa</option><option data-request-ra-lga="Misau" value="RA-139" data-en="Beti" data-ha="Beti">Beti</option><option data-request-ra-lga="Misau" value="RA-140" data-en="Jarkasa" data-ha="Jarkasa">Jarkasa</option><option data-request-ra-lga="Misau" value="RA-141" data-en="Kukadi/Gundari" data-ha="Kukadi/Gundari">Kukadi/Gundari</option><option data-request-ra-lga="Misau" value="RA-142" data-en="Ajilin/Gugulin" data-ha="Ajilin/Gugulin">Ajilin/Gugulin</option><option data-request-ra-lga="Misau" value="RA-143" data-en="Tofu" data-ha="Tofu">Tofu</option><option data-request-ra-lga="Misau" value="RA-144" data-en="Hardawa" data-ha="Hardawa">Hardawa</option><option data-request-ra-lga="Misau" value="RA-145" data-en="Sarma/Akuyam" data-ha="Sarma/Akuyam">Sarma/Akuyam</option><option data-request-ra-lga="Misau" value="RA-146" data-en="Sirko" data-ha="Sirko">Sirko</option><option data-request-ra-lga="Misau" value="RA-147" data-en="Gwaram" data-ha="Gwaram">Gwaram</option><option data-request-ra-lga="Ningi" value="RA-148" data-en="Ningi" data-ha="Ningi">Ningi</option><option data-request-ra-lga="Ningi" value="RA-149" data-en="Dingis" data-ha="Dingis">Dingis</option><option data-request-ra-lga="Ningi" value="RA-150" data-en="Nasaru" data-ha="Nasaru">Nasaru</option><option data-request-ra-lga="Ningi" value="RA-151" data-en="Jangu" data-ha="Jangu">Jangu</option><option data-request-ra-lga="Ningi" value="RA-152" data-en="Balma" data-ha="Balma">Balma</option><option data-request-ra-lga="Ningi" value="RA-153" data-en="Kudu/Yamma" data-ha="Kudu/Yamma">Kudu/Yamma</option><option data-request-ra-lga="Ningi" value="RA-154" data-en="Tiffi/Guda" data-ha="Tiffi/Guda">Tiffi/Guda</option><option data-request-ra-lga="Ningi" value="RA-155" data-en="Burra/Kyata" data-ha="Burra/Kyata">Burra/Kyata</option><option data-request-ra-lga="Ningi" value="RA-156" data-en="Sama" data-ha="Sama">Sama</option><option data-request-ra-lga="Ningi" value="RA-157" data-en="Bashe" data-ha="Bashe">Bashe</option><option data-request-ra-lga="Ningi" value="RA-158" data-en="Kurmi" data-ha="Kurmi">Kurmi</option><option data-request-ra-lga="Shira" value="RA-159" data-en="Andubun" data-ha="Andubun">Andubun</option><option data-request-ra-lga="Shira" value="RA-160" data-en="Sambuwal" data-ha="Sambuwal">Sambuwal</option><option data-request-ra-lga="Shira" value="RA-161" data-en="Bukul/Bangire" data-ha="Bukul/Bangire">Bukul/Bangire</option><option data-request-ra-lga="Shira" value="RA-162" data-en="Disina" data-ha="Disina">Disina</option><option data-request-ra-lga="Shira" value="RA-163" data-en="Faggo" data-ha="Faggo">Faggo</option><option data-request-ra-lga="Shira" value="RA-164" data-en="Beli/Gagidaba" data-ha="Beli/Gagidaba">Beli/Gagidaba</option><option data-request-ra-lga="Shira" value="RA-165" data-en="Kilbori" data-ha="Kilbori">Kilbori</option><option data-request-ra-lga="Shira" value="RA-166" data-en="Shira" data-ha="Shira">Shira</option><option data-request-ra-lga="Shira" value="RA-167" data-en="Tsafi" data-ha="Tsafi">Tsafi</option><option data-request-ra-lga="Shira" value="RA-168" data-en="Tumfafi" data-ha="Tumfafi">Tumfafi</option><option data-request-ra-lga="Shira" value="RA-169" data-en="Zubo" data-ha="Zubo">Zubo</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-170" data-en="Kardam A" data-ha="Kardam A">Kardam A</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-171" data-en="Kardam B" data-ha="Kardam B">Kardam B</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-172" data-en="Lere North" data-ha="Lere North">Lere North</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-173" data-en="Lere South" data-ha="Lere South">Lere South</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-174" data-en="Tapshin" data-ha="Tapshin">Tapshin</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-175" data-en="Wai" data-ha="Wai">Wai</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-176" data-en="Ball" data-ha="Ball">Ball</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-177" data-en="Bula" data-ha="Bula">Bula</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-178" data-en="Dajin" data-ha="Dajin">Dajin</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-179" data-en="Dull" data-ha="Dull">Dull</option><option data-request-ra-lga="Tafawa-Balewa" value="RA-180" data-en="Bununu" data-ha="Bununu">Bununu</option><option data-request-ra-lga="Toro" value="RA-181" data-en="Toro/Tulai" data-ha="Toro/Tulai">Toro/Tulai</option><option data-request-ra-lga="Toro" value="RA-182" data-en="Tilden Fulani" data-ha="Tilden Fulani">Tilden Fulani</option><option data-request-ra-lga="Toro" value="RA-183" data-en="Ribina" data-ha="Ribina">Ribina</option><option data-request-ra-lga="Toro" value="RA-184" data-en="Mara/Palama" data-ha="Mara/Palama">Mara/Palama</option><option data-request-ra-lga="Toro" value="RA-185" data-en="Rauta/Geji" data-ha="Rauta/Geji">Rauta/Geji</option><option data-request-ra-lga="Toro" value="RA-186" data-en="Jama’a/Zaranda" data-ha="Jama’a/Zaranda">Jama’a/Zaranda</option><option data-request-ra-lga="Toro" value="RA-187" data-en="Lame" data-ha="Lame">Lame</option><option data-request-ra-lga="Toro" value="RA-188" data-en="Wonu" data-ha="Wonu">Wonu</option><option data-request-ra-lga="Toro" value="RA-189" data-en="Zalau/Rishi" data-ha="Zalau/Rishi">Zalau/Rishi</option><option data-request-ra-lga="Toro" value="RA-190" data-en="Tama" data-ha="Tama">Tama</option><option data-request-ra-lga="Toro" value="RA-191" data-en="Rahama" data-ha="Rahama">Rahama</option><option data-request-ra-lga="Warji" value="RA-192" data-en="Baima North/West" data-ha="Baima North/West">Baima North/West</option><option data-request-ra-lga="Warji" value="RA-193" data-en="Baima South/East" data-ha="Baima South/East">Baima South/East</option><option data-request-ra-lga="Warji" value="RA-194" data-en="Dagu East" data-ha="Dagu East">Dagu East</option><option data-request-ra-lga="Warji" value="RA-195" data-en="Dagu West" data-ha="Dagu West">Dagu West</option><option data-request-ra-lga="Warji" value="RA-196" data-en="Gabanga" data-ha="Gabanga">Gabanga</option><option data-request-ra-lga="Warji" value="RA-197" data-en="Katanga" data-ha="Katanga">Katanga</option><option data-request-ra-lga="Warji" value="RA-198" data-en="Ranga" data-ha="Ranga">Ranga</option><option data-request-ra-lga="Warji" value="RA-199" data-en="Tiyin" data-ha="Tiyin">Tiyin</option><option data-request-ra-lga="Warji" value="RA-200" data-en="Tudun Wada East" data-ha="Tudun Wada East">Tudun Wada East</option><option data-request-ra-lga="Warji" value="RA-201" data-en="Tudun Wada West" data-ha="Tudun Wada West">Tudun Wada West</option><option data-request-ra-lga="Zaki" value="RA-202" data-en="Bursali" data-ha="Bursali">Bursali</option><option data-request-ra-lga="Zaki" value="RA-203" data-en="Katagum" data-ha="Katagum">Katagum</option><option data-request-ra-lga="Zaki" value="RA-204" data-en="Tashena/Gadai" data-ha="Tashena/Gadai">Tashena/Gadai</option><option data-request-ra-lga="Zaki" value="RA-205" data-en="Makawa" data-ha="Makawa">Makawa</option><option data-request-ra-lga="Zaki" value="RA-206" data-en="Sakwa" data-ha="Sakwa">Sakwa</option><option data-request-ra-lga="Zaki" value="RA-207" data-en="Gumai" data-ha="Gumai">Gumai</option><option data-request-ra-lga="Zaki" value="RA-208" data-en="Murmur North" data-ha="Murmur North">Murmur North</option><option data-request-ra-lga="Zaki" value="RA-209" data-en="Murmur South" data-ha="Murmur South">Murmur South</option><option data-request-ra-lga="Zaki" value="RA-210" data-en="Alangawari/Kafin/Larabawa" data-ha="Alangawari/Kafin/Larabawa">Alangawari/Kafin/Larabawa</option><option data-request-ra-lga="Zaki" value="RA-211" data-en="Maiwa" data-ha="Maiwa">Maiwa</option><option data-request-ra-lga="Zaki" value="RA-212" data-en="Mainako" data-ha="Mainako">Mainako</option>
+            </select>
+          </div>
+        </div>
+        <p class="request-note" id="request-ra-note" data-en="Names are based on provisional INEC electoral registration areas (RAs); they are not a current administrative council-ward schedule." data-ha="Sunan sun dogara da yarjejeni na ƙaura zaye na INEC na gwaji; ba su ta kasance wata jadawar karkashin gari na yanzu ba.">Names are based on provisional INEC electoral registration areas (RAs); they are not a current administrative council-ward schedule.</p>
+        <div class="request-field">
+          <label for="request-address"><span data-en="Address or location" data-ha="Adireshi ko wuri">Address or location</span> <span class="request-required" aria-hidden="true">*</span></label>
+          <input id="request-address" name="address" type="text" maxlength="300" autocomplete="street-address" required>
+        </div>
+        <div class="request-field">
+          <label for="request-category"><span data-en="Primary request category" data-ha="Babban nauyin buƙatar">Primary request category</span> <span class="request-required" aria-hidden="true">*</span></label>
+          <select id="request-category" name="category" required>
+            <option value="" data-en="Choose one category" data-ha="Zaɓi nauyi daya" selected>Choose one category</option>
+            <option value="water" data-en="Water" data-ha="Ruwan sha">Water</option><option value="electricity" data-en="Electricity" data-ha="Wuta">Electricity</option><option value="roads" data-en="Roads" data-ha="Dabarar kai">Roads</option><option value="healthcare" data-en="Healthcare" data-ha="Kafi lafiya">Healthcare</option><option value="education" data-en="Education" data-ha="Ilimi">Education</option><option value="jobs_agriculture" data-en="Jobs and agriculture" data-ha="Aiki da dama">Jobs and agriculture</option><option value="security" data-en="Security" data-ha="Tsaro">Security</option><option value="housing_environment" data-en="Housing and environment" data-ha="Gidaje da yanayi">Housing and environment</option><option value="other" data-en="Other" data-ha="Wani">Other</option>
+          </select>
+        </div>
+        <div class="request-field">
+          <label for="request-details"><span data-en="Details" data-ha="Bayani">Details</span> <span class="request-required" aria-hidden="true">*</span></label>
+          <textarea id="request-details" name="details" rows="6" maxlength="1000" required></textarea>
+        </div>
+        <fieldset class="request-contact-fields">
+          <legend><span data-en="Optional follow-up details" data-ha="Bayanan binfollow-up (zaɓi)">Optional follow-up details</span></legend>
+          <div class="request-grid">
+            <div class="request-field"><label for="request-name"><span data-en="Name (optional)" data-ha="Suna (zaɓi)">Name (optional)</span></label><input id="request-name" name="name" type="text" maxlength="120" autocomplete="name"></div>
+            <div class="request-field"><label for="request-phone"><span data-en="Phone (optional)" data-ha="L waya (zaɓi)">Phone (optional)</span></label><input id="request-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" inputmode="tel"></div>
+            <div class="request-field request-field-wide"><label for="request-email"><span data-en="Email (optional)" data-ha="Imel (zaɓi)">Email (optional)</span></label><input id="request-email" name="email" type="email" maxlength="254" autocomplete="email"></div>
+          </div>
+        </fieldset>
+        <div class="request-field request-honeypot" aria-hidden="true"><label for="request-website" data-en="Website" data-ha="Yanayin gari">Website</label><input id="request-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+        <div class="request-consent">
+          <input id="request-consent" name="consent" type="checkbox" required>
+          <label for="request-consent"><span data-en="I consent to the use of these details to receive and follow up on this request." data-ha="Na amince da amfani da waƙannan bayanan don karɓi buƙatar ta kuma sani da ita.">I consent to the use of these details to receive and follow up on this request.</span> <span class="request-required" aria-hidden="true">*</span></label>
+        </div>
+        <p class="request-note" id="request-identity-note" data-en="Do not enter a voter ID. No electoral identity number is requested. Any confirmation ID is a generated request tracking reference, not a voter ID." data-ha="Kada shigar da ID na zabb'ar masu zayyawa. Ba a nemi lambar wayo da zai gano mutum ba. ID na tabbaci yana nufin bin buƙatar kawai, ba ID na zabb'ar masu zayyawa ba.">Do not enter a voter ID. No electoral identity number is requested. Any confirmation ID is a generated request tracking reference, not a voter ID.</p>
+         <button class="btn request-submit" type="submit" data-request-submit disabled><span data-en="Submit request" data-ha="Aika buƙatar">Submit request</span></button>
+         <p class="request-status" data-request-status role="status" aria-live="polite" aria-atomic="true" data-en="Submission is currently unavailable. Please check the status above." data-ha="A ba da damar aika buƙatar yanzu. Duba matsayi a sama." data-unavailable-en="Submission is currently unavailable. Please check the status above." data-unavailable-ha="A ba da damar aika buƙatar yanzu. Duba matsayi a sama." data-submitting-en="Sending your request." data-submitting-ha="Ana aika buƙatar." data-error-en="We could not send your request. Please try again later." data-error-ha="Ba mu iya aika buƙatar. Ka sake gwada daga baya.">Submission is currently unavailable. Please check the status above.</p>
+        <div class="request-confirmation" data-request-confirmation role="status" aria-live="polite" aria-atomic="true" hidden data-en="Request received. Any confirmation ID is a generated request tracking reference, not a voter ID." data-ha="An karɓi buƙatar. ID na tabbaci yana nufin bin buƙatar kawai, ba ID na zabb'ar masu zayyawa ba.">Request received. Any confirmation ID is a generated request tracking reference, not a voter ID.</div>
+      </form>
+      <aside class="request-aside" aria-label="Request guidance">
+        <div><span>01</span><h3><span data-en="Describe the problem" data-ha="Bayyana matsala">Describe the problem</span></h3><p><span data-en="Give the location and what is needed. One request keeps the issue clear for follow-up." data-ha="Yi bayyana wuri da abin da ake buƙata. Buƙatar daya tana sa batun ya kasance mai sauƙi idan a biyo shi.">Give the location and what is needed. One request keeps the issue clear for follow-up.</span></p></div>
+        <div><span>02</span><h3><span data-en="Keep personal details optional" data-ha="Sanya bayanan sirri zaɓi">Keep personal details optional</span></h3><p><span data-en="Add contact information only if you want a response. It will be sent only to the configured request service." data-ha="Ƙara bayan tuntu kawai idan kana son amsa. Za a tura shi kawai ga sabis na buƙatar da aka saita.">Add contact information only if you want a response. It will be sent only to the configured request service.</span></p></div>
+        <div><span>03</span><h3><span data-en="Use the tracking reference" data-ha="Yi amfani da maƙai bin">Use the tracking reference</span></h3><p><span data-en="A confirmation reference helps follow up only after the request service accepts a request. It is not a voter ID." data-ha="Maƙai bin ya taimaka ne kawai bayan sabis ɗin buƙatar ya karɓi buƙatar. Ba ID na zabb&#x27;ar masu zayyawa ba.">A confirmation reference helps follow up only after the request service accepts a request. It is not a voter ID.</span></p></div>
+      </aside>
+    </div>
+  </div>
+</section><section class="section" id="how"><div class="shell"><div class="section-head"><div><div class="eyebrow"><span data-en="Before you send" data-ha="Kafin ka aika">Before you send</span></div><h2><span data-en="What happens to this form." data-ha="Abin da zai faru da wannan fom.">What happens to this form.</span></h2></div><p><span data-en="This form is not connected to a public endpoint yet, so nothing is sent from this build." data-ha="Wannan fom ba a haɗa da wata adireshin da za a iya amfani ba tukuna, don haka ba a tura komai daga wannan gina.">This form is not connected to a public endpoint yet, so nothing is sent from this build.</span></p></div><div class="note-box"><span data-en="No voter ID is requested. No electoral identity number is collected. Any confirmation reference is a generated request tracking reference, not a voter ID." data-ha="Ba a nemi ID na zabb&#x27;ar masu zayyawa. Ba a tara lambar wayo da ke gano mutum. ID na tabbaci yana nufin bin buƙatar kawai, ba ID na zabb&#x27;ar masu zayyawa ba.">No voter ID is requested. No electoral identity number is collected. Any confirmation reference is a generated request tracking reference, not a voter ID.</span></div></div></section></main>
+<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p><span data-en="Public-source campaign intelligence. Built" data-ha="Basirar gaggawa daga bayanan al&#x27;umma. An gina a">Public-source campaign intelligence. Built</span> 26 Sep 2026 · 21:28 UTC. <span data-en="Public information and campaign materials are labelled separately; this page is not private polling." data-ha="Bayanan al&#x27;umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra&#x27;yu na ɓoye ba.">Public information and campaign materials are labelled separately; this page is not private polling.</span></p></div><div class="sponsor"><div class="sponsor-photo"><span><span data-en="Sponsor photo" data-ha="Hotun mai tallafi">Sponsor photo</span></span></div><div class="sponsor-body"><span class="sponsor-label"><span data-en="Sponsor" data-ha="Mai tallafi">Sponsor</span></span><span class="sponsor-name"><span data-en="[ Sponsor name ]" data-ha="[ Suna na mai tallafi ]">[ Sponsor name ]</span></span><span class="sponsor-contribution"><span data-en="Contribution:" data-ha="Zuciya:">Contribution:</span> <b><span data-en="[ What was contributed and by whom — to be completed by the campaign team ]" data-ha="[ Abin da aka ba da da kuɗi — za a cika shi da hukumar gaggawa ]">[ What was contributed and by whom — to be completed by the campaign team ]</span></b></span></div></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" data-en="Created By Deerflow" data-ha="An ƙirƙira Deerflow">Created By Deerflow</a></div></footer>
+<script>
+const root=document.documentElement;
+let currentLanguage='en';
+let selectedLga='';
+let renderFeatured=()=>{};
+const renderLgaDetail=()=>{if(!selectedLga)return;const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const titleEl=document.getElementById('selected-lga');const copyEl=document.getElementById('selected-copy');if(!titleEl||!copyEl)return;const summary=currentLanguage==='ha'?btn.dataset.summaryHa:btn.dataset.summary;const promise=currentLanguage==='ha'?btn.dataset.promiseHa:btn.dataset.promise;const result=currentLanguage==='ha'?btn.dataset.resultHa:btn.dataset.result;titleEl.textContent=selectedLga;copyEl.textContent=currentLanguage==='ha'?selectedLga+': '+summary+' APM: '+promise+' Sami na gaba: '+result:selectedLga+': '+summary+' APM: '+promise+' Next result: '+result;};
+const LANGUAGE_KEY='apm-lang';
+const readStoredLanguage=()=>{try{const stored=window.localStorage.getItem(LANGUAGE_KEY);return stored==='ha'||stored==='en'?stored:null;}catch(error){return null;}};
+const storeLanguage=(lang)=>{try{window.localStorage.setItem(LANGUAGE_KEY,lang);}catch(error){/* blocked storage: the toggle still works for this page */}};
+const setLanguage=(lang,persist=true)=>{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;});document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',lang==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});document.querySelectorAll('[data-lang]').forEach(btn=>{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);};
+document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',currentLanguage==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});
+document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
+const storedLanguage=readStoredLanguage();if(storedLanguage)setLanguage(storedLanguage,false);
+document.querySelectorAll('[data-lga]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-lga]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');selectedLga=btn.dataset.lga;renderLgaDetail();}));
+
+const publicRequestForm=document.querySelector('[data-request-form]');
+if(publicRequestForm){
+  const requestLga=publicRequestForm.querySelector('#request-lga');
+  const requestRa=publicRequestForm.querySelector('#request-ward-code');
+  const requestStatus=publicRequestForm.querySelector('[data-request-status]');
+  const requestConfirmation=publicRequestForm.querySelector('[data-request-confirmation]');
+  const requestSubmit=publicRequestForm.querySelector('[data-request-submit]');
+  const requestConfigStatus=publicRequestForm.querySelector('[data-request-config-status]');
+  const requestHoneypot=publicRequestForm.querySelector('#request-website');
+  const requestConsent=publicRequestForm.querySelector('#request-consent');
+  const configuredRequestEndpoint=(publicRequestForm.dataset.requestEndpoint||'').trim();
+  let requestEndpointUrl=null;
+  try{
+    const parsedRequestEndpoint=new URL(configuredRequestEndpoint,window.location.href);
+    if(configuredRequestEndpoint&&parsedRequestEndpoint.protocol==='https:'&&!parsedRequestEndpoint.username&&!parsedRequestEndpoint.password&&!parsedRequestEndpoint.hash)requestEndpointUrl=parsedRequestEndpoint;
+  }catch(error){requestEndpointUrl=null;}
+  const requestEndpointReady=Boolean(requestEndpointUrl);
+   const showRequestStatus=key=>{
+     const english=requestStatus.dataset[key+'En'];
+     const hausa=requestStatus.dataset[key+'Ha'];
+     requestStatus.textContent=currentLanguage==='ha'?(hausa||requestStatus.dataset.ha):(english||requestStatus.dataset.en);
+     requestStatus.classList.toggle('is-error',key==='error');
+     requestStatus.hidden=false;
+   };
+   const applyBilingualValidity=()=>{
+     const fields=[
+       [document.querySelector('#request-lga'),'Choose an LGA.','Zaɓi LGA.'],
+       [document.querySelector('#request-ward-code'),'Choose a registration area.','Zaɓi wurin ƙaura zaye.'],
+       [document.querySelector('#request-address'),'Enter the address or location.','Shigar da adireshi ko wuri.'],
+       [document.querySelector('#request-category'),'Choose one request category.','Zaɓi nauyin buƙatar daya.'],
+       [document.querySelector('#request-details'),'Enter the request details.','Shigar da bayanan buƙatar.'],
+        [document.querySelector('#request-email'),'Enter a valid email address.','Shigar da adireshin imil mai yawa.',false],
+       [document.querySelector('#request-consent'),'Consent is required.','An buƙatar aminci.'],
+     ];
+       fields.forEach(([field,english,hausa,required=true])=>{
+         if(!field)return;
+         field.setCustomValidity('');
+         const value=field.type==='checkbox'?'':field.value.trim();
+         const invalid=field.type==='checkbox'?!field.checked:(required&&!value)||(field.type==='email'&&value&&field.validity.typeMismatch);
+         field.setCustomValidity(invalid?(currentLanguage==='ha'?hausa:english):'');
+       });
+   };
+   document.querySelectorAll('[data-lang]').forEach(button=>button.addEventListener('click',applyBilingualValidity));
+  const updateRequestRas=()=>{
+    const selectedLga=requestLga.value;
+    [...requestRa.options].forEach(option=>{
+      if(option.hasAttribute('data-request-ra-lga'))option.hidden=Boolean(selectedLga)&&option.dataset.requestRaLga!==selectedLga;
+      else option.hidden=Boolean(selectedLga);
+    });
+    requestRa.disabled=!selectedLga;
+    requestRa.value='';
+  };
+    publicRequestForm.setAttribute('aria-disabled',String(!requestEndpointReady));
+     requestSubmit.disabled=!requestEndpointReady;
+     requestStatus.hidden=requestEndpointReady;
+  requestLga.addEventListener('change',updateRequestRas);
+  updateRequestRas();
+  if(!requestEndpointReady){
+    requestConfigStatus.textContent=currentLanguage==='ha'?'Ba a saita wata maƙai da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.':'No usable request endpoint is configured in this build. No request is being sent.';
+    requestConfigStatus.dataset.en='No usable request endpoint is configured in this build. No request is being sent.';
+    requestConfigStatus.dataset.ha='Ba a saita wata maƙai da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.';
+    requestSubmit.addEventListener('click',event=>{event.preventDefault();showRequestStatus('unavailable');});
+  }
+  publicRequestForm.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(requestHoneypot.value.trim()){
+      publicRequestForm.reset();
+      updateRequestRas();
+      return;
+    }
+    if(!requestEndpointReady){
+      showRequestStatus('unavailable');
+      return;
+    }
+     applyBilingualValidity();
+     if(!publicRequestForm.reportValidity())return;
+    const payload={};
+    new FormData(publicRequestForm).forEach((value,key)=>{payload[key]=key==='consent'?requestConsent.checked:String(value);});
+    requestSubmit.disabled=true;
+    showRequestStatus('submitting');
+    requestConfirmation.hidden=true;
+    try{
+      const response=await fetch(requestEndpointUrl.href,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),credentials:'omit',referrerPolicy:'no-referrer'});
+       if(!response.ok)throw new Error('request_failed');
+       const responseData=await response.json().catch(()=>null);
+       const responseKeys=responseData&&typeof responseData==='object'&&!Array.isArray(responseData)?Object.keys(responseData):[];
+       const trackingId=responseKeys.length===1&&responseKeys[0]==='request_id'&&typeof responseData.request_id==='string'&&/^APM-[0-9]{4}-[0-9]{4,12}$/.test(responseData.request_id)?responseData.request_id:'';
+       if(!trackingId)throw new Error('invalid_request_confirmation');
+       requestStatus.hidden=true;
+       requestConfirmation.dataset.trackingId=trackingId;
+       requestConfirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+trackingId+'.';
+       requestConfirmation.hidden=false;
+      publicRequestForm.reset();
+      updateRequestRas();
+    }catch(error){
+      showRequestStatus('error');
+    }finally{
+      requestSubmit.disabled=!requestEndpointReady;
+    }
+  });
+}
+</script>
+</body>
+</html>

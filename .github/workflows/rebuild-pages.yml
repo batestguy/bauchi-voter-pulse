@@ -26,11 +26,24 @@ jobs:
             exit 1
           fi
       - run: python src/dashboard/render.py
-      - name: Commit landing page
+      - name: Verify every generated page exists
+        run: |
+          missing=0
+          for page in index achievements atlas poll agenda sources; do
+            if [ ! -f "docs/${page}.html" ]; then
+              echo "::error::docs/${page}.html was not generated. A page listed in PAGE_BUILDERS is missing from the build."
+              missing=1
+            fi
+          done
+          exit "$missing"
+      - name: Commit generated pages
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/assets/
-          git diff --cached --quiet || git commit -m "chore(pages): rebuild APM Bauchi progress landing"
+          # Every generated page must be staged. Naming only docs/index.html renders
+          # the other five but commits none of them, so the site silently keeps
+          # publishing stale subpages.
+          git add docs/*.html docs/assets/
+          git diff --cached --quiet || git commit -m "chore(pages): rebuild APM Bauchi progress pages"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"

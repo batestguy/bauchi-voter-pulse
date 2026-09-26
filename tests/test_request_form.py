@@ -6,7 +6,7 @@ from src.dashboard import render
 
 class RequestFormContractTests(unittest.TestCase):
     def setUp(self):
-        self.html = Path("docs/index.html").read_text(encoding="utf-8")
+        self.html = Path("docs/poll.html").read_text(encoding="utf-8")
         optional = render.read_optional_csv(render.LGA_WARDS_FILE)
         self.ward_rows = optional[0] if optional else []
 

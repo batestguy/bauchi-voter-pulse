@@ -1,6 +1,6 @@
 # APM Bauchi Site Expansion Plan
 
-**Status:** approved by owner 26 September 2026. **S0, S1 and S2 complete** (see §9). S3 onward not started.
+**Status:** approved by owner 26 September 2026. **S0–S3 complete** (see §9). S4 onward not started.
 **Supersedes:** the single-page layout described in `HANDOFF.md` §3 and `IMPLEMENTATION_PLAN.md` "Interactive Expansion Execution Plan"
 **Scope:** header/logo repair, bilingual correctness, six-page site, Bauchi LGA map, opinion poll
 **Naming:** phases are `S0`–`S7` to avoid collision with the existing `P0`–`P6` series in `IMPLEMENTATION_PLAN.md`
@@ -435,7 +435,7 @@ no `id` and is not linkable.
 
 ## 6. Test plan
 
-Existing: 87 `unittest` methods after S1/S2 (40 at baseline), no pytest/lint/typecheck. Keep it that way for now.
+Existing: 115 `unittest` methods after S3 (40 at baseline), no pytest/lint/typecheck. Keep it that way for now.
 The two guards added in S1/S2 are `tests/test_bilingual.py` and `tests/test_header_brand.py`; the latter
 includes a `node --check` parse of the inline script, which is the only thing that catches a
 duplicate `const` declaration.
@@ -649,54 +649,113 @@ translates, agenda de-duplicated, no horizontal overflow at 375px, **zero consol
 
 ---
 
+### S3 — Multi-page shell (complete)
+
+`render()` was a single 300-line f-string. It is now a page registry: `PAGE_NAV`,
+`PAGE_BUILDERS`, `PAGE_SCRIPTS`, and a `document()` shell that assembles head, topbar,
+body, footer and script. Six **flat** files are written, so `assets/brand/...` relative
+paths keep working with no `../`.
+
+| Page | Sections moved onto it |
+|---|---|
+| `index.html` | hero, stats, four-step story + sector filter + arrow cards, continuity, cards into every subpage |
+| `achievements.html` | featured carousel, all 25 achievement records, measurement ledger |
+| `atlas.html` | 20-LGA selector and evidence panel |
+| `poll.html` | request form, plus a "what happens to this form" section |
+| `agenda.html` | the 8 published commitments, now also showing `promise_type` and the measure |
+| `sources.html` | source register, grading legend, build method |
+
+Deviation from the plan, recorded deliberately: the plan proposed Jinja2 templates. The
+implementation keeps the existing tested fragment builders and adds a shell function
+instead. Converting 15 fragment builders to Jinja2 was a much larger, riskier change that
+did not serve the goal any better. The stylesheet stays one shared block for the same
+reason — the weight is negligible against the data payload, and a single block removes a
+whole class of cascade regressions. **S4 should revisit the CSS split** if page weight
+ever matters.
+
+The three things S3 had to get right:
+
+1. **Mobile navigation.** `.nav` is `display:none` below 1050px, so a no-JS
+   `<details>`/`<summary>` menu is the only phone path to any subpage. Its bar is
+   `position:relative` because the panel is absolutely positioned at `top:100%` of it.
+   An earlier `position:fixed` override pushed the panel off-screen because `top:100%`
+   then resolved against the viewport; caught in the browser and now asserted.
+2. **Solid subpage header.** `.topbar` is `position:absolute` with white text over the
+   dark hero. Subpages have no hero, so they wrap it in `.page-head` with an opaque navy
+   background instead.
+3. **Both §20 release traps**, fixed in the same change: the cron now stages
+   `docs/*.html` and fails if any page is missing, and the handoff allowlist lists all six.
+
+#### Script routing
+
+`SCRIPT_CORE` ships on every page: language state, storage, `setLanguage`, the
+`localStorage` restore, the LGA binding, and a seeded `let renderFeatured = () => {}`.
+`FEATURED_SCRIPT` now **assigns** `renderFeatured` instead of declaring it `const`, so
+the seed and the override coexist. `SCRIPT_INDEX` (sector filter) ships on the home page
+only, `FEATURED_SCRIPT` on achievements only, `REQUEST_SCRIPT` on poll only.
+
+#### Bugs found and fixed during S3
+
+- **The home page rendered the topbar twice** — once centrally in `document()` and once
+  inside the hero. `document()` no longer emits a header; each body owns its own wrapper.
+- **`aria-label` contained HTML.** `copy()` emits a `<span>`, which is invalid inside an
+  attribute. Replaced with `data-aria-label-en`/`-ha` pairs translated inside
+  `setLanguage`, so it also updates on the language switch rather than only at load.
+- **`nav_links(active, panel=True)` bound `panel` to `css_class`**, emitting
+  `class="True"`. Parameter removed.
+
+#### Verification
+
+**115 tests pass** (was 87). `tests/test_site_structure.py` is new: it asserts all six
+pages exist with unique titles and descriptions, that every nav link and asset path
+resolves, that no page uses `../`, that each heavy section lives on exactly one page,
+that exactly one nav item is `aria-current="page"` per page, that the mobile menu exists
+and contains no JavaScript, that subpages have a solid header, that each script blob is
+routed to the right pages, that all six scripts pass `node --check` with no duplicate
+top-level declarations, and that both release traps stay closed.
+
+Browser-verified at 375px and 1440px: all six pages load, mobile menu opens inside the
+viewport with all six links and the current page marked, the language choice persists
+across page navigation, `aria-label` translates, the LGA selector still updates the detail
+panel, the carousel still navigates and filters, the request form is still disabled with
+no endpoint configured, and there are **zero console errors**.
+
 ## 10. Next session - start here
 
-**State at handoff (26 September 2026):** S0, S1 and S2 complete and committed. `main` is
-**4 commits ahead of `origin/main` and nothing has been pushed** (including the pre-existing
-`2fd12fa`). The site is still a single
-page. 87 tests pass.
+**State at handoff (26 September 2026):** S0–S3 complete and committed. `main` is **5
+commits ahead of `origin/main` and nothing has been pushed.** The site is six pages. 115
+tests pass.
 
 ### Do this first
 
 1. Work from `D:\APMdeliverable` and run `python -m unittest discover -s tests -q`. Expect
-   **87 OK**.
-2. Run `python src/dashboard/render.py`. It must render without raising.
+   **115 OK**.
+2. Run `python src/dashboard/render.py`. It must print six page sizes and write all six.
 3. Confirm the preserved local work is still untracked/modified and do **not** touch it:
    `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`, `.playwright-mcp/`.
-4. Read section 3 (target architecture) and section 5 (anchor re-targeting) above, then
-   start **S3**.
+4. Start **S4, the Bauchi map**, per §2.4 and the P0 list in `HANDOFF.md` §13.
 
-### S3 scope in one paragraph
+### S4 scope in one paragraph
 
-Extract the single f-string in `render()` into a Jinja2 shared layout. Jinja2 is already in
-`requirements.txt` and currently unused, so this adds no dependency. Emit six **flat** files
-in `docs/` - `index.html`, `achievements.html`, `atlas.html`, `poll.html`, `agenda.html`,
-`sources.html` - so the existing `assets/brand/...` relative paths keep working unchanged.
-Every page gets the shared header, the labelled language control, the footer with the
-sponsor slot, and `aria-current="page"` on its own nav link.
+Fetch the GRID3 / eHealth Africa operational LGA boundaries once, cache them, register
+the source as grade B, and commit the simplified path strings to
+`data/derived/lga_paths.json` so the weekly Pages build never calls ArcGIS. Emit 20
+inline `<path data-lga>` elements on `atlas.html` with zero runtime third-party requests,
+and keep the RA list in the side panel labelled "not geo-located".
 
-### Three things S3 must not miss
+### Five things S4 must not get wrong
 
-1. **A mobile navigation menu.** `.nav` is `display:none` below 1050px. With subpages, phones
-   get **no navigation at all**.
-2. **A solid-header variant.** `.topbar` is `position:absolute` with white text over the dark
-   hero. A subpage without a hero needs an opaque background or the header renders
-   white-on-cream.
-3. **The two release traps in `HANDOFF.md` section 20**, fixed *in the same change*:
-   `rebuild-pages.yml:33` stages only `docs/index.html`, and the staging allowlist in
-   `HANDOFF.md` section 18 names only `docs/index.html`. Both fail silently.
-
-### Re-target these tests
-
-| Test | Assertions | Move to |
-|---|---:|---|
-| `test_dashboard_contract.test_language_toggle_preserves_selected_lga` | 4 | `atlas.html` |
-| `test_dashboard_contract.test_featured_section_is_rendered_from_current_data` | 9 | `achievements.html` |
-| `test_request_form.*` (4 tests) | 24 | `poll.html` |
-
-`test_request_form.py:21` asserts `data-request-ra-lga=` appears 212 times, but there are 213
-raw occurrences - the extra one is inside `REQUEST_SCRIPT`. It only passes because the markup
-and its JS ship in the same file.
+1. **Never quantize below 3 dp.** At 2 dp, 56% of shared boundary edges collapse and the
+   map tears. Assert ≥90% shared-edge retention in a test.
+2. **Douglas-Peucker needs an explicit stack.** `Itas/Gadau` is a 1,223-point ring, which
+   exceeds Python's 1000-frame recursion limit.
+3. **DP is not provably seam-safe.** Neighbours share 3,538 exactly-matching vertices, so
+   a position-only transform is safe, but per-polygon DP can keep different subsets of a
+   shared border. Snap neighbours back together after simplifying.
+4. **Join on `lgacode`, not names.** `Itas/Gadau` → `Itas-Gadau` and `Jama'Are` →
+   `Jamaare` are the only two mismatches.
+5. **Do not pull the GRID3 Wards layer.** It is BY-SA and would force BY-SA on the whole
+   site. The LGA Boundaries layer is BY and is what this project needs.
 
 ### Owner gates still open
 
@@ -704,18 +763,18 @@ and its JS ship in the same file.
 - Native-speaker review of the **53 AI-drafted Hausa strings** (27 `usage_note_ha`, 25
   `verification_status_ha`, 1 wash-promise clause). These are integrity caveats a
   Hausa-reading voter now sees.
-- Push authorisation for the four unpushed commits.
-- Decide whether to narrow the `wash` sector label from "Water and climate resilience" - the
-  published campaign source contains zero climate content.
+- Push authorisation for the five unpushed commits.
+- Decide whether to narrow the `wash` sector label from "Water and climate resilience" —
+  the published campaign source contains zero climate content.
 
 ### If you only have time for one thing
 
-Run the S1 and S2 guards against your change:
-
 ```text
-python -m unittest tests.test_bilingual tests.test_header_brand -v
+python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure -v
 ```
 
-These cover the defects that are invisible in a visual check: untranslated strings, Hausa
-pasted into an English column, a missing emblem hash, an invert filter creeping back,
-invented sponsor content, and a duplicate `const` that would disable every script on the page.
+These cover the defects a visual check cannot see: untranslated strings, Hausa pasted into
+an English column, a missing emblem hash, an invert filter creeping back, invented sponsor
+content, a duplicate `const` that would disable every script on a page, a nav link
+pointing at a page that was never generated, and a cron that would publish stale subpages.
+
