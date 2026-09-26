@@ -43,14 +43,14 @@ All figures below were measured against the working tree at `2fd12fa`, not estim
 | Sections emitted | hero+topbar, stats, progress, atlas, continuity, agenda, featured, indicators, requests, sources, footer |
 | `id` attributes | 29 |
 | In-page anchors | 8 — **all break on a page split** |
-| Tests | 40 `unittest` methods; 2 files read `docs/index.html` (`test_dashboard_contract.py:9,29`, `test_request_form.py:9`) |
+| Tests | 40 `unittest` methods at this baseline, **87 after S1/S2**; 2 files read `docs/index.html` (`test_dashboard_contract.py:9,29`, `test_request_form.py:9`) |
 
 `stats` is a real section with **no `id`**, and it sits between `</header>` and `<main>`, not inside `<main>`.
 
 ### 2.2 The logo defect (confirmed by screenshot of the live site)
 
 - `assets/brand/apm-logo.png` is **1516×337** RGBA — a horizontal lockup: shield emblem + "ALLIED PEOPLES' MOVEMENT" wordmark + italic motto.
-- `render.py:844` applies `.brand img{width:116px;height:auto;filter:brightness(0) invert(1)}`.
+- `render.py:981` applies `.brand img{width:116px;height:auto;filter:brightness(0) invert(1)}`.
 - `brightness(0) invert(1)` collapses all colour to solid white. At `width:116px` the rendered box is **116×26** — the wordmark and motto become an illegible white smudge. The screenshot confirms a plain white rectangle.
 - The HTML wordmark `Allied Peoples' Movement` is **already** rendered beside it (`render.py:1064`), so the image contributes nothing.
 - **Fix:** crop the shield emblem once, at 1:1, and render it at ~40px with **no invert filter**.
@@ -69,7 +69,7 @@ Of **711** `data-en`/`data-ha` pairs, **227** are byte-identical. These partitio
 | Party motto `Integrity · Sacrifice · Service` | 1 | legitimately identical by design |
 | **Genuinely untranslated** | **10** | **3 distinct strings — BUG** |
 
-**Bug 1 — 8 occurrences, one line.** `render.py:616` calls
+**Bug 1 — 8 occurrences, one line.** `render.py:747` (the indicator card; the second `status_badge` site at 707 is the correct one) calls
 `status_badge(row.get("status",""), row.get("status",""))` — passing `status` as *both*
 arguments. `indicators.csv` has no `status_ha` column, so all 8 indicator cards render
 `Outcome being measured` (×5) and `Progress delivered` (×3) in **both** slots. The correct
@@ -104,7 +104,7 @@ Hausa mode is actually showing Hausa.
 | `indicators.current_unit` | 8 | `render.py:609` |
 | `Baseline pending` | 8 | `render.py:607` |
 | `Target not set` | 8 | `render.py:614` |
-| indicator eyebrow uses the raw `sector` key, not `SECTOR_LABELS` | 8 | `render.py:616` |
+| indicator eyebrow uses the raw `sector` key, not `SECTOR_LABELS` | 8 | `render.py:747` (the indicator card; the second `status_badge` site at 707 is the correct one) |
 
 **Hausa quality defects** (text present and correctly encoded, but wrong). The significant ones:
 
@@ -116,7 +116,7 @@ Hausa mode is actually showing Hausa.
 - `render.py:1084` — Hausa footer leaves `private polling` in English.
 - `render.py:1070`, `render.py:1072` — missing `ƙ` (`A bayanan` → `Ƙa bayanan`; `A agenda` → `ƙa agenda`).
 - `render.py:69` — `SECTOR_HA["governance"]` = `Isar da g hanyayi da gwaji`; stray space.
-- `render.py:1090` — LGA panel says `Bari:` while the rest of the page says `Sami na gaba:`.
+- `render.py:1241` — LGA panel says `Bari:` while the rest of the page says `Sami na gaba:`.
 - `render.py:419` — `...note na hotun yana nuna wanda.` — `wanda` misused, reads as nonsense.
 - `needs.csv:8` — `accountability` left untranslated in the Hausa slot.
 - `achievements.csv:3` — `Martaba` used for "Malnutrition"; `achievements.csv:6` — `Sectors` untranslated.
@@ -229,7 +229,7 @@ not validated by government authorities and have no official gazetted status. Pr
 
 ### 2.5 Traps in the existing code
 
-🔴 **`render.py:1090` is the only un-guarded DOM write in the entire script.**
+🔴 **`render.py:1090` (now `render.py:1241`) was the only un-guarded DOM write in the entire script.**
 `document.getElementById('selected-lga').textContent` and `('selected-copy').textContent` are
 not null-checked. It is safe today only by transitive reasoning (`selectedLga` stays `''` when
 no `[data-lga]` button exists). On a page split — or if `selectedLga` is ever restored from
@@ -328,7 +328,7 @@ Each phase leaves the site deployable. No phase should be left half-merged.
 
 Ordered so each step is independently verifiable:
 
-1. `render.py:616` — pass `row.get("status_ha","")` instead of `row.get("status","")`. Fixes 8 of 10.
+1. `render.py:747` (the indicator card; the second `status_badge` site at 707 is the correct one) — pass `row.get("status_ha","")` instead of `row.get("status","")`. Fixes 8 of 10.
 2. `data/delivery/indicators.csv` — add a `status_ha` column; populate 8 rows. Add `"status_ha"` to the required-column set at `render.py:209-213` and the `required_fields` list at `render.py:183` so it cannot regress.
 3. `render.py:690` / `738` — supply the Hausa `Zaɓi wurin ƙaura zaye.` already present at `render.py:502`. Also fix the dead branch at 693.
 4. `data/delivery/achievements.csv` lines 7, 8, 9 — write real English into `description`; fix `Gihada` → `Jihada`. Add a `validate_data()` guard rejecting `ƙ ɓ ɗ ʙ` in any non-`_ha` column of `achievements.csv`, so this cannot recur.
@@ -339,7 +339,7 @@ Ordered so each step is independently verifiable:
 9. Wrap the silent English-only gaps from §2.3: `source_register` `title`/`usage_note`, `achievements` `verification_status`, `indicators` `measurement_note`/`current_value`/`current_unit`, and the `Baseline pending` / `Target not set` literals. This requires new `_ha` columns in `source_register.csv` and `indicators.csv` — **owner or native-speaker review required for the new Hausa copy.**
 10. Route the indicator eyebrow through `SECTOR_LABELS`/`SECTOR_HA` instead of the raw key.
 11. Apply the Hausa quality fixes in §2.3 and de-duplicate `promises.csv:5`/`:6`.
-12. Fix the `Bari:` vs `Sami na gaba:` inconsistency at `render.py:1090`.
+12. Fix the `Bari:` vs `Sami na gaba:` inconsistency at `render.py:1241`.
 
 **Hausa authorship caveat:** items 2, 3, 8, 9 and 11 require new Hausa copy. The existing
 `Zaɓi wurin ƙaura zaye.` is reusable as-is, and `achievements.csv:status_ha` already supplies
@@ -435,7 +435,10 @@ no `id` and is not linkable.
 
 ## 6. Test plan
 
-Existing: 40 `unittest` methods, no pytest/lint/typecheck. Keep it that way for now.
+Existing: 87 `unittest` methods after S1/S2 (40 at baseline), no pytest/lint/typecheck. Keep it that way for now.
+The two guards added in S1/S2 are `tests/test_bilingual.py` and `tests/test_header_brand.py`; the latter
+includes a `node --check` parse of the inline script, which is the only thing that catches a
+duplicate `const` declaration.
 
 **Re-target the two HTML-reading test files:**
 
@@ -478,7 +481,7 @@ Assert **counts from the data, not constants** — e.g. derive the arrow-card co
 | # | Risk | Mitigation |
 |---|---|---|
 | 1 | 🔴 Cron renders the new pages but never commits them | Fix `rebuild-pages.yml:33` in the same phase as S3 |
-| 2 | 🔴 Language toggle throws on a page lacking the LGA detail panel | Null-guard `render.py:1090` in S2, before S3 makes it reachable |
+| 2 | 🔴 Language toggle throws on a page lacking the LGA detail panel | Null-guard `render.py:1241` in S2, before S3 makes it reachable |
 | 3 | 🔴 Phones lose all navigation | Mobile menu is a required S3 deliverable |
 | 4 | 🔴 CI fails closed on an unapproved asset | Owner must approve the emblem; `usage_status` must sit in column 6 |
 | 5 | 🟠 Map tears between LGAs | Never quantize below 3 dp; test asserts ≥90% shared-edge retention |
@@ -570,3 +573,149 @@ Tests: `tests/test_bilingual.py`, 17 methods. Suite is **57 passing**, up from 4
    the same caveat already recorded on `.evals/2026-W39.md`. They cover integrity caveats a
    Hausa-reading visitor now sees, so they should be spot-checked before the next push.
 2. ~~promises duplication~~ **RESOLVED in S2** - see below.
+
+### S2 - Header, emblem, sponsor slot, language control (complete, commit `533a210`)
+
+#### Emblem
+
+The white rectangle was diagnosed by measurement, not guesswork. `apm-logo.png` is a
+1516x337 lockup with an **opaque white background** (RGB 254,254,254, alpha 255), so the old
+`filter:brightness(0) invert(1)` turned the background white as well as the artwork. The two
+merged into one solid block, rendered at 116x26.
+
+- Measured ink bounds of the emblem: x 31-304, y 5-318 (274x314). There is **no blank row**
+  between the "A P M" letters and the shield, so the crop keeps the whole connected mark
+  rather than attempting a cut that would decapitate the letters.
+- Background removal is a **border flood fill**, not a global white threshold. A threshold
+  would also punch out the shield's own white "ALLIED / PEOPLES' / MOVEMENT" lettering,
+  which is enclosed by ink and must survive. 38.9% of pixels are now transparent.
+- `apm-emblem.png` added to `asset_register.csv` and `ASSET_FILES`; hash-registered. The CI
+  asset gate, which validates `usage_status` by **column position**, passes.
+- Header and favicon both use the emblem; the invert filter is gone. The wordmark
+  "Allied Peoples' Movement" stays as HTML text beside it.
+- The original `apm-logo.png` is retained.
+
+#### Sponsor slot
+
+Footer only, three labelled fields per owner direction: photo, name, and a **prominent
+contribution line**. Bilingual, dashed border, and deliberately unfilled. A test asserts the
+slot carries no amount, no four-digit figure, and no invented name or organisation.
+
+#### Language control
+
+- Now labelled with a globe glyph plus `Language` / `Harshe`, so it is self-describing
+  rather than a bare `EN | HA` pill. Grouped with `role="group"` and `aria-labelledby`.
+- The choice persists in `localStorage` under `apm-lang` and is restored on load. Both read
+  and write are wrapped in try/catch so blocked storage cannot break the toggle, and only
+  `en`/`ha` are accepted from storage.
+- Verified by browser: switched to Hausa, reloaded the page, and Hausa was still active.
+
+#### Promises duplication - resolved from source evidence
+
+Read the archived campaign page (`delivery-89aec627d08a.html`, grade D, cited by all eight
+promises). The published manifesto has **five pillars** and **no standalone water pillar**.
+Searching the whole document, `water` appears exactly twice, while `sanitation`, `WASH`,
+`borehole`, `toilet`, `drainage` and `climate` appear **zero times**.
+
+`promise-wash` was therefore a **phantom row** created to fill the sector grid, holding a
+byte-for-byte copy of `promise-infrastructure` - including `success_indicator`. The agenda
+rendered the same commitment twice under two sectors.
+
+- `promise-infrastructure` keeps the full published pillar text, unchanged.
+- `promise-wash` is re-scoped to the **water clause of that same published commitment** and
+  labelled honestly: `promise_type` = `Published commitment clause`, `approval_status` =
+  `Published clause of the Infrastructure Development commitment`, with a water-specific
+  `success_indicator`. Nothing is invented; every word traces to the source.
+- **New validator `validate_unique_promises()`** rejects any two promise rows sharing
+  `promise_text`. This guards the bug class, not just the instance. Proven to fire by
+  reintroducing the duplicate, then restoring.
+
+Verified in the browser: 8 agenda cards, no duplicates, water and infrastructure distinct.
+
+#### Bug caught during S2
+
+Adding the persistence wrapper left **two `const setLanguage` declarations** in the same
+scope. That is a `SyntaxError`, which would have silently disabled *every* script on the
+page - the HTML still renders, so nothing looks wrong in a visual check. Caught by
+inspection, fixed, and now guarded three ways: a `node --check` parse of the extracted
+inline script, a duplicate top-level `const` detector, and an exact-count assertion on
+`setLanguage`.
+
+#### Verification
+
+87 tests pass (was 57). Browser-verified at 375px and 1440px: emblem renders in colour,
+language label switches EN/Hausa, choice survives reload, sponsor tile renders and
+translates, agenda de-duplicated, no horizontal overflow at 375px, **zero console errors**.
+
+---
+
+## 10. Next session - start here
+
+**State at handoff (26 September 2026):** S0, S1 and S2 complete and committed. `main` is
+**4 commits ahead of `origin/main` and nothing has been pushed** (including the pre-existing
+`2fd12fa`). The site is still a single
+page. 87 tests pass.
+
+### Do this first
+
+1. Work from `D:\APMdeliverable` and run `python -m unittest discover -s tests -q`. Expect
+   **87 OK**.
+2. Run `python src/dashboard/render.py`. It must render without raising.
+3. Confirm the preserved local work is still untracked/modified and do **not** touch it:
+   `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`, `.playwright-mcp/`.
+4. Read section 3 (target architecture) and section 5 (anchor re-targeting) above, then
+   start **S3**.
+
+### S3 scope in one paragraph
+
+Extract the single f-string in `render()` into a Jinja2 shared layout. Jinja2 is already in
+`requirements.txt` and currently unused, so this adds no dependency. Emit six **flat** files
+in `docs/` - `index.html`, `achievements.html`, `atlas.html`, `poll.html`, `agenda.html`,
+`sources.html` - so the existing `assets/brand/...` relative paths keep working unchanged.
+Every page gets the shared header, the labelled language control, the footer with the
+sponsor slot, and `aria-current="page"` on its own nav link.
+
+### Three things S3 must not miss
+
+1. **A mobile navigation menu.** `.nav` is `display:none` below 1050px. With subpages, phones
+   get **no navigation at all**.
+2. **A solid-header variant.** `.topbar` is `position:absolute` with white text over the dark
+   hero. A subpage without a hero needs an opaque background or the header renders
+   white-on-cream.
+3. **The two release traps in `HANDOFF.md` section 20**, fixed *in the same change*:
+   `rebuild-pages.yml:33` stages only `docs/index.html`, and the staging allowlist in
+   `HANDOFF.md` section 18 names only `docs/index.html`. Both fail silently.
+
+### Re-target these tests
+
+| Test | Assertions | Move to |
+|---|---:|---|
+| `test_dashboard_contract.test_language_toggle_preserves_selected_lga` | 4 | `atlas.html` |
+| `test_dashboard_contract.test_featured_section_is_rendered_from_current_data` | 9 | `achievements.html` |
+| `test_request_form.*` (4 tests) | 24 | `poll.html` |
+
+`test_request_form.py:21` asserts `data-request-ra-lga=` appears 212 times, but there are 213
+raw occurrences - the extra one is inside `REQUEST_SCRIPT`. It only passes because the markup
+and its JS ship in the same file.
+
+### Owner gates still open
+
+- Ratify or correct the `apm-emblem.png` rights record in `asset_register.csv`.
+- Native-speaker review of the **53 AI-drafted Hausa strings** (27 `usage_note_ha`, 25
+  `verification_status_ha`, 1 wash-promise clause). These are integrity caveats a
+  Hausa-reading voter now sees.
+- Push authorisation for the four unpushed commits.
+- Decide whether to narrow the `wash` sector label from "Water and climate resilience" - the
+  published campaign source contains zero climate content.
+
+### If you only have time for one thing
+
+Run the S1 and S2 guards against your change:
+
+```text
+python -m unittest tests.test_bilingual tests.test_header_brand -v
+```
+
+These cover the defects that are invisible in a visual check: untranslated strings, Hausa
+pasted into an English column, a missing emblem hash, an invert filter creeping back,
+invented sponsor content, and a duplicate `const` that would disable every script on the page.

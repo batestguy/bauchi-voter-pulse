@@ -1,10 +1,15 @@
 # APM Bauchi Progress & Delivery — Project Handoff
 
-**Handoff date:** 25 September 2026
+**Handoff date:** 26 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** `b94d4b0` — `feat(delivery): add indicator ledger and integrity tests`
+**Current release:** `533a210` — `fix(header): legible APM emblem, sponsor slot, persistent language (S2)`
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
+**Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
+
+> ⚠️ **Read `SITE_EXPLANSION_PLAN.md` before touching the site.** It governs the six-page
+> split (phase S3), the Bauchi map (S4) and the opinion poll (S5). Two release-breaking
+> traps fire the moment S3 lands and are listed in §20 below.
 
 ## 1. Handoff Summary
 
@@ -25,28 +30,36 @@ is not the current product and is not invoked by the current GitHub Pages build.
 
 ## Current Checkpoint
 
+**Three phases of the site expansion are complete and committed. Nothing is pushed.**
+
+| Commit | Phase | What it did |
+|---|---|---|
+| `9cd101b` | S0 | Added `SITE_EXPANSION_PLAN.md` |
+| `be832e0` | S1 | Bilingual correctness across all delivery content |
+| `533a210` | S2 | Legible APM emblem, sponsor slot, persistent language control, de-duplicated promises |
+
 The next maintainer should resume from this exact checkpoint:
 
-- **Current local product checkpoint:** the approved interactive expansion is
-  implemented locally in the delivery site. The next deployable release adds one
-  five-slide featured-achievement carousel, five source-attributed local images,
-  a 212-row provisional INEC electoral-RA dataset, a bilingual request form with
-  dependent LGA/RA selection, and the private request validation/aggregation
-  contracts. The form is intentionally not connected to a public endpoint yet.
-- **Last verified live product:** release `b94d4b0` remains the last deployed
-  Pages release at the URL below; its Pages run was `35972044982`.
-- **Current local verification:** 40 `unittest` tests pass; Python compilation,
-  rendering, featured-data validation, asset hashes, RA counts, public-output
-  privacy checks, and browser interaction checks pass locally. Browser checks
-  covered 375px/1440px, Hausa toggling, LGA→RA selection, carousel navigation,
-  scope filters, zero console errors, bilingual validation, and disabled submission
-  with the empty endpoint.
+- **Current local product checkpoint:** the delivery site is still a **single page**
+  (`docs/index.html`) but is now materially better than the last deployed release. Phases
+  S0–S2 are committed locally; **S3 (the six-page split) has not started.**
+- **Last verified live product:** release `b94d4b0` remains the last deployed Pages
+  release at the URL below; its Pages run was `35972044982`. **Everything in
+  `9cd101b`, `be832e0` and `533a210` is unpushed**, so the live site still shows the
+  white-rectangle logo, the untranslated Hausa and the duplicated water promise.
+- **Current local verification:** **87 `unittest` tests pass** (was 40). Python
+  compilation, delivery-data validation, asset hash checks, the CI asset gate, a
+  `node --check` parse of the inline script, and browser interaction checks all pass.
+  Browser checks covered 375px/1440px, EN↔Hausa switching, language persistence across
+  reload, the labelled language control, the sponsor slot, agenda de-duplication, zero
+  horizontal overflow at 375px, and **zero console errors**.
 - **Evaluation report:** `.evals/2026-W39.md` is intentionally local-only because
   its 100-row source sample is not approved for release staging.
 - **Preserve local work:** do not reset or stage `src/aggregation/aggregate.py`,
   `.evals/2026-W39_sample100_filled.csv`, `.evals/2026-W39.md`,
   `data/human_review/filled/`, or `.playwright-mcp/`. The last path is a local
   browser artifact and is not part of the release.
+
 
 ## 2. Release State
 
@@ -73,17 +86,47 @@ not call an explicit Pages deployment action.
 | Review queue records | 33 | `data/delivery/review_queue.csv` |
 | Needs | 8 | `data/delivery/needs.csv` |
 | Achievements | 25 | `data/delivery/achievements.csv` |
-| APM promises | 8 | `data/delivery/promises.csv` |
+| APM promises | 8 (7 published pillars + 1 published clause) | `data/delivery/promises.csv` |
 | LGA delivery rows | 20 | `data/delivery/lga_delivery.csv` |
-| Approved assets | 9 | `data/delivery/asset_register.csv` |
+| Approved assets | 10 | `data/delivery/asset_register.csv` |
 | Featured achievement records | 5 | `data/delivery/featured_achievements.csv` |
 | Provisional electoral RAs | 212 | `data/delivery/lga_wards.csv` |
 | Outcome indicators | 8 | `data/delivery/indicators.csv` |
 | Pending source reviews | 0 | `review_status == needs_review` |
+| Local `unittest` tests | 87 | `tests/` |
 
 All 20 LGAs currently have an explicit LGA-specific evidence row. This means each
 LGA has a source-backed record for the atlas; it does not mean that every sector or
 project in every LGA has been comprehensively audited.
+
+### Promise count caveat
+
+`promises.csv` has 8 rows but only **7 distinct published campaign commitments**. The
+archived campaign page (`delivery-89aec627d08a.html`) publishes five pillars plus health
+and governance statements. There is **no standalone water pillar**: `water` appears twice
+in that document and `sanitation`, `WASH`, `borehole`, `toilet`, `drainage` and `climate`
+appear zero times.
+
+`promise-wash` is therefore the water **clause** of the published Infrastructure
+Development commitment, labelled `promise_type = Published commitment clause`. It is not a
+separate pillar. `validate_unique_promises()` in `render.py` fails the build if any two
+promise rows ever share `promise_text` again.
+
+### Approved assets
+
+| File | Note |
+|---|---|
+| `apm-logo.png` | Original party logo, 1516×337, **opaque white background**. Retained; no longer used in the header. |
+| `apm-emblem.png` | **New in S2.** 274×314 crop of the above with a transparent background, used in the header and as the favicon. |
+| `yakubu-adamu-hero.png`, `yakubu-adamu-portrait.png`, `bala-mohammed.png` | Candidate and governor imagery |
+| `achievement-*.jpg` / `.webp` (5) | Featured carousel images, source-attributed |
+
+⚠️ `apm-emblem.png` was registered as `campaign approved` by `campaign team` on
+26 September 2026 to unblock the build, recorded as a derived crop of the already-approved
+`apm-logo.png` with no new rights cleared. **The owner should ratify or correct that
+attribution**, since `asset_register.csv` is the rights record and
+`rebuild-pages.yml` fails closed on any row whose column 6 is not `campaign approved`.
+
 
 ## 3. Product Architecture
 
@@ -112,8 +155,8 @@ GitHub Pages
 
 | File or directory | Responsibility |
 |---|---|
-| `docs/index.html` | Generated public landing page |
-| `src/dashboard/render.py` | Validates delivery data and generates the page, carousel, RA selector and request form |
+| `docs/index.html` | Generated public landing page. **Still the only generated page** until S3 splits the site. |
+| `src/dashboard/render.py` | Validates delivery data and generates the page, carousel, RA selector and request form. Also owns the bilingual helpers (`attr`, `copy`, `localized`, `status_badge`), the controlled status vocabulary and the delivery validators. |
 | `data/delivery/` | Curated source, evidence, promise, indicator, featured-achievement, provisional electoral-RA and LGA tables |
 | `data/delivery/source_snapshots/` | Locally archived source responses |
 | `src/ingestion/delivery_sources.py` | Public source discovery, archival and review intake |
@@ -121,15 +164,24 @@ GitHub Pages
 | `src/requests/validation.py` | Pure bilingual-safe private request validation contract |
 | `src/requests/aggregate.py` | Contact-free public request aggregation contract |
 | `docs/GOOGLE_SHEETS_SETUP.md` | Owner-only Google Sheet/Apps Script setup and privacy guide |
-| `assets/brand/` | Approved local source assets |
+| `assets/brand/` | Approved local source assets, including the derived `apm-emblem.png` |
 | `docs/assets/brand/` | Generated copies used by the public page |
+| `tests/test_bilingual.py` | Guards the S1 bilingual fixes: denylist of untranslated UI strings, Hausa-in-English-column detection, required Hausa columns |
+| `tests/test_header_brand.py` | Guards the S2 fixes: emblem registration and transparency, no invert filter, favicon, sponsor slot placeholders, language persistence, promise de-duplication, and a `node --check` parse of the inline script |
+| `SITE_EXPANSION_PLAN.md` | **Governing plan for S3–S7**: six-page split, map, poll. Read this first. |
 | `README.md` | Short product and local-run guide |
 | `IMPLEMENTATION_PLAN.md` | Product contract, evidence hierarchy and phase history |
 
 ### Page features
 
-- APM identity and approved local imagery.
-- English/Hausa toggle.
+- APM identity: the colour **emblem** in the header (transparent background, no CSS
+  filter) with the "Allied Peoples' Movement" wordmark as text beside it. The same emblem
+  is the favicon.
+- **Labelled** English/Hausa toggle (globe glyph + `Language` / `Harshe`), whose choice
+  persists in `localStorage` across navigation and reload.
+- **Sponsor slot** in the footer with three labelled fields — photo, name, and a
+  prominent contribution line. Ships deliberately unfilled; a test forbids invented
+  content.
 - Four-step public-need-to-next-result pathway.
 - Five-slide approved featured-achievement carousel with source and image attribution.
 - LGA/electoral-RA dependent request selector using 20 LGAs and 212 provisional RAs.
@@ -138,8 +190,12 @@ GitHub Pages
 - Sector filtering for health, education, water/WASH, infrastructure and governance.
 - Twenty-LGA selector with source-backed LGA summaries.
 - Current-administration continuity framing.
-- Separate APM campaign agenda.
+- Separate APM campaign agenda, with the water entry labelled a published *clause* rather
+  than a standalone pillar.
 - Measurement ledger separating reported outputs from outcomes still being measured.
+- Every integrity caveat (achievement `verification_status`, source `usage_note`,
+  indicator values and notes) now switches between English and Hausa.
+
 - Source list with publication date, retrieval date, usage note and evidence grade.
 - Responsive layout, bilingual validation and reduced-motion support.
 - Full-screen achievement viewer is deferred to the next implementation phase; the in-page carousel remains the current fallback.
@@ -437,7 +493,7 @@ settings in GitHub if that configuration changes.
 
 ## 9. Current Validation and Release Evidence
 
-The current release was checked on 24 September 2026 after deployment:
+### Last deployed release (checked 24 September 2026)
 
 - 27 registered sources.
 - 33 archived source pages.
@@ -453,8 +509,25 @@ The current release was checked on 24 September 2026 after deployment:
 - Live page showed 20 LGA tiles, 8 indicators and Misau/Toro/Zaki evidence.
 - Live browser console returned 0 errors.
 - Responsive checks showed no horizontal overflow at 1440px, 1024px, 760px or 375px.
-- No pytest, lint or typecheck suite is installed in the current project; the
-  dependency-free `unittest` integrity suite passes.
+
+### Local state after S0–S2 (26 September 2026, unpushed)
+
+- **87 `unittest` tests pass** (40 before this session).
+- `python src/dashboard/render.py` renders cleanly.
+- `render.validate_data()` passes, including `validate_no_hausain_english_columns()`
+  and `validate_unique_promises()`.
+- **224** `data-en`/`data-ha` pairs are byte-identical and **every one is legitimate**:
+  electoral RA proper nouns, LGA names, the `LGA` acronym, the party motto, and numeric
+  values that are genuinely identical in both languages. Zero unexplained.
+- 10 approved assets; all SHA-256 values reconcile, including the new `apm-emblem.png`.
+- The CI asset gate (`usage_status` in **column 6** of `asset_register.csv`) passes.
+- The extracted inline `<script>` passes `node --check`; there is exactly one
+  `const setLanguage` and no duplicate top-level `const` declaration.
+- Browser-verified at 375px and 1440px: emblem renders in colour, language label switches
+  EN↔Hausa, the chosen language **survives a full page reload**, the sponsor slot renders
+  and translates, the agenda shows 8 distinct cards, no horizontal overflow at 375px,
+  **0 console errors**.
+- No pytest, lint or typecheck suite is installed in the current project.
 
 ## 10. Legacy Sentiment/Risk Pipeline
 
@@ -549,20 +622,48 @@ still need completion.
 
 ## 13. Prioritized Next Steps
 
-### P0 — Strengthen the current product
+### P0 — Do next: the six-page split (phase S3)
+
+Full detail in `SITE_EXPANSION_PLAN.md` §4 and §3. Do not start S4 (map) or S5 (poll)
+until S3 ships.
+
+1. Extract the single f-string into a Jinja2 shared layout. Jinja2 is already in
+   `requirements.txt` and currently unused, so this adds no dependency.
+2. Ship six flat pages in `docs/` so existing `assets/brand/...` relative paths keep
+   working: `index.html`, `achievements.html`, `atlas.html`, `poll.html`, `agenda.html`,
+   `sources.html`.
+3. **Add a mobile navigation menu.** `.nav` is `display:none` below 1050px. On a single
+   page that is survivable; with subpages, phones get **no navigation at all**.
+4. **Add a solid-header variant.** `.topbar` is `position:absolute` with white text over
+   the dark hero; subpages without a hero need an opaque background.
+5. Make `FEATURED_SCRIPT` conditional on `achievements.html` and `REQUEST_SCRIPT`
+   conditional on `poll.html`. Blocks A/D/E — `currentLanguage`, `setLanguage`, the
+   language binding — must ship on **every** page, in that order.
+6. Re-target all 8 in-page anchors as cross-page links (mapping in
+   `SITE_EXPANSION_PLAN.md` §5).
+7. Preserve the duplicate-breakpoint cascade order in the CSS (1056/1058 are both
+   1050px; 1057/1059 are both 760px) and keep the global `*` reduced-motion rule on
+   every page.
+8. Update `rebuild-pages.yml:33` and the staging allowlist in §18 **in the same change** —
+   see the two release-breaking traps in §20.
+
+### P1 — Housekeeping on the current product
 
 1. Extend `indicators.csv` with more verified baselines and targets; keep missing
    baselines blank rather than estimating them.
 2. Replace remaining delivery-output language with measured outcomes where primary
    evidence exists: service reliability, beneficiaries, learning, health access,
    market access, income and employment.
-3. Add semantic validation for duplicate claims, date validity and actor/source
-   consistency.
-4. Run a native-speaker Hausa review of the bilingual labels and dynamic records.
-5. Extend the focused tests beyond integrity checks to cover language toggling and
-   rendered HTML structure.
+3. Add semantic validation for date validity and actor/source consistency.
+   Duplicate promise text is now covered by `validate_unique_promises()`.
+4. **Run a native-speaker Hausa review.** 53 strings in this session are AI-drafted and
+   unreviewed: 27 `usage_note_ha`, 25 `verification_status_ha`, plus the new wash-promise
+   clause. These are integrity caveats a Hausa-reading voter now sees, so they matter.
+5. Ratify or correct the `apm-emblem.png` rights record in `asset_register.csv`.
+6. Decide whether to narrow the `wash` sector label. It renders as "Water and climate
+   resilience", but the published campaign source contains **zero** climate content.
 
-### P1 — Complete legacy evaluation work separately
+### P2 — Complete legacy evaluation work separately
 
 1. Create the missing `data/human_review/filled/queue_en_part1.csv` without
    overwriting existing parts.
@@ -574,7 +675,7 @@ still need completion.
 5. Disclose that the current filled sample was labelled by
    `mimo-v2.6-ai-reviewer`, not a native Hausa speaker.
 
-### P2 — Operate and improve
+### P3 — Operate and improve
 
 1. Monitor `delivery-sources.yml` weekly and review all new candidates.
 2. Add sector-specific primary sources for water, health, education, roads,
@@ -602,6 +703,24 @@ Do not claim that:
 - YouTube ingestion is implemented.
 - A launch or handover is automatically a completed outcome.
 - A statewide record can be assigned to an LGA without explicit LGA evidence.
+
+Claims that became false or newly unsafe with the S1/S2 work:
+
+- ❌ **Do not claim the site is fully bilingual.** It is bilingual throughout the
+  delivery content, but the 53 Hausa strings added in S1/S2 are **AI-drafted and not
+  native-speaker reviewed**. Disclose this, exactly as `.evals/2026-W39.md` already does
+  for its labeler.
+- ❌ **Do not claim the campaign published a water/sanitation policy.** It did not. The
+  published manifesto has five pillars and no water pillar; `promise-wash` is the water
+  **clause** of the Infrastructure Development commitment and is labelled as such.
+- ❌ **Do not claim the live site has the emblem, the sponsor slot or the fixed Hausa.**
+  All four unpushed commits are **local only**. The live site still shows the white-rectangle logo.
+- ❌ **Do not claim the sponsor slot is filled.** It ships as a labelled placeholder with
+  no name, no photo and no contribution, by design.
+- ❌ **Do not claim the six-page site exists.** S3 has not started; there is still one page.
+- ❌ **Do not claim the emblem is a separately cleared asset.** It is a derived crop of the
+  already-approved `apm-logo.png` with no new rights cleared, and its `approval_note`
+  still needs owner ratification.
 
 ## 15. Approved Interactive Site Expansion Plan
 
@@ -772,7 +891,7 @@ contact details are not stored in this repository.
 - Aggregate counts can still create privacy risk in small locations; exact
   LGA/category cells remain owner-review items, and no ward-level cells are
   published.
-- The current local suite passes 40 `unittest` tests; browser verification covers
+- The suite passed 40 `unittest` tests **at that checkpoint**; it now passes 87 after S1/S2. Browser verification covers
   375px/1440px rendering, Hausa toggling, LGA→RA selection, carousel navigation,
   scope filters, zero console errors, and disabled submission with the empty
   endpoint.
@@ -928,30 +1047,45 @@ capture is enabled.
 
 ## 18. Commit Boundary and Working Tree
 
-The current interactive expansion is a **local verified checkpoint**, not a
-public deployment. Before committing, stage only the intended release paths:
+The S0–S2 work is a **local verified checkpoint, not a public deployment.** As of
+26 September 2026 `main` is **4 commits ahead of `origin/main`** and nothing has been
+pushed:
+
+```text
+2fd12fa  feat(delivery): add interactive achievements and request intake   (pre-existing)
+9cd101b  docs: add site expansion plan                                       (S0)
+be832e0  fix(i18n): correct Hausa rendering across delivery content          (S1)
+533a210  fix(header): legible APM emblem, sponsor slot, persistent language  (S2)
+```
+
+Pushing is the owner's call and has not been authorised.
+
+### Current staging allowlist
+
+Stage only these paths for the next release:
 
 ```text
 HANDOFF.md
 IMPLEMENTATION_PLAN.md
 README.md
+SITE_EXPANSION_PLAN.md
 data/delivery/asset_register.csv
-data/delivery/featured_achievements.csv
-data/delivery/lga_wards.csv
-assets/brand/achievement-*.jpg
-assets/brand/achievement-*.webp
-docs/GOOGLE_SHEETS_SETUP.md
+data/delivery/achievements.csv
+data/delivery/indicators.csv
+data/delivery/needs.csv
+data/delivery/promises.csv
+data/delivery/source_register.csv
+assets/brand/apm-emblem.png
+docs/assets/brand/apm-emblem.png
 docs/index.html
-docs/assets/brand/achievement-*.jpg
-docs/assets/brand/achievement-*.webp
 src/dashboard/render.py
-src/requests/
-tests/test_dashboard_contract.py
-tests/test_request_aggregation.py
-tests/test_request_form.py
-tests/test_request_validation.py
-tests/test_ward_dataset.py
+tests/test_bilingual.py
+tests/test_header_brand.py
 ```
+
+> ⚠️ **This allowlist is only valid while the site is one page.** When S3 lands, the six
+> generated pages and the template directory must be added here, or a maintainer
+> following this section will render, diff and commit nothing. See §20.
 
 Never stage or commit these preserved/local paths without explicit owner
 confirmation:
@@ -963,6 +1097,38 @@ data/human_review/filled/
 .playwright-mcp/
 ```
 
+## 20. Two Release-Breaking Traps That Fire When S3 Lands
+
+Both are silent. Neither produces an error, which is why they are written down here.
+
+### 🔴 Trap 1 — the weekly cron will not commit the new pages
+
+`.github/workflows/rebuild-pages.yml:33` runs:
+
+```text
+git add docs/index.html docs/assets/
+```
+
+Add pages without changing this and the Monday cron will **render** all six, then commit
+only `index.html`, leaving five stale pages published forever. Fix it in the same change
+as S3, not afterwards.
+
+### 🔴 Trap 2 — this handoff's own allowlist will commit nothing
+
+See §18. The allowlist above names only `docs/index.html`.
+
+### Lesser traps in the same change
+
+- `rebuild-pages.yml:19-27` validates assets with `awk -F, 'NR > 1 && $6 != "campaign
+  approved"'`. That is **column-position coupled**. Any new asset row must have
+  `usage_status` in exactly column 6 or CI fails closed.
+- `tests/test_request_form.py:21` asserts `html.count('data-request-ra-lga=') == 212`,
+  but there are **213** raw occurrences — 212 `<option>`s plus one inside
+  `REQUEST_SCRIPT`. It only passes because the markup and its JS ship in the same file.
+  Re-target it when S3 splits scripts.
+- `test_dashboard_contract.py` has 4 assertions that belong on `atlas.html` and 9 that
+  belong on `achievements.html`; all currently read `docs/index.html`.
+
 ## 19. Handoff Checklist
 
 A new maintainer should be able to answer “yes” to each question:
@@ -971,32 +1137,57 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Can I explain the four-step narrative model?
 - [ ] Can I identify the source register, manifest, review queue and curated tables?
 - [ ] Can I distinguish an achievement from an APM promise?
+- [ ] Can I explain why the water promise is a published *clause*, not a pillar?
 - [ ] Can I explain why `docs/` is the public source directory?
 - [ ] Can I run source intake without overwriting raw snapshots?
 - [ ] Can I validate source, snapshot and asset hashes?
-- [ ] Can I identify the live GitHub Pages URL?
+- [ ] Can I explain why the header emblem needed a transparent background?
+- [ ] Do I know that a duplicate `const` in the inline script silently kills all page
+      JavaScript, and that `node --check` guards it?
+- [ ] Can I identify the live GitHub Pages URL, and know it does **not** yet include
+      the S0–S2 work?
 - [ ] Can I preserve the uncommitted aggregation and human-review work?
 - [ ] Do I know which pipeline is legacy and not part of the public product?
 - [ ] Do I know which outcome claims still require measurement?
+- [ ] Do I know which 53 Hausa strings are AI-drafted and unreviewed?
+- [ ] Do I know the two release-breaking traps in §20?
 - [ ] Do I have a next-step list that does not mix current-product work with
       legacy evaluation work?
 
 ## Restart and Resume Procedure
 
-1. Start a new OpenCode session from `D:\APMdeliverable`.
-2. Read `HANDOFF.md` sections 1, 15, 16, 17, 18 and 19 before making changes.
-3. Read `AGENTS.md` for repository rules and preserve all local-only legacy work.
-4. Read `IMPLEMENTATION_PLAN.md` before changing the current delivery contract.
-5. Run `python -m unittest discover -s tests -v` before implementation.
-6. Commit the current verified local checkpoint only after the owner explicitly
-   requests a commit; do not include `.playwright-mcp/` or preserved legacy work.
-7. After that commit, implement the deferred full-screen achievement viewer from
-   the section above. Do not redesign the whole page into a deck.
-8. Run tests, render, browser interaction checks and an independent review before
-   staging the viewer change.
-9. Do not reset, clean, stash permanently, or stage the preserved local work.
-10. Do not deploy the request form until the external human-only gates in this
-    handoff are satisfied and an Apps Script endpoint is configured.
+1. Start a new session from `D:\APMdeliverable`.
+2. **Read `SITE_EXPANSION_PLAN.md` first.** It governs the next three phases and its §9
+   records exactly what S0–S2 did and why.
+3. Read `HANDOFF.md` sections 1, 9, 13, 18, 19 and 20. Section 20 holds the two traps
+   that will silently break the release.
+4. Read `AGENTS.md` for repository rules and preserve all local-only legacy work.
+5. Run `python -m unittest discover -s tests -v` **before** changing anything. Expect
+   **87 passing**. A drop means something regressed; investigate before proceeding.
+6. Confirm the working tree still shows the preserved local work as untracked/modified:
+   `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`,
+   `.playwright-mcp/`. Do not reset, clean, stash permanently, or stage them.
+7. Implement **S3, the six-page split**, per `SITE_EXPANSION_PLAN.md` §3 and §4. Fix the
+   two §20 traps **in the same change**, not afterwards.
+8. Run the full suite, render, browser-check at 375px and 1440px, and get an independent
+   review before staging anything.
+9. Commit only after the owner explicitly asks. **Do not push** without explicit
+   authorisation — `main` is already 4 commits ahead of `origin/main`.
+10. Do not deploy the request form or the poll until an approved HTTPS Apps Script
+    endpoint is configured; both ship disabled until then.
+
+### If you only have time for one thing
+
+Run S1's and S2's guards against a change you made:
+
+```text
+python -m unittest tests.test_bilingual tests.test_header_brand -v
+```
+
+These cover the defects that are invisible in a visual check — untranslated strings,
+Hausa pasted into English columns, a missing emblem hash, an invert filter creeping
+back, invented sponsor content, and a duplicate `const` that would disable every script
+on the page.
 
 The complete project contract remains in `IMPLEMENTATION_PLAN.md`. This handoff is
 the operational starting point for maintainers and deployment.

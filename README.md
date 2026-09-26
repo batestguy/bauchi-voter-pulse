@@ -18,6 +18,13 @@ The new interface uses the official APM identity and approved campaign assets, p
 - `assets/brand/` — locally stored official APM and campaign image assets
 - `docs/assets/brand/` — generated copies for GitHub Pages
 - `docs/GOOGLE_SHEETS_SETUP.md` — owner-only private request-service setup guide
+- `SITE_EXPANSION_PLAN.md` — **governing plan for the next phases: six-page split, Bauchi map, opinion poll**
+
+The site is bilingual English/Hausa throughout its delivery content, and the chosen
+language persists in the browser across navigation and reload. The header uses the APM
+emblem (`apm-emblem.png`, cropped from the party logo with a transparent background);
+the wordmark beside it is HTML text. The footer carries a sponsor slot that ships as a
+labelled placeholder — photo, name and contribution — with nothing invented.
 
 ## Run locally
 
@@ -27,7 +34,8 @@ python src/dashboard/render.py
 python -m http.server 8766 --directory docs
 ```
 
-Open `http://127.0.0.1:8766/index.html`.
+Open `http://127.0.0.1:8766/index.html`. The suite is **87 `unittest` tests**; no pytest,
+lint or typecheck suite is installed.
 
 The local page includes the interactive in-page carousel and bilingual request
 form. The form's submit control is disabled until an approved HTTPS Google Apps
@@ -38,29 +46,49 @@ Script endpoint is configured; no request data is sent in the local preview.
 - Public sources only; robots.txt and rate limits remain enforced.
 - Every achievement and promise carries a source record.
 - Campaign promises are not displayed as completed achievements.
+- `promises.csv` holds 8 rows but only 7 distinct published commitments. There is no
+  standalone water pillar in the campaign source, so `promise-wash` is the water
+  **clause** of the published Infrastructure Development commitment and is labelled
+  as such. `validate_unique_promises()` fails the build if two rows ever share text.
 - Statewide records are not forced into an LGA without evidence.
 - Missing data remains unknown and is not estimated.
 - The current administration is described as progress that APM can build on and complete.
 - The request form never requests an official voter ID; the generated tracking reference is not a voter ID.
 - The RA selector uses provisional INEC electoral registration areas and does not claim a current administrative-ward schedule.
+- Source titles are citations and are shown in their original language, untranslated.
 - Independent image rights clearance and native-speaker Hausa review remain owner gates before deployment.
+
+## Known disclosure
+
+53 Hausa strings added in September 2026 (`usage_note_ha`, `verification_status_ha` and
+the wash-promise clause) are **AI-drafted and not native-speaker reviewed**. They cover
+integrity caveats a Hausa-reading visitor now sees, so they are an owner gate before
+deployment. `apm-emblem.png` is a derived crop of the already-approved `apm-logo.png`
+with no new rights cleared; its `approval_note` still needs owner ratification.
 
 ## Next implementation phase
 
-The next planned change is a focused full-screen achievement viewer opened from
-the existing carousel. It will support next/previous controls, dots, keyboard
-navigation, touch/swipe, focus return, scroll lock, and mobile safeguards while
-keeping the current in-page carousel as the no-JavaScript fallback. See
-`HANDOFF.md` section 16 and `IMPLEMENTATION_PLAN.md` P4.
+The next phase is the **six-page split**: `index.html`, `achievements.html`, `atlas.html`
+with a Bauchi LGA map, `poll.html`, `agenda.html` and `sources.html`, sharing one header,
+footer and language control. After that come the map and the opinion poll.
+
+⚠️ Two silent release-breaking traps fire when that lands, both written up in
+`HANDOFF.md` §20: the weekly cron stages only `docs/index.html`, and this file's
+staging allowlist in `HANDOFF.md` §18 names only `docs/index.html`. Fix both in the
+same change as the split.
+
+The deferred full-screen achievement viewer remains out of scope until the split ships.
 
 ## Handoff
 
 See `HANDOFF.md` for the complete operational handoff, deployment runbook, current
 release counts, validation evidence, known limitations, preserved local work and
-prioritized next steps.
+prioritized next steps. Start with `SITE_EXPANSION_PLAN.md`.
 
 The current public release is live at
-`https://batestguy.github.io/bauchi-voter-pulse/`.
+`https://batestguy.github.io/bauchi-voter-pulse/`. **It does not yet include the
+September 2026 header, bilingual or promise fixes — those are committed locally and
+unpushed.**
 
 ## Project history
 

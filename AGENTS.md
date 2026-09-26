@@ -31,5 +31,19 @@ Live sentiment + voter-intelligence system for 2027 Bauchi governorship (APM, Dr
 ## Dashboard (GitHub Pages — decided)
 Fully automated per `IMPLEMENTATION_PLAN.md` Ph.5–6: pipeline renders static HTML to `docs/index.html`; `rebuild-pages.yml` weekly cron regenerates + commits; Pages serves `docs/`; no manual Sheet paste. Keep assets static/relative + `workflow_dispatch` for ad-hoc rebuilds.
 
+**In progress:** `SITE_EXPANSION_PLAN.md` splits this single page into six (`index`, `achievements`, `atlas`, `poll`, `agenda`, `sources`) and adds a Bauchi LGA map + opinion poll. Phases S0–S2 are committed and unpushed; **S3 (the split) has not started.** Two silent release traps fire when it does — `rebuild-pages.yml` stages only `docs/index.html`, and the staging allowlist in `HANDOFF.md` §18 names only `docs/index.html`. Fix both in the same change. Full detail in `HANDOFF.md` §20.
+
+## Content integrity rules
+These are enforced in code; keep them enforced.
+- **Never let two promise rows share `promise_text`.** `validate_unique_promises()` fails the build. A phantom row once duplicated a commitment across two sectors.
+- **Never put Hausa in an English content column.** `validate_no_hausain_english_columns()` fails the build, using both an orthography test and a function-word test — the orthography test alone misses sentences that are Hausa but use no `ƙ ɓ ɗ ʙ`.
+- **Never leave a required `_ha` column blank.** Enforced by `validate_data()` and the test suite.
+- **Source titles are citations** and stay in their original language, untranslated. Our own prose (`usage_note`, `verification_status`, indicator values) must translate.
+- **Do not invent published campaign content.** If the source does not state it, it does not go on the page. `promise-wash` is labelled a *clause* of the infrastructure commitment because the campaign published no water pillar.
+- **No new assets without approval.** `asset_register.csv` needs a matching SHA-256, `usage_status` in **column 6** (`rebuild-pages.yml` checks by position, not name), and an `approved_at` date. Derived crops must say so in `approval_note`.
+- **A duplicate `const` in the inline script silently disables every script on the page** while the HTML still renders. Guarded by a `node --check` parse in `tests/test_header_brand.py`. Run it.
+
 ## Legal / ethics
 Public sources only; anonymize; disclose outputs are social/news analysis, not private polling. Version everything so any dashboard cell traces to schema + model + data.
+
+53 Hausa strings added in September 2026 are AI-drafted and not native-speaker reviewed. Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler.
