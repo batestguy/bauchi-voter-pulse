@@ -66,7 +66,7 @@ SECTOR_HA = {
     "livelihoods": "Aiki da rayuwa",
     "security": "Tsaro da aminci",
     "agriculture": "Noma da abinci",
-    "governance": "Isar da g hanyayi da gwaji",
+    "governance": "Isar da ganyayi da gwaji",
     "infrastructure": "Infastructure da haɗi",
 }
 
@@ -101,7 +101,9 @@ def esc(value):
 
 
 def attr(en, ha):
-    return f'data-en="{esc(en)}" data-ha="{esc(ha)}"'
+    # A missing Hausa string must degrade to English rather than serialising an empty
+    # data-ha, which is indistinguishable from a real untranslated string once rendered.
+    return f'data-en="{esc(en)}" data-ha="{esc(ha or en)}"'
 
 
 def copy(en, ha):
@@ -112,15 +114,33 @@ def localized(en, ha):
     return f'<span {attr(en, ha)}>{esc(en)}</span>'
 
 
+# One controlled vocabulary for record status: CSS class, Hausa label, and the
+# indicator validator's allowed set all derive from this, so a status cannot ship
+# without a translation or drift out of the validator.
+STATUS_CLASSES = {
+    "Progress delivered": "status-progress",
+    "Project underway": "status-underway",
+    "Approval milestone": "status-milestone",
+    "Promise to complete": "status-promise",
+    "Next priority": "status-next",
+    "Outcome being measured": "status-measured",
+}
+
+STATUS_HA = {
+    "Progress delivered": "An ci gaba",
+    "Project underway": "Aiki yana ci gaba",
+    "Approval milestone": "Matsayin amincewa",
+    "Promise to complete": "Alkawarin a kare",
+    "Next priority": "Farkashin da gaba",
+    "Outcome being measured": "Ana aunawa sakamako",
+}
+
+INDICATOR_STATUSES = frozenset(
+    {"Progress delivered", "Project underway", "Outcome being measured", "Approval milestone"})
+
+
 def status_class(status):
-    return {
-        "Progress delivered": "status-progress",
-        "Project underway": "status-underway",
-        "Approval milestone": "status-milestone",
-        "Promise to complete": "status-promise",
-        "Next priority": "status-next",
-        "Outcome being measured": "status-measured",
-    }.get(status, "status-underway")
+    return STATUS_CLASSES.get(status, "status-underway")
 
 
 def source_link(source_id, sources, label="Source", label_ha=""):
@@ -131,8 +151,12 @@ def source_link(source_id, sources, label="Source", label_ha=""):
             f'target="_blank" rel="noopener noreferrer">{localized(label, label_ha or label)} <span aria-hidden="true">↗</span></a>')
 
 
-def status_badge(status, ha=""):
-    return f'<span class="status {status_class(status)}" {attr(status, ha)}>{esc(status)}</span>'
+def status_badge(status, ha=None):
+    # ha defaults from the controlled vocabulary so an omitted argument can never ship
+    # English into both slots. An explicit per-record ha (e.g. achievements.status_ha)
+    # still wins.
+    return (f'<span class="status {status_class(status)}" '
+            f'{attr(status, ha or STATUS_HA.get(status, ""))}>{esc(status)}</span>')
 
 
 
@@ -179,8 +203,8 @@ def validate_indicator_rows(rows):
     indicator_ids = [row.get("indicator_id", "") for row in rows]
     if len(indicator_ids) != len(set(indicator_ids)):
         raise ValueError("duplicate indicator_id")
-    allowed_statuses = {"Progress delivered", "Project underway", "Outcome being measured", "Approval milestone"}
-    required_fields = ["indicator_id", "sector", "lga", "indicator", "indicator_ha", "current_value", "current_unit", "current_year", "status", "source_id", "measurement_note"]
+    allowed_statuses = set(INDICATOR_STATUSES)
+    required_fields = ["indicator_id", "sector", "lga", "indicator", "indicator_ha", "current_value", "current_unit", "current_year", "status", "status_ha", "source_id", "measurement_note", "measurement_note_ha"]
     for row in rows:
         for field in required_fields:
             if not row.get(field):
@@ -196,11 +220,73 @@ def validate_indicator_rows(rows):
             raise ValueError(f"target lacks unit or year: {row['indicator_id']}")
 
 
+HAUSA_ORTHOGRAPHY = "ƙɓɗʙƊƘ"
+
+# Distinctively Hausa function words. Deliberately excludes "a" and "na"-like tokens that
+# collide with English, so English prose cannot trip the density test.
+HAUSA_FUNCTION_WORDS = frozenset("""
+    da na ya ka ta mu ku ci cikin tare ba wanda yana suka wasu kuma ko sai don sun tana
+    ina sunu mua kuma
+""".split())
+
+# Curated content tables whose English columns must stay English. lga_wards.csv and the
+# source registers are excluded: they hold proper nouns, URLs and hashes, not prose.
+ENGLISH_COLUMN_TABLES = (
+    "achievements.csv", "indicators.csv", "needs.csv", "promises.csv",
+    "lga_delivery.csv", "featured_achievements.csv",
+)
+
+HAUSA_DENSITY_MIN_TOKENS = 6
+HAUSA_MIN_HITS = 3
+
+
+def looks_like_hausa(value):
+    """True when a value carries Hausa orthography or function-word evidence.
+
+    The hit count is absolute rather than a ratio: none of the function words above are
+    English words, so three occurrences in a six-token cell is conclusive, whereas a
+    ratio mis-scores short Hausa sentences padded with Latin proper nouns.
+    """
+    if not value:
+        return False
+    if any(char in value for char in HAUSA_ORTHOGRAPHY):
+        return True
+    tokens = [token.strip(".,;:!?()[]\"'").lower() for token in value.split()]
+    if len(tokens) < HAUSA_DENSITY_MIN_TOKENS:
+        return False
+    return sum(1 for token in tokens if token in HAUSA_FUNCTION_WORDS) >= HAUSA_MIN_HITS
+
+
+def validate_no_hausain_english_columns():
+    """Reject Hausa text in any non-`_ha` column of the curated content tables.
+
+    Three achievements.csv records shipped with the Hausa description pasted into the
+    English column, so a Hausa-mode visitor saw nothing change. Two of the three use no
+    Hausa-specific characters at all, which is why both an orthography test and a
+    function-word density test are required. This makes it a build failure rather than a
+    silent content bug.
+    """
+    offenders = []
+    for name in ENGLISH_COLUMN_TABLES:
+        for row in read_csv(name):
+            for column, value in row.items():
+                if column.endswith("_ha"):
+                    continue
+                if looks_like_hausa(value):
+                    key = (row.get("achievement_id") or row.get("indicator_id")
+                           or row.get("promise_id") or row.get("need_id")
+                           or row.get("lga") or "?")
+                    offenders.append(f"{name}:{key}:{column}")
+    if offenders:
+        raise ValueError(
+            "Hausa text found in English column(s): " + ", ".join(sorted(offenders)))
+
+
 def validate_data():
     required = {
-        "source_register.csv": {"source_id", "url", "content_hash", "source_grade", "usage_note"},
+        "source_register.csv": {"source_id", "url", "content_hash", "source_grade", "usage_note", "usage_note_ha"},
         "needs.csv": {"need_id", "lga", "sector", "need_text", "source_id"},
-        "achievements.csv": {"achievement_id", "sector", "status", "source_id", "verification_status"},
+        "achievements.csv": {"achievement_id", "sector", "status", "source_id", "verification_status", "verification_status_ha"},
         "promises.csv": {"promise_id", "sector", "promise_text", "source_id"},
         "lga_delivery.csv": {"lga", "coverage_type", "status"},
         "asset_register.csv": {"file", "sha256", "usage_status", "approved_by", "approved_at"},
@@ -209,7 +295,8 @@ def validate_data():
         "indicators.csv": {
             "indicator_id", "sector", "lga", "indicator", "indicator_ha", "baseline_value",
             "baseline_unit", "baseline_year", "current_value", "current_unit", "current_year",
-            "target_value", "target_year", "status", "source_id", "measurement_note"
+            "target_value", "target_year", "status", "status_ha", "source_id",
+            "measurement_note", "measurement_note_ha"
         },
     }
     for name, columns in required.items():
@@ -219,6 +306,7 @@ def validate_data():
         missing = columns - set(rows[0])
         if missing:
             raise ValueError(f"{name} missing columns: {sorted(missing)}")
+    validate_no_hausain_english_columns()
     sources = read_csv("source_register.csv")
     source_ids = [row["source_id"] for row in sources]
     if len(source_ids) != len(set(source_ids)):
@@ -398,7 +486,7 @@ def featured_achievement_carousel(rows, achievement_rows, asset_rows, sources):
         heading_ha = achievement.get("project_or_programme_ha", "") or caption_ha
         sector = row["sector"]
         sector_en = SECTOR_LABELS.get(sector, sector.title())
-        sector_ha = SECTOR_HA.get(sector, sector)
+        sector_ha = SECTOR_HA.get(sector, sector_en)
         scope = row["lga_scope"]
         scope_en, scope_ha = FEATURED_SCOPE_LABELS[scope]
         lga_names = row.get("lga_names", "")
@@ -416,7 +504,7 @@ def featured_achievement_carousel(rows, achievement_rows, asset_rows, sources):
             f'''<li class="featured-slide" data-featured-slide data-featured-id="{esc(row["featured_id"])}" data-lga-scope="{esc(scope)}" data-featured-lga-scope="{esc(scope)}"><figure class="featured-media"><img src="assets/brand/{esc(image_path)}" alt="{esc(alt_en)}" data-alt-en="{esc(alt_en)}" data-alt-ha="{esc(alt_ha)}" loading="lazy" decoding="async">{image_context_note}<figcaption>{localized(caption_en, caption_ha)}</figcaption></figure><div class="featured-slide-copy"><div class="featured-slide-meta"><span class="featured-sector">{localized(sector_en, sector_ha)}</span><span class="featured-scope-badge" data-lga-names="{esc(lga_scope_label)}">{localized(scope_en, scope_ha)}{lga_scope_detail}</span></div><h3>{localized(heading_en, heading_ha)}</h3><p class="featured-caption">{localized(caption_en, caption_ha)}</p><div class="featured-source">{source_link(row["source_id"], sources, "Featured source", "Sauro da ayyuka")}{image_source_link}</div></div></li>'''
         )
     slide_html = "".join(slides)
-    return f'''<section class="featured-section" id="featured" data-featured-state="ready" aria-labelledby="featured-title"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Featured achievements", "Ayyuka da aka zaɓa")}</div><h2 id="featured-title">{copy("Five approved, source-backed records, with their scope kept clear.", "Bayanai guda da aka amince, tare da nuna iyakin su.") }</h2></div><p>{copy("Each slide keeps the approved caption, source and LGA scope visible. Some source images are context images rather than verified project close-ups; the image note identifies those cases. Statewide evidence is not relabelled as a single-LGA record.", "Kowane mafada yana nuna caption da aka amince da sauro da iyakin LGA. Wasu hotunan ba kwakaiyo aiki ba ne; note na hotun yana nuna wanda. Ba a canza bayanan jihada zuwa LGA daya.") }</p></div><div class="featured-carousel" data-featured-carousel tabindex="0" role="region" aria-roledescription="carousel" aria-labelledby="featured-title"><div class="featured-toolbar"><div class="featured-scope-filters" role="group" aria-label="Featured achievement scope filters"><button type="button" class="featured-scope-filter active" data-featured-scope-filter="all" aria-pressed="true" {attr("All scopes", "Dufin firin")}>All scopes</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="lga" aria-pressed="false" {attr("LGA", "LGA")}>LGA</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="multi_lga" aria-pressed="false" {attr("Multiple LGAs", "LGA daya da yawa")}>Multiple LGAs</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="statewide" aria-pressed="false" {attr("Statewide", "Jihada")}>Statewide</button></div><div class="featured-controls"><button type="button" class="featured-control" data-featured-prev aria-label="Previous featured achievement" {attr("Previous", "Baya")}>← <span {attr("Previous", "Baya")}>Previous</span></button><span class="featured-status" data-featured-status aria-live="polite" aria-atomic="true">1 / 5</span><button type="button" class="featured-control" data-featured-next aria-label="Next featured achievement" {attr("Next", "Na gaba")}><span {attr("Next", "Na gaba")}>Next</span> →</button></div></div><ol id="featured-slides" class="featured-slides">{slide_html}</ol></div></div></section>'''
+    return f'''<section class="featured-section" id="featured" data-featured-state="ready" aria-labelledby="featured-title"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Featured achievements", "Ayyuka da aka zaɓa")}</div><h2 id="featured-title">{copy("Five approved, source-backed records, with their scope kept clear.", "Bayanai guda da aka amince, tare da nuna iyakin su.") }</h2></div><p>{copy("Each slide keeps the approved caption, source and LGA scope visible. Some source images are context images rather than verified project close-ups; the image note identifies those cases. Statewide evidence is not relabelled as a single-LGA record.", "Kowane mafada yana nuna caption da aka amince da sauro da iyakin LGA. Wasu hotunan ba kwakaiyo aiki ba ne; note na hotun yana nuna wanda ake. Ba a canza bayanan jihada zuwa LGA daya.") }</p></div><div class="featured-carousel" data-featured-carousel tabindex="0" role="region" aria-roledescription="carousel" aria-labelledby="featured-title"><div class="featured-toolbar"><div class="featured-scope-filters" role="group" aria-label="Featured achievement scope filters"><button type="button" class="featured-scope-filter active" data-featured-scope-filter="all" aria-pressed="true" {attr("All scopes", "Dufin firin")}>All scopes</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="lga" aria-pressed="false" {attr("LGA", "LGA")}>LGA</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="multi_lga" aria-pressed="false" {attr("Multiple LGAs", "LGA daya da yawa")}>Multiple LGAs</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="statewide" aria-pressed="false" {attr("Statewide", "Jihada")}>Statewide</button></div><div class="featured-controls"><button type="button" class="featured-control" data-featured-prev aria-label="Previous featured achievement" {attr("Previous", "Baya")}>← <span {attr("Previous", "Baya")}>Previous</span></button><span class="featured-status" data-featured-status aria-live="polite" aria-atomic="true">1 / 5</span><button type="button" class="featured-control" data-featured-next aria-label="Next featured achievement" {attr("Next", "Na gaba")}><span {attr("Next", "Na gaba")}>Next</span> →</button></div></div><ol id="featured-slides" class="featured-slides">{slide_html}</ol></div></div></section>'''
 
 
 FEATURED_SCRIPT = r'''
@@ -579,9 +667,10 @@ if(publicRequestForm){
 def source_footer(sources):
     return "".join(
         f'<li><span class="source-grade">{esc(row.get("source_grade", "?"))}</span> '
+        # The title stays in the source's own language: it is a citation, not our copy.
         f'<span><strong>{esc(row.get("title", "Untitled source"))}</strong>'
         f'<small>{copy("Published", "An wallafa")} {esc(row.get("publication_date", "date unknown"))} · {copy("Retrieved", "An ɗauko")} {esc(row.get("retrieved_date", "date unknown"))}</small>'
-        f'<small>{esc(row.get("usage_note", ""))}</small></span>'
+        f'<small>{localized(row.get("usage_note", ""), row.get("usage_note_ha", ""))}</small></span>'
         f'{source_link(row.get("source_id", ""), sources, "Open", "Buɗe")}</li>'
         for row in sources.values()
     )
@@ -596,7 +685,9 @@ def achievement_list(rows, sources):
             f'{status_badge(row.get("status", ""), row.get("status_ha", ""))}</div>'
             f'<p>{localized(row.get("description", ""), row.get("description_ha", ""))}</p>'
             f'<div class="item-meta"><span>{esc(row.get("date", ""))}</span>'
-            f'<span>{esc(row.get("actor", ""))}</span><span>{esc(row.get("verification_status", ""))}</span>{source_link(row.get("source_id", ""), sources, "Source", "Sauro")}</div></li>'
+            f'<span>{esc(row.get("actor", ""))}</span>'
+            f'<span>{localized(row.get("verification_status", ""), row.get("verification_status_ha", ""))}</span>'
+            f'{source_link(row.get("source_id", ""), sources, "Source", "Sauro")}</div></li>'
         )
     return "".join(items) or '<li class="empty-item">No public achievement record yet.</li>'
 
@@ -604,20 +695,39 @@ def achievement_list(rows, sources):
 def indicator_cards(rows, sources):
     items = []
     for row in rows:
-        baseline = row.get("baseline_value") or "Baseline pending"
-        current = row.get("current_value") or "Current value pending"
+        sector = row.get("sector", "")
+        sector_en = SECTOR_LABELS.get(sector, sector.title())
+        sector_ha = SECTOR_HA.get(sector, sector_en)
+        baseline = row.get("baseline_value") or ""
+        if baseline:
+            baseline_label = esc(baseline)
+        else:
+            baseline_label = copy("Baseline pending", "Tsarin asal yana jira")
+        current = row.get("current_value") or ""
+        current_ha = row.get("current_value_ha") or current
         unit = row.get("current_unit") or row.get("baseline_unit") or ""
+        unit_ha = row.get("current_unit_ha") or row.get("baseline_unit_ha") or unit
         current_year = row.get("current_year")
-        current_label = f"{current} · {current_year}" if current_year else current
+        current_label = localized(
+            f"{current} · {current_year}" if current_year else current,
+            f"{current_ha} · {current_year}" if current_year else current_ha)
         target = row.get("target_value")
         target_year = row.get("target_year")
-        target_label = f"Target {target}{(' by ' + target_year) if target_year else ''}" if target else "Target not set"
+        if target:
+            target_label = localized(
+                f"Target {target}{(' by ' + target_year) if target_year else ''}",
+                f"Maƙasudin {target}{(' cikin ' + target_year) if target_year else ''}")
+        else:
+            target_label = localized("Target not set", "Ba a saita makasudi ba")
         items.append(
-            f'<article class="indicator-card"><div class="indicator-top"><span class="eyebrow">{esc(row.get("lga", "Statewide"))} · {esc(row.get("sector", ""))}</span>{status_badge(row.get("status", ""), row.get("status", ""))}</div>'
+            f'<article class="indicator-card"><div class="indicator-top">'
+            f'<span class="eyebrow">{localized(row.get("lga", "Statewide"), row.get("lga_ha", ""))} · {localized(sector_en, sector_ha)}</span>'
+            f'{status_badge(row.get("status", ""), row.get("status_ha", ""))}</div>'
             f'<h3>{localized(row.get("indicator", ""), row.get("indicator_ha", ""))}</h3>'
-            f'<div class="indicator-value"><strong>{esc(current_label)}</strong><span>{esc(unit)}</span></div>'
-            f'<p>{esc(row.get("measurement_note", ""))}</p>'
-            f'<div class="indicator-meta"><span>{copy("Baseline", "Tsarin asal")} {esc(baseline)} · {esc(target_label)}</span>{source_link(row.get("source_id", ""), sources, "Source", "Sauro")}</div></article>'
+            f'<div class="indicator-value"><strong>{current_label}</strong><span>{localized(unit, unit_ha)}</span></div>'
+            f'<p>{localized(row.get("measurement_note", ""), row.get("measurement_note_ha", ""))}</p>'
+            f'<div class="indicator-meta"><span>{copy("Baseline", "Tsarin asal")} {baseline_label} · {target_label}</span>'
+            f'{source_link(row.get("source_id", ""), sources, "Source", "Sauro")}</div></article>'
         )
     return "".join(items)
 
@@ -640,9 +750,9 @@ def arrow_card(sector, need, promise, achievements, sources):
         <span class="arrow-index">{esc(sector[:2].upper())}</span>
       </div>
       <div class="arrow-path">
-        <div class="path-node need-node"><span class="node-number">01</span><h3>{copy("Public need", "Bincike na buƙatar al'umma")}</h3><p>{localized(need_text, need_text_ha)}</p><span class="node-tag">{copy("Needs evidence", "Tabbacin buƙatar")}</span>{need_source}</div>
+        <div class="path-node need-node"><span class="node-number">01</span><h3>{copy("Public need", "Buƙatar al'umma")}</h3><p>{localized(need_text, need_text_ha)}</p><span class="node-tag">{copy("Needs evidence", "Tabbacin buƙatar")}</span>{need_source}</div>
         <div class="path-arrow" aria-hidden="true">→</div>
-        <div class="path-node achievement-node"><span class="node-number">02</span><h3>{copy("Current achievement", "Acikaken sa na yanzu")}</h3><ul class="achievement-list">{achievement_list(achievements, sources)}</ul><span class="node-tag">{copy("Public record", "Bayanan al'umma")}</span></div>
+        <div class="path-node achievement-node"><span class="node-number">02</span><h3>{copy("Current achievement", "Ayyuka da yanzu")}</h3><ul class="achievement-list">{achievement_list(achievements, sources)}</ul><span class="node-tag">{copy("Public record", "Bayanan al'umma")}</span></div>
         <div class="path-arrow" aria-hidden="true">→</div>
         <div class="path-node promise-node"><span class="node-number">03</span><h3>{copy("APM promise", "Alkawarin APM")}</h3><p>{localized(promise_text, promise_text_ha)}</p><span class="node-tag">{copy("Campaign commitment", "Alkawarin gaggawa")}</span>{promise_source}</div>
         <div class="path-arrow" aria-hidden="true">→</div>
@@ -688,9 +798,11 @@ def request_form_section(ward_rows):
             for row in ward_rows
         )
         ra_placeholder = "Choose a registration area"
+        ra_placeholder_ha = "Zaɓi wurin ƙaura zaye"
     else:
         ra_options = ""
         ra_placeholder = "Registration areas are not loaded"
+        ra_placeholder_ha = "An karɓi sauƙin ƙaura zaye ba a iya nuna shi ba"
     category_options = "".join(
         f'<option value="{esc(key)}" {attr(label_en, label_ha)}>'
         f'{esc(label_en)}</option>'
@@ -735,7 +847,7 @@ def request_form_section(ward_rows):
           <div class="request-field">
             <label for="request-ward-code">{copy("Registration area (RA)", "Wurin ƙaura zaye (RA)")} <span class="request-required" aria-hidden="true">*</span></label>
             <select id="request-ward-code" name="ward_code" required disabled>
-              <option value="" {attr(ra_placeholder, ra_placeholder)} selected>{esc(ra_placeholder)}</option>
+              <option value="" {attr(ra_placeholder, ra_placeholder_ha)} selected>{esc(ra_placeholder)}</option>
               {ra_options}
             </select>
           </div>
@@ -1062,14 +1174,14 @@ a{{color:inherit}}
 <body>
 <header class="hero" id="top">
   <div class="topbar"><div class="shell topbar-inner"><a class="brand" href="#top"><img src="assets/brand/apm-logo.png" alt="Allied Peoples Movement logo"><small>Allied Peoples' Movement</small></a><nav class="nav"><a href="#progress">{copy("Progress", "Ci gaban")}</a><a href="#atlas">{copy("LGA atlas", "Taswirar LGA")}</a><a href="#continuity">{copy("Continuity", "Ci gaba")}</a><a href="#agenda">{copy("APM agenda", "Bayan-APM")}</a><a href="#indicators">{copy("Indicators", "Alamu")}</a><a href="#requests">{copy("Request", "Buƙatar")}</a><a href="#sources">{copy("Sources", "Bayane")}</a></nav><div class="lang"><button type="button" data-lang="en" class="active" aria-pressed="true">EN</button><button type="button" data-lang="ha" aria-pressed="false">HA</button></div></div></div>
-  <div class="shell hero-grid"><div><div class="eyebrow">{copy("Official campaign record · Bauchi State", "Kadairin kowane · Bauchi State")}</div><h1><span data-en="A Vision" data-ha="Vision">A Vision</span><br><span data-en="for" data-ha="don">for</span> <em><span data-en="Progress." data-ha="Ci gaba.">Progress.</span></em></h1><p class="hero-lede">{copy("A visual record of Bauchi’s public needs, the progress already made, and the work APM will carry forward.", "Ganiya da nuna da bukatar al’umma, ci gaban da aka yi, da aiki da APM za ci gaba da shi.")}</p><div class="hero-actions"><a class="btn btn-primary" href="#progress">{copy("Explore the progress", "Duba ci gaban")} <span>→</span></a><a class="btn btn-secondary" href="#atlas">{copy("View LGA atlas", "Duba taswirar LGA")}</a></div><div class="motto" {attr("Integrity · Sacrifice · Service", "Integrity · Sacrifice · Service")}>Integrity · Sacrifice · Service</div></div><div class="portrait-wrap"><img class="portrait" src="{hero_image}" alt="Dr. Yakubu Adamu campaign portrait"><div class="portrait-caption"><strong>Dr. Yakubu Adamu</strong><span {attr("Bauchi State Governor candidate", "Mikaɗin gwamna jihada Bauchi")}>Bauchi State Governor candidate</span></div></div></div>
+  <div class="shell hero-grid"><div><div class="eyebrow">{copy("Official campaign record · Bauchi State", "Ƙaƙarar gaggawa · Bauchi State")}</div><h1><span data-en="A Vision" data-ha="Vision">A Vision</span><br><span data-en="for" data-ha="don">for</span> <em><span data-en="Progress." data-ha="Ci gaba.">Progress.</span></em></h1><p class="hero-lede">{copy("A visual record of Bauchi’s public needs, the progress already made, and the work APM will carry forward.", "Ganiya da nuna da bukatar al’umma, ci gaban da aka yi, da aiki da APM za ci gaba da shi.")}</p><div class="hero-actions"><a class="btn btn-primary" href="#progress">{copy("Explore the progress", "Duba ci gaban")} <span>→</span></a><a class="btn btn-secondary" href="#atlas">{copy("View LGA atlas", "Duba taswirar LGA")}</a></div><div class="motto" {attr("Integrity · Sacrifice · Service", "Integrity · Sacrifice · Service")}>Integrity · Sacrifice · Service</div></div><div class="portrait-wrap"><img class="portrait" src="{hero_image}" alt="Dr. Yakubu Adamu campaign portrait"><div class="portrait-caption"><strong>Dr. Yakubu Adamu</strong><span {attr("Bauchi State Governor candidate", "Mikaƙin gwamna jihada Bauchi")}>Bauchi State Governor candidate</span></div></div></div>
 </header>
 <section class="stats"><div class="shell stats-grid"><div class="stat"><strong>{len(LGAS)}</strong><span>{copy("LGAs in the atlas", "LGA a cikin taswirar")}</span></div><div class="stat"><strong>{achievement_count}</strong><span>{copy("Public records mapped", "Bayanan da aka nunawa")}</span></div><div class="stat"><strong>{promise_count}</strong><span>{copy("APM commitments tracked", "Alkawarin APM da aka sa ido")}</span></div><div class="stat"><strong>{len(indicator_rows)}</strong><span>{copy("Outcome indicators", "Alamu na sakamako")}</span></div></div></section>
 <main>
 <section class="section" id="progress"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("The delivery story", "Labari na isar da sabis")}</div><h2>{copy("From public need to the next result.", "Daga buƙatar al'umma zuwa sakamako na gaba.")}</h2></div><p>{copy("The new dashboard keeps needs, public records, campaign commitments and future measures in one traceable story.", "Sabuwar dashboard tana buƙatar al'umma, bayanan ci gabansu, alkawarin gaggawa da matakan nan zuwa cikin wataƙa mai sauri.")}</p></div><div class="progress-path"><div class="path-step"><span class="step-no">{copy("01 / NEED", "01 / BUƙATAR")}</span><h3>{copy("What matters?", "Me ya fi muhimmanci?")}</h3><p>{copy("Start with the everyday need.", "Fara da buƙatar rayuwar yau.")}</p></div><div class="path-step"><span class="step-no">{copy("02 / RECORD", "02 / BAYANI")}</span><h3>{copy("What exists?", "Me yana nan?")}</h3><p>{copy("Show documented progress.", "Nuna ci gaban da aka tabbatar.")}</p></div><div class="path-step"><span class="step-no">{copy("03 / PROMISE", "03 / ALKAWARI")}</span><h3>{copy("What comes next?", "Me zai zo bayan nan?")}</h3><p>{copy("Make the commitment clear.", "Sanya alkawarin a bayyana.")}</p></div><div class="path-step"><span class="step-no">{copy("04 / RESULT", "04 / SAKAMAKO")}</span><h3>{copy("How will we know?", "Yaya za mu sani?")}</h3><p>{copy("Measure what changes.", "Auna abin da za ta canza.")}</p></div></div><div class="filter-row"><button class="filter active" type="button" data-filter="all" {attr("All records", "Dufin bayanai")}>All records</button><button class="filter" type="button" data-filter="health" {attr("Health", "Lafiya")}>Health</button><button class="filter" type="button" data-filter="education" {attr("Education", "Ilimi")}>Education</button><button class="filter" type="button" data-filter="wash" {attr("Water & climate", "Ruwa da sauroyi")}>Water & climate</button><button class="filter" type="button" data-filter="governance" {attr("Governance", "Gwaji")}>Governance</button><button class="filter" type="button" data-filter="infrastructure" {attr("Infrastructure", "Infastructure")}>Infrastructure</button></div><div class="arrow-list">{''.join(arrow_cards)}</div></div></section>
-<section class="section lga-section" id="atlas"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("20 local government areas", "LGA 20")}</div><h2>{copy("A 20-LGA evidence queue for Bauchi.", "Bita na bayanai ga LGA 20 a Bauchi.")}</h2></div><p>{copy("All 20 LGAs now have one curated source-backed evidence row. This is a starting evidence model, not comprehensive sector coverage for every community.", "Yanzu dukan LGA 20 suna da jimayi na bayanai mai goyon bayan sauro. Wannan ba cikakken bayanan kowane bangare ba.")}</p></div><div class="lga-grid">{lga_atlas(lga_rows)}</div><div class="lga-detail" id="lga-detail"><div><div class="detail-label">{copy("Selected area · statewide evidence start", "Wanda za zaɓi · ci gaban jihada")}</div><h3 id="selected-lga">Bauchi</h3><p id="selected-copy" aria-live="polite" data-en="Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified." data-ha="Zaɓi LGA don duba bita don bayanai. A bayanan farko ana sune a matsayin ci gaban jihada yayin da ake tabbatar da bayanan LGA.">Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified.</p></div><span class="detail-label" {attr("20 LGAs · 1 evidence model", "LGA 20 · 1 tsarin tabbaci")}>20 LGAs · 1 evidence model</span></div></div></section>
+<section class="section lga-section" id="atlas"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("20 local government areas", "LGA 20")}</div><h2>{copy("A 20-LGA evidence queue for Bauchi.", "Bita na bayanai ga LGA 20 a Bauchi.")}</h2></div><p>{copy("All 20 LGAs now have one curated source-backed evidence row. This is a starting evidence model, not comprehensive sector coverage for every community.", "Yanzu dukan LGA 20 suna da jimayi na bayanai mai goyon bayan sauro. Wannan ba cikakken bayanan kowane bangare ba.")}</p></div><div class="lga-grid">{lga_atlas(lga_rows)}</div><div class="lga-detail" id="lga-detail"><div><div class="detail-label">{copy("Selected area · statewide evidence start", "Wanda za zaɓi · ci gaban jihada")}</div><h3 id="selected-lga">Bauchi</h3><p id="selected-copy" aria-live="polite" data-en="Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified." data-ha="Zaɓi LGA don duba bita don bayanai. Ƙa bayanan farko ana sune a matsayin ci gaban jihada yayin da ake tabbatar da bayanan LGA.">Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified.</p></div><span class="detail-label" {attr("20 LGAs · 1 evidence model", "LGA 20 · 1 tsarin tabbaci")}>20 LGAs · 1 evidence model</span></div></div></section>
 <section class="section" id="continuity"><div class="shell governance-grid"><div class="governor-card"><img src="{governor_image}" alt="Governor Bala Mohammed"><div class="governor-caption"><strong>{copy("Progress with continuity", "Ci gaba mai ci gaba")}</strong><span {attr("Current Bauchi State administration and the next APM chapter", "Ggwamnatin Bauchi ta yanzu da sabon babban darasi na APM")}>Current Bauchi State administration and the next APM chapter</span></div></div><div class="governance-copy"><div class="eyebrow">{copy("Build on what is working", "Ci gaba kan abin da ke aiki")}</div><h3>{copy("The next chapter should finish the journey.", "Babban sabo ya kamata ya kare adireshin da aka fara.")}</h3><p>{copy("This landing page presents the current administration’s public record first, then shows where APM’s published commitments can complete, expand and measure the next priorities.", "Wannan shafi yana nuna bayanan gwamnati na yanzu da farko, sannan ya nuna inda alkawarin APM za ka ci gaba da shi, ya kuma yi aiki, ya sanya ido kan mabambanci na gaba.")}</p><div class="continuity-list"><div class="continuity-item"><b>01</b><span>{copy("Credit progress to the people and institutions delivering it.", "Mayar da ci gaban ga mutane da sashen da ke aiki.")}</span></div><div class="continuity-item"><b>02</b><span>{copy("Show joint delivery honestly, including partners and public institutions.", "Nuna aiki tare da gaskiya, tare da abokan hulɗe da sashen gwamnati.")}</span></div><div class="continuity-item"><b>03</b><span>{copy("Turn every promise into a result that can be tracked.", "Sanya kowane alkawari ya zama sakamako da za a iya sa shi ido a kai.")}</span></div></div></div></div></section>
-<section class="section" id="agenda"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Published campaign commitments", "Alkawarin gaggawa da aka wallafa")}</div><h2>{copy("A focused agenda for the next Bauchi.", "A agenda mai mayar hankali don Bauchi na gaba.")}</h2></div><p>{copy("These are campaign commitments, not completed achievements. They are shown separately so the evidence story stays clear.", "Waannan alkawarin gaggawa ne, ba ayyuka da aka kammala ba. An nuna su a wuri dabewa don bayan ci gabansu ya kasance mai sauƙi.")}</p></div><div class="agenda-grid">'''
+<section class="section" id="agenda"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Published campaign commitments", "Alkawarin gaggawa da aka wallafa")}</div><h2>{copy("A focused agenda for the next Bauchi.", "ƙa agenda mai mayar hankali don Bauchi na gaba.")}</h2></div><p>{copy("These are campaign commitments, not completed achievements. They are shown separately so the evidence story stays clear.", "Waannan alkawarin gaggawa ne, ba ayyuka da aka kammala ba. An nuna su a wuri dabewa don bayan ci gabansu ya kasance mai sauƙi.")}</p></div><div class="agenda-grid">'''
     for idx, promise in enumerate(read_csv("promises.csv"), 1):
         sector = promise.get("sector", "")
         label = SECTOR_LABELS.get(sector, sector.title())
@@ -1079,15 +1191,15 @@ a{{color:inherit}}
 {featured_section}
 {indicator_section}
 {request_section}
-<section class="sources-section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Traceable by design", "An tsara shi don sa ido")}</div><h2>{copy("Every record has a source.", "Kowane bayana yana da sauro.")}</h2></div><p>{copy(f"{len(manifest_rows)} source pages archived. {len(pending_review_rows)} candidate records are queued for source review before they can become achievements.", f"An ruƙe shafi {len(manifest_rows)} na bayanai. An sanya bayanan {len(pending_review_rows)} a cikin bita kafin su iya zama ayyuka.")}</p></div><ul class="source-list">{source_footer(sources)}</ul><div class="source-legend"><span><b>A</b> {copy("Primary or institutional record", "Bayanan gwamnati ko institucio")}</span><span><b>B</b> {copy("Programme or corroborating evidence", "Shirin ko tabbacin da ke tabbatar")}</span><span><b>D</b> {copy("Campaign material", "Kayan gaggawa")}</span></div></div></section>
+<section class="sources-section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Traceable by design", "An tsara shi don sa ido")}</div><h2>{copy("Every record has a source.", "Kowane bayana yana da sauro.")}</h2></div><p>{copy(f"{len(manifest_rows)} source pages archived. {len(pending_review_rows)} candidate records are queued for source review before they can become achievements.", f"An ruƙe shafi {len(manifest_rows)} na bayanai. An sanya bayanan {len(pending_review_rows)} a cikin bita kafin su iya zama ayyuka.")}</p></div><ul class="source-list">{source_footer(sources)}</ul><div class="source-legend"><span><b>A</b> {copy("Primary or institutional record", "Bayanan gwamna ko instituciya")}</span><span><b>B</b> {copy("Programme or corroborating evidence", "Shirin ko tabbacin da ke tabbatar")}</span><span><b>D</b> {copy("Campaign material", "Kayan gaggawa")}</span></div></div></section>
 </main>
-<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p>{copy("Public-source campaign intelligence. Built", "Basirar gaggawa daga bayanan al'umma. An gina a")} {built}. {copy("Public information and campaign materials are labelled separately; this page is not private polling.", "Bayanan al'umma da kayan gaggawa an bambanta su; wannan shafi ba ita ce private polling.")}</p></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" {attr("Created By Deerflow", "An ƙirƙira Deerflow")}>Created By Deerflow</a></div></footer>
+<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p>{copy("Public-source campaign intelligence. Built", "Basirar gaggawa daga bayanan al'umma. An gina a")} {built}. {copy("Public information and campaign materials are labelled separately; this page is not private polling.", "Bayanan al'umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra'yu na ɓoye ba.")}</p></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" {attr("Created By Deerflow", "An ƙirƙira Deerflow")}>Created By Deerflow</a></div></footer>
 <script>
 const root=document.documentElement;
 let currentLanguage='en';
 {FEATURED_SCRIPT}
 let selectedLga='';
-const renderLgaDetail=()=>{{if(!selectedLga)return;const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const summary=currentLanguage==='ha'?btn.dataset.summaryHa:btn.dataset.summary;const promise=currentLanguage==='ha'?btn.dataset.promiseHa:btn.dataset.promise;const result=currentLanguage==='ha'?btn.dataset.resultHa:btn.dataset.result;document.getElementById('selected-lga').textContent=selectedLga;const copy=document.getElementById('selected-copy');copy.textContent=currentLanguage==='ha'?selectedLga+': '+summary+' APM: '+promise+' Bari: '+result:selectedLga+': '+summary+' APM: '+promise+' Next result: '+result;}};
+const renderLgaDetail=()=>{{if(!selectedLga)return;const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const titleEl=document.getElementById('selected-lga');const copyEl=document.getElementById('selected-copy');if(!titleEl||!copyEl)return;const summary=currentLanguage==='ha'?btn.dataset.summaryHa:btn.dataset.summary;const promise=currentLanguage==='ha'?btn.dataset.promiseHa:btn.dataset.promise;const result=currentLanguage==='ha'?btn.dataset.resultHa:btn.dataset.result;titleEl.textContent=selectedLga;copyEl.textContent=currentLanguage==='ha'?selectedLga+': '+summary+' APM: '+promise+' Sami na gaba: '+result:selectedLga+': '+summary+' APM: '+promise+' Next result: '+result;}};
 const setLanguage=(lang)=>{{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en}});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;}});document.querySelectorAll('[data-lang]').forEach(btn=>{{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));}});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(lang==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';}};
 document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
 document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const filter=btn.dataset.filter;document.querySelectorAll('.arrow-card').forEach(card=>card.hidden=filter!=='all'&&card.dataset.sector!==filter);}}));

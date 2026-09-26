@@ -1,6 +1,6 @@
 # APM Bauchi Site Expansion Plan
 
-**Status:** approved by owner 26 September 2026; not yet started
+**Status:** approved by owner 26 September 2026. **S0 and S1 complete** (see §9). S2 onward not started.
 **Supersedes:** the single-page layout described in `HANDOFF.md` §3 and `IMPLEMENTATION_PLAN.md` "Interactive Expansion Execution Plan"
 **Scope:** header/logo repair, bilingual correctness, six-page site, Bauchi LGA map, opinion poll
 **Naming:** phases are `S0`–`S7` to avoid collision with the existing `P0`–`P6` series in `IMPLEMENTATION_PLAN.md`
@@ -524,3 +524,62 @@ Assert **counts from the data, not constants** — e.g. derive the arrow-card co
 - All 40 existing tests pass, plus the new tests in §6.
 - `HANDOFF.md`, `README.md`, `AGENTS.md` and `IMPLEMENTATION_PLAN.md` are accurate.
 - An independent review has run before anything is staged or pushed.
+
+---
+
+## 9. Progress log
+
+### S0 — Baseline (complete, commit `9cd101b`)
+
+Plan document committed. `2fd12fa` remains unpushed. The legacy working-tree files
+(`src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`) were left untouched
+and untracked, as required.
+
+### S1 — Bilingual correctness (complete)
+
+All twelve steps landed. Result: **224 identical `data-en`/`data-ha` pairs remain and every one
+is legitimate** (electoral RA proper nouns, LGA names, the `LGA` acronym, the party motto, and
+numeric values that are genuinely identical in both languages). Zero unexplained.
+
+Fixed:
+
+- `render.py` indicator card: `status` was passed to `status_badge` as both arguments. Now
+  reads `status_ha`.
+- `indicators.csv`: added `lga_ha`, `current_value_ha`, `current_unit_ha`, `status_ha`,
+  `measurement_note_ha` across all 8 rows.
+- `source_register.csv`: added `usage_note_ha` across all 27 rows.
+- `achievements.csv`: added `verification_status_ha` across all 25 rows; wrote real English
+  into the three `description` cells that held Hausa; fixed `Gihada` → `Jihada`.
+- `render.py` RA placeholder now uses the Hausa already present at the old line 502.
+- 15 Hausa quality defects corrected, including `Mikaɗin` → `Mikaƙin`, `Bincike` (research) used
+  for "need", `Kadairin kowane` ("every voter") used for "official", and the English
+  `private polling` left in the Hausa footer.
+- `promises.csv` Hausa realigned to the English, which is the citation of record.
+
+Hardening, so these cannot regress:
+
+- `attr()` now falls back `ha or en` instead of serialising `data-ha=""`.
+- `status_badge()` defaults `ha` from `STATUS_HA`; the `ha=""` default that caused 8 of the 10
+  bugs is gone.
+- `STATUS_CLASSES` / `STATUS_HA` / `INDICATOR_STATUSES` are now one controlled vocabulary, so a
+  status cannot ship without a Hausa label or drift out of the validator.
+- `validate_no_hausain_english_columns()` rejects Hausa in English columns, using **both** an
+  orthography test and an absolute function-word-hit test. The orthography test alone caught
+  only 1 of 3 offenders; two of the three sentences contain no Hausa-specific characters.
+  Swept across every delivery CSV with zero false positives.
+- The `🔴` un-guarded `getElementById` write in the LGA detail panel is now null-guarded, so a
+  future page split cannot throw inside `setLanguage` and kill the language toggle.
+- `source_register.title` is deliberately **not** wrapped for translation. A source title is a
+  citation and belongs in its own language.
+
+Tests: `tests/test_bilingual.py`, 17 methods. Suite is **57 passing**, up from 40.
+
+⚠️ **Outstanding, needs a decision:**
+
+1. The 52 new Hausa strings in this phase are **AI-drafted and not native-speaker reviewed**,
+   the same caveat already recorded on `.evals/2026-W39.md`. They cover integrity caveats a
+   Hausa-reading visitor now sees, so they should be spot-checked before the next push.
+2. `promises.csv` rows 5 and 6 (`promise-wash`, `promise-infrastructure`) are near-duplicates:
+   identical English and Hausa text under two different `sector` values, both citing
+   `source-campaign-home`. Differentiating them would mean inventing published campaign
+   commitments, so this is left for the owner as a content decision.
