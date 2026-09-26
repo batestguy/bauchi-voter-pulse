@@ -1,6 +1,6 @@
 # APM Bauchi Site Expansion Plan
 
-**Status:** approved by owner 26 September 2026. **S0 and S1 complete** (see §9). S2 onward not started.
+**Status:** approved by owner 26 September 2026. **S0, S1 and S2 complete** (see §9). S3 onward not started.
 **Supersedes:** the single-page layout described in `HANDOFF.md` §3 and `IMPLEMENTATION_PLAN.md` "Interactive Expansion Execution Plan"
 **Scope:** header/logo repair, bilingual correctness, six-page site, Bauchi LGA map, opinion poll
 **Naming:** phases are `S0`–`S7` to avoid collision with the existing `P0`–`P6` series in `IMPLEMENTATION_PLAN.md`
@@ -307,9 +307,9 @@ else is single-section and moves with its page.
 
 | Phase | Owner | Area | Deliverable | Gate |
 |---|---|---|---|---|
-| **S0** Baseline commit | Main maintainer | working tree | Clean commit of `2fd12fa` state; legacy files left untouched | Owner approval; nothing pushed |
-| **S1** Bilingual correctness | Executor + reviewer | `render.py`, `data/delivery/*.csv` | 10 untranslated strings fixed, 3 bad records fixed, silent English-only gaps wrapped, `attr()` hardened | New bilingual tests pass; 40 existing tests green |
-| **S2** Header, logo, sponsor slot | Executor + reviewer | `render.py`, `asset_register.csv` | Legible emblem, labelled language control with `localStorage` persistence, sponsor placeholder | Owner approves the emblem asset; browser-verified |
+| **S0** Baseline commit | Main maintainer | working tree | Plan committed; legacy files left untouched | COMPLETE — see §9 |
+| **S1** Bilingual correctness | Executor + reviewer | `render.py`, `data/delivery/*.csv` | 10 untranslated strings fixed, 3 bad records fixed, silent English-only gaps wrapped, `attr()` hardened | COMPLETE — see §9 |
+| **S2** Header, emblem, sponsor slot | Executor + reviewer | `render.py`, `asset_register.csv`, `promises.csv` | Legible emblem, labelled language control with `localStorage` persistence, sponsor slot, de-duplicated promises | COMPLETE — see §9 |
 | **S3** Multi-page shell | Executor + reviewer | `src/dashboard/templates/`, `render.py` | 6 pages, mobile nav, solid subpage header, `aria-current`, null-guarded JS | All 6 render; nav resolves; no console errors |
 | **S4** Bauchi map | Executor + reviewer | `src/ingestion/lga_boundaries.py`, `src/dashboard/map_svg.py` | 20 LGA paths inline, seam-safe, panel + RA list, attribution, indicative caveat | 20 paths match `LGAS`; seams verified visually; no runtime network |
 | **S5** Poll | Executor + reviewer | `src/poll/`, `poll.html` | Q1 sector choice + Q2 optional text, live results with disclosure, disabled until endpoint set | Disabled-state tests prove nothing is sent |
@@ -346,16 +346,6 @@ Ordered so each step is independently verifiable:
 vocabulary for the status terms. Anything newly authored should be labelled as AI-drafted and
 spot-checked by a native speaker, consistent with the existing disclosure on
 `.evals/2026-W39.md`.
-
-### S2 — Header, logo, sponsor slot
-
-1. Crop the shield from `apm-logo.png` (Pillow, local only) to a square `assets/brand/apm-emblem.png`. Do **not** add Pillow to `requirements.txt`.
-2. Register it in `data/delivery/asset_register.csv` with the sha256, `usage_status` in **column 6** set to `campaign approved`, and an `approved_at` date. **Owner must approve — CI fails closed otherwise.**
-3. Replace the header image at `render.py:844`: drop `filter:brightness(0) invert(1)`, set width ~40px, keep the existing HTML wordmark.
-4. Add the sponsor placeholder: a neutral tile reading "Sponsor photo" and a name line reading `[ Sponsor name ]`. No invented content, and it must be visibly a placeholder.
-5. Label the language control — globe glyph plus `Language` / `Harshe` — keeping EN/HA.
-6. Persist the choice in `localStorage` and restore it on load, so language survives navigation. This is a **new requirement created by the page split.**
-7. Fix `render.py:1090` null guards **now**, before S3 makes them reachable.
 
 ### S3 — Multi-page shell
 
@@ -579,7 +569,4 @@ Tests: `tests/test_bilingual.py`, 17 methods. Suite is **57 passing**, up from 4
 1. The 52 new Hausa strings in this phase are **AI-drafted and not native-speaker reviewed**,
    the same caveat already recorded on `.evals/2026-W39.md`. They cover integrity caveats a
    Hausa-reading visitor now sees, so they should be spot-checked before the next push.
-2. `promises.csv` rows 5 and 6 (`promise-wash`, `promise-infrastructure`) are near-duplicates:
-   identical English and Hausa text under two different `sector` values, both citing
-   `source-campaign-home`. Differentiating them would mean inventing published campaign
-   commitments, so this is left for the owner as a content decision.
+2. ~~promises duplication~~ **RESOLVED in S2** - see below.

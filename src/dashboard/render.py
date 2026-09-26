@@ -32,7 +32,8 @@ REQUEST_CATEGORIES = (
 )
 
 ASSET_FILES = [
-    "apm-logo.png", "yakubu-adamu-hero.png", "yakubu-adamu-portrait.png", "bala-mohammed.png"
+    "apm-logo.png", "apm-emblem.png", "yakubu-adamu-hero.png", "yakubu-adamu-portrait.png",
+    "bala-mohammed.png"
 ]
 
 FEATURED_ACHIEVEMENTS_FILE = "featured_achievements.csv"
@@ -282,6 +283,26 @@ def validate_no_hausain_english_columns():
             "Hausa text found in English column(s): " + ", ".join(sorted(offenders)))
 
 
+def validate_unique_promises():
+    """Reject two promise rows carrying the same commitment text.
+
+    promise-wash once held a byte-for-byte copy of promise-infrastructure, so the agenda
+    rendered the same commitment twice under two different sectors. A phantom row had
+    been created to fill the sector grid. This guards that bug class, not just the
+    instance.
+    """
+    seen = {}
+    for row in read_csv("promises.csv"):
+        text = (row.get("promise_text") or "").strip().lower()
+        if not text:
+            raise ValueError(f"blank promise_text: {row.get('promise_id', '')}")
+        if text in seen:
+            raise ValueError(
+                f"duplicate promise_text shared by {seen[text]} and "
+                f"{row.get('promise_id', '')}: {row.get('promise_text', '')[:70]}")
+        seen[text] = row.get("promise_id", "")
+
+
 def validate_data():
     required = {
         "source_register.csv": {"source_id", "url", "content_hash", "source_grade", "usage_note", "usage_note_ha"},
@@ -317,6 +338,7 @@ def validate_data():
         for row in read_csv(name):
             if row["source_id"] not in source_ids:
                 raise ValueError(f"unknown source_id in {name}: {row['source_id']}")
+    validate_unique_promises()
     for row in read_csv("source_register.csv"):
         if len(row["content_hash"]) != 64:
             raise ValueError(f"invalid source hash: {row['source_id']}")
@@ -940,7 +962,7 @@ def render():
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="APM Bauchi Progress and Delivery: public needs, current achievements, campaign commitments and next results.">
-<link rel="icon" type="image/png" href="assets/brand/apm-logo.png">
+<link rel="icon" type="image/png" href="assets/brand/apm-emblem.png">
 <title>APM Bauchi Progress &amp; Delivery</title>
 <style>
 :root{{--ink:#13202b;--navy:#0b263c;--blue:#145d86;--sky:#d9eff6;--gold:#d89b31;--gold-soft:#f5e6c4;--paper:#f7f4ed;--white:#fffdf8;--line:#d8d8cd;--muted:#6c7880;--green:#2e7254;--green-soft:#dcefe3;--shadow:0 24px 70px rgba(11,38,60,.14)}}
@@ -953,12 +975,18 @@ a{{color:inherit}}
 .topbar{{position:absolute;z-index:2;top:0;left:0;right:0;color:#fff;padding:22px 0}}
 .topbar-inner{{display:flex;align-items:center;justify-content:space-between;gap:20px}}
 .brand{{display:flex;align-items:center;gap:12px;text-decoration:none}}
-.brand img{{width:116px;height:auto;filter:brightness(0) invert(1)}}
+/* The emblem already has a transparent background, so it needs no colour filter.
+   An earlier brightness(0) invert(1) collapsed the logo's opaque white page and the
+   whitened artwork into one solid block. */
+.brand img{{width:38px;height:44px;object-fit:contain;flex:none}}
 .brand small{{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.74;margin-top:-3px}}
 .nav{{display:flex;align-items:center;gap:24px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}}
 .nav a{{opacity:.78;text-decoration:none}}
 .nav a:hover{{opacity:1}}
-.lang{{display:flex;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:3px}}
+.lang{{display:flex;align-items:center;gap:9px}}
+.lang-label{{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;opacity:.72;white-space:nowrap}}
+.lang-label svg{{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}}
+.lang-toggle{{display:flex;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:3px}}
 .lang button{{border:0;background:transparent;color:#fff;padding:5px 9px;border-radius:999px;cursor:pointer;font:inherit;font-size:10px}}
 .lang button.active{{background:#fff;color:var(--navy)}}
 .hero{{min-height:760px;background:var(--navy);color:#fff;position:relative;overflow:hidden;display:flex;align-items:center;padding:128px 0 74px}}
@@ -1157,11 +1185,22 @@ a{{color:inherit}}
 .source-grade{{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700}}
 .source-link{{justify-self:end}}
 .site-footer{{background:#081d2c;color:#fff;padding:34px 0 28px}}
-.footer-inner{{display:flex;justify-content:space-between;gap:30px;align-items:center}}
+.footer-inner{{display:flex;justify-content:space-between;gap:30px;align-items:center;flex-wrap:wrap}}
 .footer-inner p{{font-size:11px;color:rgba(255,255,255,.56);margin:0;max-width:650px}}
 .footer-inner strong{{font-family:Georgia,serif;font-size:1.3rem;font-weight:400;display:block;margin-bottom:6px}}
 .deerflow{{font-size:10px;color:rgba(255,255,255,.45);text-decoration:none;border:1px solid rgba(255,255,255,.2);padding:7px 10px;border-radius:999px;white-space:nowrap}}
 .deerflow:hover{{color:#fff;border-color:#fff}}
+/* Sponsor slot. Deliberately reads as an unfilled placeholder: no invented name, no
+   invented contribution, no amount. The contribution line is a factual disclosure the
+   owner completes, not a claim of delivered achievement. */
+.sponsor{{display:flex;gap:14px;align-items:center;max-width:400px;padding:12px 16px;border:1px dashed rgba(255,255,255,.28);border-radius:4px;background:rgba(255,255,255,.03)}}
+.sponsor-photo{{width:58px;height:58px;flex:none;border:1px dashed rgba(255,255,255,.3);border-radius:3px;display:grid;place-items:center;text-align:center;padding:4px}}
+.sponsor-photo span{{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);line-height:1.3}}
+.sponsor-body{{min-width:0}}
+.sponsor-label{{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}}
+.sponsor-name{{display:block;font-family:Georgia,serif;font-size:1.05rem;font-weight:400;color:#fff}}
+.sponsor-contribution{{display:block;font-size:11px;line-height:1.45;color:rgba(255,255,255,.72);margin-top:5px}}
+.sponsor-contribution b{{color:#fff;font-weight:700}}
 .reveal{{opacity:0;transform:translateY(15px);animation:rise .7s ease forwards;animation-delay:var(--delay,0s)}}
 @keyframes rise{{to{{opacity:1;transform:translateY(0)}}}}
 @media (prefers-reduced-motion:reduce){{*{{scroll-behavior:auto!important;animation:none!important;transition:none!important}}.reveal{{opacity:1;transform:none}}}}
@@ -1173,7 +1212,7 @@ a{{color:inherit}}
 </head>
 <body>
 <header class="hero" id="top">
-  <div class="topbar"><div class="shell topbar-inner"><a class="brand" href="#top"><img src="assets/brand/apm-logo.png" alt="Allied Peoples Movement logo"><small>Allied Peoples' Movement</small></a><nav class="nav"><a href="#progress">{copy("Progress", "Ci gaban")}</a><a href="#atlas">{copy("LGA atlas", "Taswirar LGA")}</a><a href="#continuity">{copy("Continuity", "Ci gaba")}</a><a href="#agenda">{copy("APM agenda", "Bayan-APM")}</a><a href="#indicators">{copy("Indicators", "Alamu")}</a><a href="#requests">{copy("Request", "Buƙatar")}</a><a href="#sources">{copy("Sources", "Bayane")}</a></nav><div class="lang"><button type="button" data-lang="en" class="active" aria-pressed="true">EN</button><button type="button" data-lang="ha" aria-pressed="false">HA</button></div></div></div>
+  <div class="topbar"><div class="shell topbar-inner"><a class="brand" href="#top"><img src="assets/brand/apm-emblem.png" width="38" height="44" alt="Allied Peoples Movement emblem"><small>Allied Peoples' Movement</small></a><nav class="nav"><a href="#progress">{copy("Progress", "Ci gaban")}</a><a href="#atlas">{copy("LGA atlas", "Taswirar LGA")}</a><a href="#continuity">{copy("Continuity", "Ci gaba")}</a><a href="#agenda">{copy("APM agenda", "Bayan-APM")}</a><a href="#indicators">{copy("Indicators", "Alamu")}</a><a href="#requests">{copy("Request", "Buƙatar")}</a><a href="#sources">{copy("Sources", "Bayane")}</a></nav><div class="lang"><span class="lang-label" id="lang-label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg>{copy("Language", "Harshe")}</span><div class="lang-toggle" role="group" aria-labelledby="lang-label"><button type="button" data-lang="en" class="active" aria-pressed="true">EN</button><button type="button" data-lang="ha" aria-pressed="false">HA</button></div></div></div></div>
   <div class="shell hero-grid"><div><div class="eyebrow">{copy("Official campaign record · Bauchi State", "Ƙaƙarar gaggawa · Bauchi State")}</div><h1><span data-en="A Vision" data-ha="Vision">A Vision</span><br><span data-en="for" data-ha="don">for</span> <em><span data-en="Progress." data-ha="Ci gaba.">Progress.</span></em></h1><p class="hero-lede">{copy("A visual record of Bauchi’s public needs, the progress already made, and the work APM will carry forward.", "Ganiya da nuna da bukatar al’umma, ci gaban da aka yi, da aiki da APM za ci gaba da shi.")}</p><div class="hero-actions"><a class="btn btn-primary" href="#progress">{copy("Explore the progress", "Duba ci gaban")} <span>→</span></a><a class="btn btn-secondary" href="#atlas">{copy("View LGA atlas", "Duba taswirar LGA")}</a></div><div class="motto" {attr("Integrity · Sacrifice · Service", "Integrity · Sacrifice · Service")}>Integrity · Sacrifice · Service</div></div><div class="portrait-wrap"><img class="portrait" src="{hero_image}" alt="Dr. Yakubu Adamu campaign portrait"><div class="portrait-caption"><strong>Dr. Yakubu Adamu</strong><span {attr("Bauchi State Governor candidate", "Mikaƙin gwamna jihada Bauchi")}>Bauchi State Governor candidate</span></div></div></div>
 </header>
 <section class="stats"><div class="shell stats-grid"><div class="stat"><strong>{len(LGAS)}</strong><span>{copy("LGAs in the atlas", "LGA a cikin taswirar")}</span></div><div class="stat"><strong>{achievement_count}</strong><span>{copy("Public records mapped", "Bayanan da aka nunawa")}</span></div><div class="stat"><strong>{promise_count}</strong><span>{copy("APM commitments tracked", "Alkawarin APM da aka sa ido")}</span></div><div class="stat"><strong>{len(indicator_rows)}</strong><span>{copy("Outcome indicators", "Alamu na sakamako")}</span></div></div></section>
@@ -1193,15 +1232,19 @@ a{{color:inherit}}
 {request_section}
 <section class="sources-section" id="sources"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Traceable by design", "An tsara shi don sa ido")}</div><h2>{copy("Every record has a source.", "Kowane bayana yana da sauro.")}</h2></div><p>{copy(f"{len(manifest_rows)} source pages archived. {len(pending_review_rows)} candidate records are queued for source review before they can become achievements.", f"An ruƙe shafi {len(manifest_rows)} na bayanai. An sanya bayanan {len(pending_review_rows)} a cikin bita kafin su iya zama ayyuka.")}</p></div><ul class="source-list">{source_footer(sources)}</ul><div class="source-legend"><span><b>A</b> {copy("Primary or institutional record", "Bayanan gwamna ko instituciya")}</span><span><b>B</b> {copy("Programme or corroborating evidence", "Shirin ko tabbacin da ke tabbatar")}</span><span><b>D</b> {copy("Campaign material", "Kayan gaggawa")}</span></div></div></section>
 </main>
-<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p>{copy("Public-source campaign intelligence. Built", "Basirar gaggawa daga bayanan al'umma. An gina a")} {built}. {copy("Public information and campaign materials are labelled separately; this page is not private polling.", "Bayanan al'umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra'yu na ɓoye ba.")}</p></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" {attr("Created By Deerflow", "An ƙirƙira Deerflow")}>Created By Deerflow</a></div></footer>
+<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p>{copy("Public-source campaign intelligence. Built", "Basirar gaggawa daga bayanan al'umma. An gina a")} {built}. {copy("Public information and campaign materials are labelled separately; this page is not private polling.", "Bayanan al'umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra'yu na ɓoye ba.")}</p></div><div class="sponsor"><div class="sponsor-photo"><span>{copy("Sponsor photo", "Hotun mai tallafi")}</span></div><div class="sponsor-body"><span class="sponsor-label">{copy("Sponsor", "Mai tallafi")}</span><span class="sponsor-name">{copy("[ Sponsor name ]", "[ Suna na mai tallafi ]")}</span><span class="sponsor-contribution">{copy("Contribution:", "Zuciya:")} <b>{copy("[ What was contributed and by whom — to be completed by the campaign team ]", "[ Abin da aka ba da da kuɗi — za a cika shi da hukumar gaggawa ]")}</b></span></div></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" {attr("Created By Deerflow", "An ƙirƙira Deerflow")}>Created By Deerflow</a></div></footer>
 <script>
 const root=document.documentElement;
 let currentLanguage='en';
 {FEATURED_SCRIPT}
 let selectedLga='';
 const renderLgaDetail=()=>{{if(!selectedLga)return;const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const titleEl=document.getElementById('selected-lga');const copyEl=document.getElementById('selected-copy');if(!titleEl||!copyEl)return;const summary=currentLanguage==='ha'?btn.dataset.summaryHa:btn.dataset.summary;const promise=currentLanguage==='ha'?btn.dataset.promiseHa:btn.dataset.promise;const result=currentLanguage==='ha'?btn.dataset.resultHa:btn.dataset.result;titleEl.textContent=selectedLga;copyEl.textContent=currentLanguage==='ha'?selectedLga+': '+summary+' APM: '+promise+' Sami na gaba: '+result:selectedLga+': '+summary+' APM: '+promise+' Next result: '+result;}};
-const setLanguage=(lang)=>{{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en}});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;}});document.querySelectorAll('[data-lang]').forEach(btn=>{{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));}});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(lang==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';}};
+const LANGUAGE_KEY='apm-lang';
+const readStoredLanguage=()=>{{try{{const stored=window.localStorage.getItem(LANGUAGE_KEY);return stored==='ha'||stored==='en'?stored:null;}}catch(error){{return null;}}}};
+const storeLanguage=(lang)=>{{try{{window.localStorage.setItem(LANGUAGE_KEY,lang);}}catch(error){{/* blocked storage: the toggle still works for this page */}}}};
+const setLanguage=(lang,persist=true)=>{{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en}});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;}});document.querySelectorAll('[data-lang]').forEach(btn=>{{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));}});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(lang==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);}};
 document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
+const storedLanguage=readStoredLanguage();if(storedLanguage)setLanguage(storedLanguage,false);
 document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const filter=btn.dataset.filter;document.querySelectorAll('.arrow-card').forEach(card=>card.hidden=filter!=='all'&&card.dataset.sector!==filter);}}));
 document.querySelectorAll('[data-lga]').forEach(btn=>btn.addEventListener('click',()=>{{document.querySelectorAll('[data-lga]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');selectedLga=btn.dataset.lga;renderLgaDetail();}}));
 {REQUEST_SCRIPT}
