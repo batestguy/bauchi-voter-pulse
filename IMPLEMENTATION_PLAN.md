@@ -1,6 +1,7 @@
 # APM Bauchi Progress & Delivery Revamp — Governing Plan (v2)
 
 **Status:** implemented as the source-backed public landing page; legacy sentiment/risk work remains separate
+**Next:** `SITE_EXPANSION_PLAN.md` — the single-page `docs/index.html` layout is being replaced by a six-page site, plus header/logo repair, a bilingual correctness pass, a Bauchi LGA map and an opinion poll. That document governs the new work; the `P0`-`P6` series below remains the historical record for the interactive expansion.
 **Supersedes:** the legacy “Bauchi Voter Pulse” sentiment/risk dashboard as the primary product
 **Timeframe:** 2023–September 2026
 **Audience:** internal campaign strategists first; sanitized public presentation second
