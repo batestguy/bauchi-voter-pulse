@@ -3,14 +3,18 @@
 **Handoff date:** 26 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** `957d47d` — `feat(site): six-page split, mobile nav, both release traps closed (S3)`
+**Current release:** `4871cde` — **deployed to GitHub Pages 26 September 2026**, run `36274124728`, success. Contains phases S0–S3.
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
 **Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
 
-> ⚠️ **The live site is still the old single-page release `b94d4b0`.** Six local commits
-> are unpushed. The live page still shows the white-rectangle logo, the untranslated
-> Hausa and the duplicated water promise, and it has no subpages. Nothing is wrong with
-> the local build — it simply has not shipped.
+> ✅ **The site is live.** `main` is fully pushed and Pages run `36274124728` deployed
+> successfully on 26 September 2026. All six pages are public, the emblem renders in
+> colour, Hausa works and persists, and the agenda shows the water entry as a published
+> clause. The working tree is clean apart from the preserved legacy paths in step 3.
+>
+> The **weekly cron is the thing to watch**: `rebuild-pages.yml` now regenerates and
+> stages all six pages, and fails the build if any is missing. Its first scheduled run is
+> the first live exercise of that change — check it the next Monday.
 
 ---
 
@@ -50,7 +54,7 @@ The five things S4 must not get wrong are in `SITE_EXPANSION_PLAN.md` §10.
 |---|---|
 | Ratify or correct the `apm-emblem.png` rights record | `data/delivery/asset_register.csv` |
 | Native-speaker review of the 53 AI-drafted Hausa strings | spread across `data/delivery/*.csv` |
-| Push authorisation for the 6 unpushed commits | owner's call |
+| ~~Push authorisation~~ — **granted; pushed 26 September 2026** | owner's call |
 | Whether to narrow the `wash` label from "Water and climate resilience" | the source has zero climate content |
 
 **6. If you only have time for one thing:**
@@ -100,10 +104,16 @@ The next maintainer should resume from this exact checkpoint:
   header, footer and language control. Phases S0–S3 are committed locally. **S4 (the Bauchi
   map) and S5 (the opinion poll) have not started**, so `atlas.html` still shows the 20-LGA
   tile grid rather than a map, and `poll.html` holds only the request form.
-- **Last verified live product:** release `b94d4b0` remains the last deployed Pages
-  release at the URL below; its Pages run was `35972044982`. **Everything from `9cd101b`
-  onward is unpushed**, so the live site is still a single page with the white-rectangle
-  logo, the untranslated Hausa and the duplicated water promise.
+- **Last verified live product:** `4871cde`, deployed 26 September 2026 in Pages run
+  `36274124728` (success). Verified in a browser against the live URL: all six pages
+  return HTTP 200, the emblem renders in colour with `filter: none`, the nav carries six
+  links with `aria-current` on the right one, the mobile `<details>` menu is present,
+  the agenda shows 8 cards with the water entry labelled `Published commitment clause`,
+  the sponsor slot reads `[ Sponsor name ]`, Hausa switches and persists to
+  `localStorage`, and there are **0 console errors**.
+- ⚠️ **First unattended cron run not yet observed.** `rebuild-pages.yml` gained a
+  multi-page stage and a missing-page check in S3. The next Monday 06:00 UTC run is the
+  first live exercise of it.
 - **Current local verification:** **115 `unittest` tests pass** (40 before this work). Python
   compilation, delivery-data validation, asset hash checks, the CI asset gate, a
   `node --check` parse of the inline script, and browser interaction checks all pass.
@@ -592,7 +602,7 @@ settings in GitHub if that configuration changes.
 - Live browser console returned 0 errors.
 - Responsive checks showed no horizontal overflow at 1440px, 1024px, 760px or 375px.
 
-### Local state after S0–S3 (26 September 2026, unpushed)
+### Local state after S0–S3 (26 September 2026, now deployed)
 
 - **115 `unittest` tests pass** (40 before this work).
 - `python src/dashboard/render.py` writes **all six pages** and prints their sizes.
@@ -1153,9 +1163,11 @@ capture is enabled.
 
 ## 18. Commit Boundary and Working Tree
 
-The S0–S2 work is a **local verified checkpoint, not a public deployment.** As of
-26 September 2026 `main` is **6 commits ahead of `origin/main`** and nothing has been
-pushed:
+`main` is **fully pushed**; there is no local-only commit. The list below is the staging
+allowlist for the *next* change, not a record of pending work. Push was authorised once,
+on 26 September 2026, and is **not** standing authorisation.
+
+History leading to the first push, for provenance:
 
 ```text
 2fd12fa  feat(delivery): add interactive achievements and request intake   (pre-existing)
@@ -1165,8 +1177,6 @@ be832e0  fix(i18n): correct Hausa rendering across delivery content          (S1
 27a7a76  docs: handoff for the next session after S0-S2
 957d47d  feat(site): six-page split, mobile nav, both release traps closed  (S3)
 ```
-
-Pushing is the owner's call and has not been authorised.
 
 ### Current staging allowlist
 
@@ -1295,8 +1305,8 @@ A new maintainer should be able to answer “yes” to each question:
    two §20 traps **in the same change**, not afterwards.
 8. Run the full suite, render, browser-check at 375px and 1440px, and get an independent
    review before staging anything.
-9. Commit only after the owner explicitly asks. **Do not push** without explicit
-   authorisation — `main` is already 6 commits ahead of `origin/main`.
+9. Commit only after the owner explicitly asks. Push was authorised once, on
+   26 September 2026; it is **not** standing authorisation for future work.
 10. Do not deploy the request form or the poll until an approved HTTPS Apps Script
     endpoint is configured; both ship disabled until then.
 

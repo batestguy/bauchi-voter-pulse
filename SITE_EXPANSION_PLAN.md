@@ -1,6 +1,12 @@
 # APM Bauchi Site Expansion Plan
 
-**Status:** approved by owner 26 September 2026. **S0–S3 complete** (see §9). S4 onward not started.
+**Status:** approved 26 September 2026. **S0–S3 complete and deployed to GitHub Pages**
+(Pages run `36274124728`, success). S4 onward not started.
+
+> **Live now:** all six pages are public. The emblem renders in colour, Hausa works and
+> persists across pages, the agenda shows the water entry as a published clause, and the
+> console is clean. The Monday 06:00 UTC cron is the first unattended exercise of the new
+> multi-page stage — check it after it runs.
 **Supersedes:** the single-page layout described in `HANDOFF.md` §3 and `IMPLEMENTATION_PLAN.md` "Interactive Expansion Execution Plan"
 **Scope:** header/logo repair, bilingual correctness, six-page site, Bauchi LGA map, opinion poll
 **Naming:** phases are `S0`–`S7` to avoid collision with the existing `P0`–`P6` series in `IMPLEMENTATION_PLAN.md`
@@ -524,8 +530,7 @@ Assert **counts from the data, not constants** — e.g. derive the arrow-card co
 
 ### S0 — Baseline (complete, commit `9cd101b`)
 
-Plan document committed. `2fd12fa` remains unpushed. The legacy working-tree files
-(`src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`) were left untouched
+Plan document committed. `2fd12fa` was unpushed at this point; the whole S0–S3 stack was pushed to `main` on 26 September 2026 and deployed in Pages run `36274124728`. The legacy working-tree files (`src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`) were left untouched
 and untracked, as required.
 
 ### S1 — Bilingual correctness (complete)
@@ -722,9 +727,8 @@ no endpoint configured, and there are **zero console errors**.
 
 ## 10. Next session - start here
 
-**State at handoff (26 September 2026):** S0–S3 complete and committed. `main` is **5
-commits ahead of `origin/main` and nothing has been pushed.** The site is six pages. 115
-tests pass.
+**State at handoff (26 September 2026):** S0–S3 complete, **pushed and deployed**. The
+site is six live pages. 115 tests pass.
 
 ### Do this first
 
@@ -763,7 +767,6 @@ and keep the RA list in the side panel labelled "not geo-located".
 - Native-speaker review of the **53 AI-drafted Hausa strings** (27 `usage_note_ha`, 25
   `verification_status_ha`, 1 wash-promise clause). These are integrity caveats a
   Hausa-reading voter now sees.
-- Push authorisation for the five unpushed commits.
 - Decide whether to narrow the `wash` sector label from "Water and climate resilience" —
   the published campaign source contains zero climate content.
 

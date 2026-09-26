@@ -91,10 +91,10 @@ See `HANDOFF.md` for the complete operational handoff, deployment runbook, curre
 release counts, validation evidence, known limitations, preserved local work and
 prioritized next steps. Start with `SITE_EXPANSION_PLAN.md`.
 
-The current public release is live at
-`https://batestguy.github.io/bauchi-voter-pulse/`. **It is still the old single-page
-release.** The header, bilingual, promise and six-page work is committed locally and
-unpushed, so the live site has not changed.
+The current release is live at
+`https://batestguy.github.io/bauchi-voter-pulse/`, deployed 26 September 2026 in Pages
+run `36274124728`. All six pages are public and verified in a browser against the live
+URL.
 
 ## Project history
 
