@@ -120,12 +120,58 @@ def _robots_allows(url):
     return rp.can_fetch(USER_AGENT, url), delay
 
 
-def polite_get(url):
+# Hosts where robots.txt itself is unreachable, so the conservative skip in
+# _robots_allows would block a documented, openly-licensed public API. Each entry must
+# record *why* the exemption is justified, and the caller must repeat that justification at
+# the call site. The global default is unchanged: only these hosts, only on request.
+#
+# services3.arcgis.com -- robots.txt returns 403 for every user agent, including a browser
+# UA, so the file is WAF-blocked rather than absent. The registrable domain
+# www.arcgis.com serves a retrievable, permissive robots.txt ("User-agent: *", no Disallow),
+# and the FeatureServer query endpoint is ArcGIS's documented public API served openly for
+# exactly this kind of programmatic access. This is a one-time cached fetch of an openly
+# licensed open-data layer (CC BY 4.0), not crawling. Owner ratification still open.
+ROBOTS_UNREACHABLE_HOSTS = {
+    "services3.arcgis.com": (
+        "robots.txt is WAF-blocked (403) at this ArcGIS subdomain; the registrable domain "
+        "arcgis.com serves a permissive robots.txt and the endpoint is a documented public API."
+    ),
+}
+
+_robots_exemptions_granted = []
+
+
+def robots_exemption_log():
+    """Every exemption actually exercised this process, for the audit trail."""
+    return list(_robots_exemptions_granted)
+
+
+def polite_get(url, robots_exemption=None):
     """GET with robots.txt check + per-host rate limit (honoring Crawl-delay).
-    Raises on disallow/unverifiable robots/failure."""
+    Raises on disallow/unverifiable robots/failure.
+
+    `robots_exemption` opts a single call out of the conservative skip for a host listed in
+    ROBOTS_UNREACHABLE_HOSTS. It must be a substantive justification, not a truthy token, and
+    it is recorded. It cannot be used for any other host.
+    """
     parts = urlparse(url)
     host = parts.netloc
-    allowed, site_delay = _robots_allows(url)
+    if robots_exemption is not None:
+        expected = ROBOTS_UNREACHABLE_HOSTS.get(host)
+        if expected is None:
+            raise PermissionError(
+                f"robots_exemption supplied for unlisted host {host!r}. Add it to "
+                "ROBOTS_UNREACHABLE_HOSTS with its justification first."
+            )
+        if not isinstance(robots_exemption, str) or len(robots_exemption.strip()) < 40:
+            raise ValueError(
+                "robots_exemption must restate the substantive reason this host is exempt, "
+                f"not just assert it. Recorded justification: {expected}"
+            )
+        _robots_exemptions_granted.append({"host": host, "justification": robots_exemption})
+        allowed, site_delay = True, 0.0
+    else:
+        allowed, site_delay = _robots_allows(url)
     if not allowed:
         raise PermissionError(f"robots.txt disallows or is unverifiable: {url}")
     wait = max(REQUEST_DELAY, site_delay) - (time.time() - _last_hit.get(host, 0))

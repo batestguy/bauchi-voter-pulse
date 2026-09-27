@@ -154,10 +154,18 @@ class HardeningTests(unittest.TestCase):
         self.assertIn('data-ha="Cin galma"', badge)
 
     def test_lga_detail_guards_its_target_elements(self):
-        # A null write here throws inside setLanguage and kills the whole toggle.
+        # A null write here throws inside setLanguage and kills the whole toggle. The
+        # panel is now three separate value elements, so every one of them must be reached
+        # through a guarded reference rather than a bare getElementById(...).textContent.
         html = PAGE.read_text(encoding="utf-8")
-        self.assertIn("if(!titleEl||!copyEl)return;", html.replace(" ", ""))
-        self.assertNotIn("document.getElementById('selected-lga').textContent", html)
+        compact = html.replace(" ", "")
+        self.assertIn("if(!titleEl)return;", compact)
+        self.assertIn("if(!evidenceEl||!promiseEl||!resultEl)return;", compact)
+        for target in ("selected-evidence", "selected-promise", "selected-result"):
+            with self.subTest(target=target):
+                self.assertIn(f"getElementById('{target}')", compact)
+                self.assertNotIn(f"getElementById('{target}').textContent", compact)
+        self.assertNotIn("getElementById('selected-lga').textContent", compact)
 
 
 if __name__ == "__main__":

@@ -1,37 +1,40 @@
 # APM Bauchi Progress & Delivery — Project Handoff
 
-**Handoff date:** 26 September 2026
+**Handoff date:** 27 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** `4871cde` — **deployed to GitHub Pages 26 September 2026**, run `36274124728`, success. Contains phases S0–S3.
+**Current release:** `1eac1bc` — **deployed to GitHub Pages 26 September 2026**, run `36274124728`, success. Contains phases S0–S3.
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
 **Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
 
-> ✅ **The site is live.** `main` is fully pushed and Pages run `36274124728` deployed
-> successfully on 26 September 2026. All six pages are public, the emblem renders in
-> colour, Hausa works and persists, and the agenda shows the water entry as a published
-> clause. The working tree is clean apart from the preserved legacy paths in step 3.
+> ⚠️ **S4, the Bauchi map, is complete, verified and NOT yet committed.** It is local
+> only. The live site still shows the 20-LGA tile grid, because S4 has not been committed
+> or pushed.
 >
-> The **weekly cron is the thing to watch**: `rebuild-pages.yml` now regenerates and
-> stages all six pages, and fails the build if any is missing. Its first scheduled run is
-> the first live exercise of that change — check it the next Monday.
+> **Live:** S0–S3, six pages, deployed 26 September 2026, run `36274124728`.
+> **Local:** S0–S4, six pages, `atlas.html` now carries a real 20-LGA map, 162 tests pass.
+>
+> The **weekly cron is still the thing to watch**: `rebuild-pages.yml` regenerates and
+> stages all six pages and fails if any is missing. Its first scheduled run is the first
+> live exercise of that change.
 
 ---
 
 ## Start here next session
 
-**1. Read in this order:** `SITE_EXPANSION_PLAN.md` (§4 phases, §9 log, §10 next
-session) → this file's §13 priorities and §20 release traps → `AGENTS.md`.
+**1. Read in this order:** `SITE_EXPANSION_PLAN.md` (§9 progress log — the S4 entry
+records what actually happened and why the plan's seam fix had to be abandoned — then
+§10) → this file's §13 priorities and §20 release traps → `AGENTS.md`.
 
 **2. Verify the baseline before changing anything:**
 
 ```bash
 cd D:\APMdeliverable
-python -m unittest discover -s tests -q     # expect 115 OK
+python -m unittest discover -s tests -q     # expect 162 OK (1 skip)
 python src/dashboard/render.py              # expect six page sizes
 ```
 
-If the test count is not 115, something has regressed. Investigate before proceeding.
+If the test count is not 162, something has regressed. Investigate before proceeding.
 
 **3. Do not touch the preserved local work.** It must still be untracked or modified:
 
@@ -44,30 +47,25 @@ data/human_review/filled/         untracked, local-only
 
 Never `git reset`, `git clean`, permanent `git stash`, or stage these.
 
-**4. Next task: phase S4, the Bauchi LGA map.** Full brief in `SITE_EXPANSION_PLAN.md`
-§2.4 (measured geometry, licence, seam safety) and §10, and the P0 list in §13 below.
-The five things S4 must not get wrong are in `SITE_EXPANSION_PLAN.md` §10.
+**4. S4 needs an owner decision before it ships.** The boundary fetch carries a
+**robots.txt exemption** for `services3.arcgis.com`; see §21. It is recorded and narrowly
+scoped, but the owner should ratify it.
 
-**5. Owner gates still open** — all four need a human decision, not code:
-
-| Gate | Where |
-|---|---|
-| Ratify or correct the `apm-emblem.png` rights record | `data/delivery/asset_register.csv` |
-| Native-speaker review of the 53 AI-drafted Hausa strings | spread across `data/delivery/*.csv` |
-| ~~Push authorisation~~ — **granted; pushed 26 September 2026** | owner's call |
-| Whether to narrow the `wash` label from "Water and climate resilience" | the source has zero climate content |
+**5. Next task once S4 is committed: phase S5, the opinion poll.** Full brief in
+`SITE_EXPANSION_PLAN.md` §4 S5 and §10, and the P1 list in §13 below.
 
 **6. If you only have time for one thing:**
 
 ```bash
-python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure -v
+python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure tests.test_atlas_map -v
 ```
 
-These 47+ tests cover the defects a visual check cannot see: untranslated strings, Hausa
-pasted into an English column, a missing asset hash, an invert filter creeping back,
-invented sponsor content, a duplicate `const` that would disable every script on a page,
-a nav link pointing at a page that was never generated, and a cron that would publish
-stale subpages.
+These cover the defects a visual check cannot see: untranslated strings, Hausa pasted
+into an English column, a missing asset hash, an invert filter creeping back, invented
+sponsor content, a duplicate `const` that would disable every script on a page, a nav
+link pointing at a page that was never generated, a cron that would publish stale
+subpages, a tearing seam between LGAs, quantization below the 3 dp floor, and a language
+switch that empties the map.
 
 ## 1. Handoff Summary
 
@@ -88,38 +86,38 @@ is not the current product and is not invoked by the current GitHub Pages build.
 
 ## Current Checkpoint
 
-**Three phases of the site expansion are complete and committed. Nothing is pushed.**
+**Four phases of the site expansion are complete. S0–S3 are live; S4 is local only.**
 
 | Commit | Phase | What it did |
 |---|---|---|
 | `9cd101b` | S0 | Added `SITE_EXPANSION_PLAN.md` |
 | `be832e0` | S1 | Bilingual correctness across all delivery content |
 | `533a210` | S2 | Legible APM emblem, sponsor slot, persistent language control, de-duplicated promises |
-| S3 | S3 | **Six-page split**, mobile nav, solid subpage header, both CI release traps closed |
+| `957d47d` | S3 | **Six-page split**, mobile nav, solid subpage header, both CI release traps closed |
+| *uncommitted* | **S4** | **The 20-LGA Bauchi map** on `atlas.html`, from CC BY 4.0 operational boundaries |
 
 The next maintainer should resume from this exact checkpoint:
 
-- **Current local product checkpoint:** the delivery site is now **six flat pages** in
-  `docs/` — `index`, `achievements`, `atlas`, `poll`, `agenda`, `sources` — sharing one
-  header, footer and language control. Phases S0–S3 are committed locally. **S4 (the Bauchi
-  map) and S5 (the opinion poll) have not started**, so `atlas.html` still shows the 20-LGA
-  tile grid rather than a map, and `poll.html` holds only the request form.
-- **Last verified live product:** `4871cde`, deployed 26 September 2026 in Pages run
-  `36274124728` (success). Verified in a browser against the live URL: all six pages
-  return HTTP 200, the emblem renders in colour with `filter: none`, the nav carries six
-  links with `aria-current` on the right one, the mobile `<details>` menu is present,
-  the agenda shows 8 cards with the water entry labelled `Published commitment clause`,
-  the sponsor slot reads `[ Sponsor name ]`, Hausa switches and persists to
-  `localStorage`, and there are **0 console errors**.
+- **Current local product checkpoint:** six flat pages in `docs/`, and `atlas.html` now
+  carries a real map — 20 inline `<path>` outlines with labels, an evidence panel, and the
+  registration-area list labelled "not geo-located". S0–S4 are done. **S5 (the opinion
+  poll) has not started**, so `poll.html` still holds only the request form.
+- **Last verified live product:** `4871cde` (now `1eac1bc` on `main`), deployed 26 September
+  2026 in Pages run `36274124728` (success). The live `atlas.html` still shows the tile
+  grid.
 - ⚠️ **First unattended cron run not yet observed.** `rebuild-pages.yml` gained a
   multi-page stage and a missing-page check in S3. The next Monday 06:00 UTC run is the
   first live exercise of it.
-- **Current local verification:** **115 `unittest` tests pass** (40 before this work). Python
-  compilation, delivery-data validation, asset hash checks, the CI asset gate, a
-  `node --check` parse of the inline script, and browser interaction checks all pass.
-  Browser checks covered 375px/1440px, EN↔Hausa switching, language persistence across
-  reload, the labelled language control, the sponsor slot, agenda de-duplication, zero
-  horizontal overflow at 375px, and **zero console errors**.
+- **Current local verification:** **162 `unittest` tests pass** (115 before S4). Delivery
+  data validation, asset hash checks, the CI asset gate, per-page `node --check`, and a
+  `node --check` on the new atlas script all pass. Browser checks covered 375px/1440px,
+  EN↔Hausa switching, language persistence, the map surviving a language switch, map↔list
+  selection sync, **0px horizontal overflow on all six pages**, and **zero console
+  errors**.
+- **Two files are build-required and must be committed with S4:**
+  `data/delivery/source_snapshots/grid3-lga-boundaries-bauchi.geojson` (388 KB;
+  `validate_data()` fails closed without it) and `data/derived/lga_paths.json` (95 KB;
+  `load_lga_paths()` fails closed without it).
 - **Evaluation report:** `.evals/2026-W39.md` is intentionally local-only because
   its 100-row source sample is not approved for release staging.
 - **Preserve local work:** do not reset or stage `src/aggregation/aggregate.py`,
@@ -148,8 +146,8 @@ not call an explicit Pages deployment action.
 
 | Area | Count | Source |
 |---|---:|---|
-| Registered sources | 27 | `data/delivery/source_register.csv` |
-| Archived source pages | 33 | `data/delivery/source_manifest.csv` |
+| Registered sources | 28 | `data/delivery/source_register.csv` |
+| Archived source pages | 34 | `data/delivery/source_manifest.csv` |
 | Review queue records | 33 | `data/delivery/review_queue.csv` |
 | Needs | 8 | `data/delivery/needs.csv` |
 | Achievements | 25 | `data/delivery/achievements.csv` |
@@ -159,8 +157,14 @@ not call an explicit Pages deployment action.
 | Featured achievement records | 5 | `data/delivery/featured_achievements.csv` |
 | Provisional electoral RAs | 212 | `data/delivery/lga_wards.csv` |
 | Outcome indicators | 8 | `data/delivery/indicators.csv` |
+| Mapped LGA outlines | 20 | `data/derived/lga_paths.json` |
 | Pending source reviews | 0 | `review_status == needs_review` |
-| Local `unittest` tests | 87 | `tests/` |
+| Local `unittest` tests | 162 | `tests/` |
+
+**New in S4:** source `source-grid3-lga-boundaries` is registered at **grade B** in
+`source_register.csv`, with the cached snapshot registered in `source_manifest.csv` as
+`grid3-lga-boundaries-bauchi`. Both rows carry the SHA-256 of the cached GeoJSON, and
+`validate_data()` cross-checks them.
 
 All 20 LGAs currently have an explicit LGA-specific evidence row. This means each
 LGA has a source-backed record for the atlas; it does not mean that every sector or
@@ -224,7 +228,7 @@ GitHub Pages
 |---|---|
 | `docs/index.html` | Home: hero, stats, four-step story, sector filter, continuity, cards into every subpage |
 | `docs/achievements.html` | Featured carousel, all 25 achievement records, measurement ledger |
-| `docs/atlas.html` | 20-LGA selector and evidence panel. **The map arrives in S4**; this is still the tile grid. |
+| `docs/atlas.html` | The 20-LGA map (the only selector), the selected-area evidence panel, the map legend, and the not-geo-located registration-area list |
 | `docs/poll.html` | The bilingual need-request form. **The opinion poll arrives in S5.** |
 | `docs/agenda.html` | The 8 published campaign commitments |
 | `docs/sources.html` | Source register, grading legend, build method |
@@ -232,7 +236,13 @@ GitHub Pages
 | `data/delivery/` | Curated source, evidence, promise, indicator, featured-achievement, provisional electoral-RA and LGA tables |
 | `data/delivery/source_snapshots/` | Locally archived source responses |
 | `src/ingestion/delivery_sources.py` | Public source discovery, archival and review intake |
-| `src/ingestion/common.py` | Shared polite HTTP, robots.txt and rate-limit logic |
+| `src/ingestion/lga_boundaries.py` | **New in S4.** One-time fetch and cache of the GRID3 operational LGA boundaries (CC BY 4.0), with the `lgacode` → canonical-name table |
+| `src/ingestion/common.py` | Shared polite HTTP, robots.txt and rate-limit logic. **Also owns `ROBOTS_UNREACHABLE_HOSTS`**, the justified per-host robots exemption (see §21) |
+| `src/derived/lga_paths.py` | **New in S4.** Pure-stdlib quantization, explicit-stack Douglas-Peucker, seam-safe vertex retention, equirectangular projection with the `cos(latMid)` correction, and SVG path serialisation |
+| `data/derived/lga_paths.json` | **New in S4, committed.** Path data, viewBox, bounds, licence, attribution and the recorded seam metrics. The weekly build reads this and never calls ArcGIS |
+| `data/delivery/source_snapshots/grid3-lga-boundaries-bauchi.geojson` | **New in S4, committed and build-required.** The raw cached boundaries, 388,559 bytes, SHA-256 `34b59f64…7ff596` |
+| `tests/test_atlas_map.py` | **New in S4.** 38 guards: licence, grade B, the `lgacode` join, the 3 dp floor, the explicit stack, seam tear of 0, projection, the CC BY attribution, the not-geo-located label, and the language-switch integrity guard |
+| `tests/test_browser_layout.py` | **New in S4.** Real-browser checks (375px overflow, the mobile `<details>` menu, map↔list sync, map survives a language switch, zero console errors). Skipped without Playwright, which is deliberately not a runtime dependency; carries static guards that always run |
 | `src/requests/validation.py` | Pure bilingual-safe private request validation contract |
 | `src/requests/aggregate.py` | Contact-free public request aggregation contract |
 | `docs/GOOGLE_SHEETS_SETUP.md` | Owner-only Google Sheet/Apps Script setup and privacy guide |
@@ -600,7 +610,53 @@ settings in GitHub if that configuration changes.
 - Live page returned the expected 33-page/0-pending source status.
 - Live page showed 20 LGA tiles, 8 indicators and Misau/Toro/Zaki evidence.
 - Live browser console returned 0 errors.
-- Responsive checks showed no horizontal overflow at 1440px, 1024px, 760px or 375px.
+- ⚠️ **CORRECTED IN S4.** This section previously recorded "Responsive checks showed no
+  horizontal overflow at 1440px, 1024px, 760px or 375px." **That was wrong at 375px.** S4
+  measured the topbar overflowing the shell by **27px at exactly 375px, on every page**,
+  forcing the whole page to scroll sideways. The claim was evidently never measured at that
+  width. S4 fixed it and the number is now genuinely 0px on all six pages, measured in a
+  browser by `tests/test_browser_layout.py`. Treat any "no overflow" claim in this file
+  as unverified unless a test asserts it.
+
+### Local state after S4 (27 September 2026, not committed)
+
+- **162 `unittest` tests pass** (115 after S3; the S4 additions bring it to 162).
+- `python src/dashboard/render.py` writes **all six pages** and prints their sizes.
+- `render.validate_data()` passes, and now also cross-checks the GRID3 boundary snapshot's
+  SHA-256 against both `source_register.csv` and `source_manifest.csv`.
+- The cached boundary snapshot reproduces **every** measured value in
+  `SITE_EXPANSION_PLAN.md` §2.4: 20 features, Polygon only, one ring each, 10,632 vertices,
+  largest ring 1,223 (`Itas/Gadau`), all rings closed, bbox 8.7450736484–11.0085317052 /
+  9.4473215106–12.5324657447, 388,559 bytes, and the two name mismatches
+  `Itas/Gadau` / `Jama'Are`.
+- Derived geometry: `viewBox="0 0 1000 1388.09"`, 7,452 vertices, 95,650 bytes.
+  **Seam tear 0 m, seam fidelity 0 m, quantization retention 3,353/3,538 = 94.8%**
+  (floor 90%).
+- `python -m src.derived.lga_paths` is **byte-for-byte deterministic** across runs.
+- Both build-required data files are confirmed necessary: removing the snapshot raises
+  `FileNotFoundError` from `validate_data()`, and removing the derived JSON raises from
+  `load_lga_paths()`.
+- The map survives EN→HA→EN with all 20 outlines intact. The first implementation did
+  **not**: `attr()` on the `<svg>` made `setLanguage` wipe the whole map. Fixed with a new
+  `render.py::aria()` helper; guarded by `tests/test_atlas_map.py::BilingualIntegrityTests`,
+  which was **verified to fail** when the bug is reintroduced.
+- 🔴 **A missing `}` in a single-line `@media` block broke every page's styling.** A
+  scripted CSS edit removed the brace closing `.indicator-grid` inside
+  `@media (max-width:1050px)`, so the rest of the stylesheet was parsed *inside* that media
+  query and stopped applying at desktop widths — the hero lost its navy background, the
+  white topbar text went invisible on cream, and the emblem overlapped the page title. The
+  pages still rendered, which is what made it expensive to spot. Restored verbatim from
+  `git HEAD`. `test_site_structure.py` now asserts both that brace counts balance and that
+  **every `@media` query begins at depth 0**, and that guard was **verified to fail** when
+  the bug is reintroduced.
+- Browser-verified at 375px and 1440px: the map renders with all 20 labels legible and
+  seamless borders; map click and list click drive the same selection in both directions;
+  the "not geo-located" RA list follows the selection; the map caveat and CC BY credit both
+  translate; **0px horizontal overflow on all six pages**; **0 console errors**.
+- ⚠️ `tests/test_browser_layout.py` is the only suite that measures real layout, and it
+  **skips** because Playwright is not installed here. It was left out of `requirements.txt`
+  deliberately so CI does not download Chromium on every run. The static guards in the same
+  file and in `test_site_structure.py` cover the same regressions and always run.
 
 ### Local state after S0–S3 (26 September 2026, now deployed)
 
@@ -625,7 +681,8 @@ settings in GitHub if that configuration changes.
   reload and page-to-page navigation**; `aria-label` translates; the sponsor slot renders
   and translates; the agenda shows 8 distinct cards; the LGA selector updates its detail
   panel; the carousel navigates and scope-filters; the request form is still disabled
-  with no endpoint configured; no horizontal overflow at 375px; **0 console errors**.
+  with no endpoint configured; **0 console errors**. (⚠️ The 375px overflow claim in this
+  section was wrong — see the S4 correction above.)
 - No pytest, lint or typecheck suite is installed in the current project.
 
 ## 10. Legacy Sentiment/Risk Pipeline
@@ -702,10 +759,22 @@ still need completion.
 - Some records are launches, approvals, handovers or reported milestones rather than
   independently measured outcomes.
 - `needs.csv` has no quantified baselines.
+- The 20-LGA display is an **indicative map on operational boundaries**, not an
+  authoritative or gazetted map. It is simplified for display at a 223 m tolerance.
+- Map boundaries descend from eHealth Africa polio-vaccination microplanning data and are
+  not validated by government authorities.
+- Registration areas are listed as "not geo-located"; `lga_wards.csv` carries no
+  coordinates and none are invented.
 - LGA rows provide one evidence record per LGA, not exhaustive sector coverage.
 - The ESTRRA outcome is Bauchi North-wide and is not a single-LGA claim.
-- The 20-LGA display is a designed grid, not an authoritative map.
-- English/Hausa copy exists, but native-speaker review is not documented.
+- The 20-LGA display is now an **indicative map on operational boundaries**, not an
+  authoritative map. Simplified for display; see the S4 correction in §9.
+- English/Hausa copy exists, but native-speaker review is not documented. **59** strings are
+  AI-drafted and unreviewed, including the map's "not gazetted" disclaimer.
+- The ArcGIS boundary fetch uses a documented robots.txt exemption that the owner has not
+  yet ratified. See §21.
+- `tests/test_browser_layout.py` skips without Playwright, so real layout is not asserted
+  on a machine that lacks it.
 - There is no automated semantic duplicate checker, date validator or claim verifier.
 - Baselines in `indicators.csv` remain blank where no verified baseline is available.
 
@@ -721,45 +790,68 @@ still need completion.
 
 ## 13. Prioritized Next Steps
 
-### P0 — Do next: the Bauchi map (phase S4)
+### Done — S4, the Bauchi map
 
-S3 shipped. Full detail in `SITE_EXPANSION_PLAN.md` §4. `atlas.html` currently shows the
-20-LGA tile grid; S4 replaces or augments it with real boundaries.
+`atlas.html` now carries a real 20-LGA map. Full record, including the three seam
+measurements and the two bugs that mattered, in `SITE_EXPANSION_PLAN.md` §9.
 
-1. Fetch the GRID3 / eHealth Africa operational LGA boundaries once and cache them under
-   `data/delivery/source_snapshots/`. Register the source in `source_register.csv` as
-   **grade B** with the licence and the "simplified for display" change note.
-2. **Licence is CC BY 4.0**: commercial use is fine and attribution is the only
-   obligation. There is **no ShareAlike**, so the simplified derivative can be published
-   on our own terms. ⚠️ The sibling GRID3 **Wards** layers are BY-SA and would force
-   BY-SA on the whole site — do not pull them in.
-3. Emit the derived path strings into a committed `data/derived/lga_paths.json` so the
-   weekly Pages rebuild never calls ArcGIS and the build stays deterministic.
-4. Simplify in pure stdlib: quantize to 4 dp, then Douglas-Peucker with an **explicit
-   stack** (a 1,223-point ring exceeds Python's 1000-frame recursion limit), then snap
-   neighbours back together. Project with the `cos(latMid)` correction.
-5. ⚠️ **Never quantize below 3 dp.** At 2 dp, 56% of the shared boundary edges between
-   LGAs collapse and the map visibly tears. Add a test asserting ≥90% shared-edge
-   retention so this cannot regress.
-6. Join on `lgacode` (5001–5020), never on names. Two names differ from the repo
-   canonical list: `Itas/Gadau` → `Itas-Gadau` and `Jama'Are` → `Jamaare`.
-7. Show the required CC BY attribution and the "operational, simplified, indicative —
-   not gazetted" caveat. These boundaries descend from polio microplanning data.
-8. Keep the RA list in the side panel labelled **"not geo-located"**. `lga_wards.csv` has
-   no coordinates and none will be invented.
+1. ✅ `src/ingestion/lga_boundaries.py` fetches the boundaries once and caches them.
+   Registered as `source-grid3-lga-boundaries`, **grade B**, CC BY 4.0, with the licence
+   and the "simplified for display" change note.
+2. ✅ The licence is CC BY 4.0 with no ShareAlike, as planned. The sibling GRID3 **Wards**
+   layers are BY-SA and were never touched; a test asserts the module never references
+   one.
+3. ✅ Derived path strings are committed to `data/derived/lga_paths.json`, so the weekly
+   Pages rebuild never calls ArcGIS. Regeneration is byte-for-byte deterministic.
+4. ✅ Pure stdlib: quantize to **3 dp**, Douglas-Peucker with an **explicit stack** (the
+   `Itas-Gadau` ring is 1,223 points, past the 1000-frame recursion limit), projected with
+   the `cos(latMid)` correction. `viewBox="0 0 1000 1388.09"`.
+5. ⚠️ **The plan's "snap neighbours back together" step was abandoned, with measurements.**
+   Position-welding cannot repair a *subset* disagreement, and after 3 dp quantization it
+   is a guaranteed no-op. The shipped approach retains every shared-border vertex:
+   **tear 0 m, fidelity 0 m**, at 7,452 vertices / 95 KB instead of the planned
+   3,070 / 36 KB. A test asserts the naive pipeline still tears.
+6. ✅ The join is on `lgacode` (5001–5020). The two name mismatches (`Itas/Gadau`,
+   `Jama'Are`) are absorbed structurally.
+7. ✅ The CC BY attribution and the "operational, simplified, indicative — not gazetted"
+   caveat both ship, in English and Hausa.
+8. ✅ The RA list is in the side panel labelled **"not geo-located"** and is never drawn on
+   the map.
+9. ✅ **The 20-LGA tile grid was cut.** It repeated a name the map already labels plus a
+   badge visible only as a fill colour, so it was duplication and exactly the "competing
+   primary navigation" the plan warned against. Each path now carries the per-LGA text via
+   the same `data-lga` contract the core script already speaks, so `renderLgaDetail` needed
+   no change, and the SVG became `role="group"` with 20 labelled focusable shapes. A
+   data-derived legend replaced the removed coverage badges.
+10. ✅ **The evidence panel is three labelled sections** — recorded evidence, APM
+    commitment, next result to measure — as a `<dl>`, instead of one concatenated
+    sentence. This was raised against the Dambam row, which read as a run-on paragraph.
+11. ✅ **A faint `apm-emblem.png` watermark now ships on all six pages.** Decorative,
+    `aria-hidden`, `pointer-events: none`, hidden in print, and below the topbar in
+    z-order so it never obscures navigation. It reuses an already-approved asset, so no
+    new rights — but it makes the emblem far more prominent and its rights record is still
+    unratified.
 
-### P1 — Then the opinion poll (phase S5)
+### P0 — Do next: commit and ship S4, then S5
 
-9. New `src/poll/` package mirroring `src/requests/`. Q1 is a required single choice over
+1. **Ratify the `services3.arcgis.com` robots exemption** (§21). This is the one S4 item
+   that needs an owner decision rather than code.
+2. Stage S4 using the §18 allowlist, which now names the two build-required data files.
+3. Push is **not** standing authorisation. Ask the owner.
+4. Then **S5, the opinion poll**, per `SITE_EXPANSION_PLAN.md` §4 S5.
+
+### P1 — The opinion poll (phase S5)
+
+5. New `src/poll/` package mirroring `src/requests/`. Q1 is a required single choice over
    the **existing 9 `REQUEST_CATEGORIES`** so results stay comparable with the request
    queue; Q2 is an optional ≤300-char free text that must be **excluded from the tally**.
-10. `POLL_ENDPOINT = ""` ships it disabled, mirroring `REQUEST_ENDPOINT`. On a static
-    host, live results mean: read the endpoint when configured, else fall back to a
-    committed `data/delivery/poll_snapshot.json` the weekly cron regenerates.
-11. Minimum PII: no name, phone or email. Honeypot, consent, one submission per browser.
-    Never seed, example or placeholder results — an empty set must render as empty.
-12. Show `N` prominently with a self-selected-respondent disclosure, and hold percentages
-    behind a configurable floor (default 10) so one vote cannot read as 100%.
+6. `POLL_ENDPOINT = ""` ships it disabled, mirroring `REQUEST_ENDPOINT`. On a static
+   host, live results mean: read the endpoint when configured, else fall back to a
+   committed `data/delivery/poll_snapshot.json` the weekly cron regenerates.
+7. Minimum PII: no name, phone or email. Honeypot, consent, one submission per browser.
+   Never seed, example or placeholder results — an empty set must render as empty.
+8. Show `N` prominently with a self-selected-respondent disclosure, and hold percentages
+   behind a configurable floor (default 10) so one vote cannot read as 100%.
 
 ### P2 — Housekeeping on the current product
 
@@ -770,12 +862,17 @@ S3 shipped. Full detail in `SITE_EXPANSION_PLAN.md` §4. `atlas.html` currently 
    market access, income and employment.
 3. Add semantic validation for date validity and actor/source consistency.
    Duplicate promise text is now covered by `validate_unique_promises()`.
-4. **Run a native-speaker Hausa review.** 53 strings in this session are AI-drafted and
-   unreviewed: 27 `usage_note_ha`, 25 `verification_status_ha`, plus the new wash-promise
-   clause. These are integrity caveats a Hausa-reading voter now sees, so they matter.
+4. **Run a native-speaker Hausa review.** The count is now **59**: 53 from S1/S2 (27
+   `usage_note_ha`, 25 `verification_status_ha`, plus the wash-promise clause) and **6 from
+   S4** (the map `aria-label`, the caveat and credit labels, the registration-area
+   "not geo-located" label, and the Hausa map caveat and attribution). The "not gazetted"
+   disclaimer is the one that matters most to get right.
 5. Ratify or correct the `apm-emblem.png` rights record in `asset_register.csv`.
 6. Decide whether to narrow the `wash` sector label. It renders as "Water and climate
    resilience", but the published campaign source contains **zero** climate content.
+7. Consider adding Playwright as a CI-only dependency so `tests/test_browser_layout.py`
+   actually runs. It was left out of `requirements.txt` to avoid a Chromium download on
+   every build; the static guards cover the same regressions meanwhile.
 
 ### P3 — Complete legacy evaluation work separately
 
@@ -821,22 +918,36 @@ Do not claim that:
 Claims that became false or newly unsafe with the S1/S2 work:
 
 - ❌ **Do not claim the site is fully bilingual.** It is bilingual throughout the
-  delivery content, but the 53 Hausa strings added in S1/S2 are **AI-drafted and not
+  delivery content, but the 59 Hausa strings added in S1/S2/S4 are **AI-drafted and not
   native-speaker reviewed**. Disclose this, exactly as `.evals/2026-W39.md` already does
   for its labeler.
 - ❌ **Do not claim the campaign published a water/sanitation policy.** It did not. The
   published manifesto has five pillars and no water pillar; `promise-wash` is the water
   **clause** of the Infrastructure Development commitment and is labelled as such.
-- ❌ **Do not claim the live site has the emblem, the sponsor slot or the fixed Hausa.**
-  All four unpushed commits are **local only**. The live site still shows the white-rectangle logo.
 - ❌ **Do not claim the sponsor slot is filled.** It ships as a labelled placeholder with
   no name, no photo and no contribution, by design.
-- ❌ **Do not claim the map or the poll exist.** S3 shipped the six-page shell, but
-  `atlas.html` still shows the 20-LGA tile grid and `poll.html` holds only the
-  request form. S4 and S5 have not started.
 - ❌ **Do not claim the emblem is a separately cleared asset.** It is a derived crop of the
   already-approved `apm-logo.png` with no new rights cleared, and its `approval_note`
   still needs owner ratification.
+
+Claims that became false with S4:
+
+- ❌ **Do not claim the live site has the map.** S4 is **not committed and not pushed**. The
+  live `atlas.html` still shows the 20-LGA tile grid; the map exists only locally.
+- ❌ **Do not claim the map boundaries are official.** They are GRID3 *operational*
+  boundaries descended from polio-vaccination microplanning data. GRID3 states they are
+  not validated by government authorities and carry no gazetted status. The page says
+  "indicative, not gazetted" and a test asserts it.
+- ❌ **Do not claim the boundaries are surveyed or precise.** They are simplified for
+  display at a 223 m tolerance, and the simplification is what guarantees a seamless map.
+- ❌ **Do not claim the registration areas are geo-located.** `lga_wards.csv` has no
+  coordinates and none were invented. They are listed as "not geo-located" and are never
+  drawn on the map.
+- ❌ **Do not claim the map is a comprehensive sector picture.** It is 20 source-backed
+  evidence rows on indicative outlines — one curated row per LGA, not exhaustive coverage.
+- ❌ **Do not claim zero horizontal overflow was verified before S4.** It was not; the
+  topbar overflowed by 27px at 375px on every page until S4 fixed it. The claim in the
+  S3 handoff was wrong. It is genuinely 0px now, and measured.
 
 ## 15. Approved Interactive Site Expansion Plan
 
@@ -1164,8 +1275,8 @@ capture is enabled.
 ## 18. Commit Boundary and Working Tree
 
 `main` is **fully pushed**; there is no local-only commit. The list below is the staging
-allowlist for the *next* change, not a record of pending work. Push was authorised once,
-on 26 September 2026, and is **not** standing authorisation.
+allowlist for the *next* change (S4), not a record of pending work. Push was authorised
+once, on 26 September 2026, and is **not** standing authorisation.
 
 History leading to the first push, for provenance:
 
@@ -1176,41 +1287,47 @@ be832e0  fix(i18n): correct Hausa rendering across delivery content          (S1
 533a210  fix(header): legible APM emblem, sponsor slot, persistent language  (S2)
 27a7a76  docs: handoff for the next session after S0-S2
 957d47d  feat(site): six-page split, mobile nav, both release traps closed  (S3)
+1eac1bc  docs: record the S0-S3 release as deployed
 ```
 
-### Current staging allowlist
-
-Stage only these paths for the next release:
+### Staging allowlist used for the S4 commit
 
 ```text
+AGENTS.md
 HANDOFF.md
-IMPLEMENTATION_PLAN.md
 README.md
 SITE_EXPANSION_PLAN.md
-data/delivery/asset_register.csv
-data/delivery/achievements.csv
-data/delivery/indicators.csv
-data/delivery/needs.csv
-data/delivery/promises.csv
 data/delivery/source_register.csv
-assets/brand/apm-emblem.png
-docs/assets/brand/apm-emblem.png
+data/delivery/source_manifest.csv
+data/delivery/source_snapshots/grid3-lga-boundaries-bauchi.geojson
+data/derived/lga_paths.json
+src/dashboard/render.py
+src/ingestion/common.py
+src/ingestion/lga_boundaries.py
+src/derived/__init__.py
+src/derived/lga_paths.py
 docs/index.html
 docs/achievements.html
 docs/atlas.html
 docs/poll.html
 docs/agenda.html
 docs/sources.html
-.github/workflows/rebuild-pages.yml
-src/dashboard/render.py
 tests/test_bilingual.py
-tests/test_header_brand.py
 tests/test_site_structure.py
+tests/test_atlas_map.py
+tests/test_browser_layout.py
 ```
 
-**The site is now six pages.** `python src/dashboard/render.py` writes all six; the weekly
-cron stages `docs/*.html` and fails if any page is missing. See §20 for how both traps
-were closed.
+⚠️ **The two `data/` entries are build-required, not optional.** `validate_data()` raises
+`FileNotFoundError` without the cached snapshot, and `load_lga_paths()` raises without the
+derived JSON. A commit that stages the code but not the data is a red build.
+
+`IMPLEMENTATION_PLAN.md` is not modified by S4. `docs/*.html` other than `atlas.html`
+changed only because the S4 CSS and the watermark are shared, which is expected.
+
+**The site is still six pages.** `python src/dashboard/render.py` writes all six; the
+weekly cron stages `docs/*.html` and fails if any page is missing. See §20 for how both
+traps were closed.
 
 Never stage or commit these preserved/local paths without explicit owner
 confirmation:
@@ -1221,6 +1338,81 @@ src/aggregation/aggregate.py
 data/human_review/filled/
 .playwright-mcp/
 ```
+
+### Still to come: the sponsor photo and name
+
+The owner holds a sponsor photograph and name that are **not yet in the repository**. They
+are deliberately not committed, and nothing was invented to fill the slot. When they are
+supplied, the follow-up change needs:
+
+1. The image file placed in `assets/brand/`, with its SHA-256 and an
+   `approved_at` date. `asset_register.csv` must have `usage_status` = `campaign approved`
+   in **column 6** — `rebuild-pages.yml` checks by position, not by name — and CI fails
+   closed on any other value.
+2. The sponsor's name, and the contribution line ("what was contributed and by whom").
+3. `test_header_brand.py::test_no_invented_sponsor_content` must be updated: it currently
+   asserts the slot contains **no** organisation name and **no** 4-digit number, which is
+   what stops a fabricated sponsor being invented. Narrow it to reject *other* names rather
+   than all names, keeping the anti-fabrication intent.
+4. Both `render.py` placeholders (`[ Sponsor name ]`,
+   `[ What was contributed and by whom ... ]`) replaced with the real values, in English and
+   Hausa.
+
+## 21. The robots.txt Exemption on the ArcGIS Host — Needs Owner Ratification
+
+This is the one S4 decision that is a judgement call rather than code, so it is recorded
+prominently rather than buried in a diff.
+
+**What happened.** `src/ingestion/lga_boundaries.py` fetches the GRID3 boundary layer once.
+The repo's `common.polite_get` checks `robots.txt` first and treats an *unverifiable*
+`robots.txt` as a hard skip. The fetch was refused:
+
+```text
+PermissionError: robots.txt disallows or is unverifiable:
+  https://services3.arcgis.com/.../query?...
+```
+
+**Why.** `services3.arcgis.com/robots.txt` returns **403 Forbidden for every user agent**,
+including a full browser UA, so the file is WAF-blocked rather than absent. Meanwhile the
+registrable domain serves a retrievable, permissive robots.txt:
+
+```text
+$ curl https://www.arcgis.com/robots.txt
+User-agent: *
+
+Sitemap: http://static.arcgis.com/sitemap.xml
+```
+
+There is no `Disallow`. The data endpoint is ArcGIS's documented public FeatureServer query
+API, openly served, and the layer is openly licensed **CC BY 4.0**.
+
+**What was done about it — and what was not.** The global conservative default was **not**
+weakened. `common.py` gained a named, justified, per-host list instead:
+
+```python
+ROBOTS_UNREACHABLE_HOSTS = {
+    "services3.arcgis.com": (
+        "robots.txt is WAF-blocked (403) at this ArcGIS subdomain; the registrable domain "
+        "arcgis.com serves a permissive robots.txt and the endpoint is a documented public API."
+    ),
+}
+```
+
+`polite_get(url, robots_exemption=...)` refuses any host not on that list, and refuses any
+justification shorter than 40 characters, so the exception stays auditable rather than
+becoming a blanket "skip robots" flag. Every exemption exercised is recorded in
+`robots_exemption_log()`. `lga_boundaries.py` restates the full justification at the call
+site and fails fast at import if the query host is ever moved off the list.
+
+**Why it still needs the owner.** This is a deliberate, documented deviation from a guard
+the repository treats as a hard rule. It is narrow, one host, one cached fetch, and the
+weekly build never makes the request — but the judgement that a WAF-blocked robots.txt on
+a subdomain with a permissive registrable domain is acceptable to fetch from is the
+owner's to make, not the implementer's.
+
+**If the owner declines**, the fallback is to drop the map and revert to the S3 tile grid.
+There is no second boundary source in the current data model, and inventing coordinates is
+not an option.
 
 ## 20. The Two Release Traps — Both Closed in S3
 
@@ -1265,7 +1457,8 @@ along with `rebuild-pages.yml` and `tests/test_site_structure.py`.
 A new maintainer should be able to answer “yes” to each question:
 
 - [ ] Can I render the live product locally and get all six pages?
-- [ ] Do I know the live site is still the old single-page release?
+- [ ] Do I know the live site does **not** yet have the map, and that S4 is uncommitted?
+- [ ] Can I explain why the two build-required map data files must be committed?
 - [ ] Can I explain the four-step narrative model?
 - [ ] Can I identify the source register, manifest, review queue and curated tables?
 - [ ] Can I name all six generated pages and say which sections live on each?
@@ -1277,12 +1470,21 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Can I explain why the header emblem needed a transparent background?
 - [ ] Do I know that a duplicate `const` in the inline script silently kills all page
       JavaScript, and that `node --check` guards it?
-- [ ] Can I identify the live GitHub Pages URL, and know it does **not** yet include
-      the S0–S2 work?
+- [ ] Do I know that `attr()` on an element with children empties it on a language switch,
+      and that `aria()` exists for that case?
+- [ ] Can I explain why the map quantizes to 3 dp and never less?
+- [ ] Can I explain why "simplify then snap neighbours back together" tears the map, with
+      the measurements?
+- [ ] Can I explain why the boundaries are "indicative, not gazetted"?
+- [ ] Do I know why the registration areas are labelled "not geo-located"?
+- [ ] Can I state the licence of the boundary layer and why the Wards layer is forbidden?
+- [ ] Can I explain the `services3.arcgis.com` robots exemption and why it needs
+      ratification?
+- [ ] Can I identify the live GitHub Pages URL, and know it does **not** include S4?
 - [ ] Can I preserve the uncommitted aggregation and human-review work?
 - [ ] Do I know which pipeline is legacy and not part of the public product?
 - [ ] Do I know which outcome claims still require measurement?
-- [ ] Do I know which 53 Hausa strings are AI-drafted and unreviewed?
+- [ ] Do I know which **59** Hausa strings are AI-drafted and unreviewed?
 - [ ] Do I know that the two release-breaking traps in §20 are closed and test-guarded?
 - [ ] Do I have a next-step list that does not mix current-product work with
       legacy evaluation work?
@@ -1291,38 +1493,46 @@ A new maintainer should be able to answer “yes” to each question:
 
 1. Start a new session from `D:\APMdeliverable` and follow **Start here next session**
    at the top of this file.
-2. **Read `SITE_EXPANSION_PLAN.md` first.** It governs the remaining phases and its §9
-   records exactly what S0–S3 did and why.
+2. **Read `SITE_EXPANSION_PLAN.md` §9 first.** The S4 entry records what actually happened
+   with the map, including the two places the plan was wrong and why.
 3. Read `HANDOFF.md` §3 (architecture), §9 (validation evidence), §13 (priorities),
-   §18 (staging), §19 (checklist) and §20 (release traps).
+   §18 (staging), §19 (checklist), §20 (release traps) and §21 (the robots exemption).
 4. Read `AGENTS.md` for repository rules and preserve all local-only legacy work.
-5. Run `python -m unittest discover -s tests -v` **before** changing anything. Expect
-   **115 passing**. A drop means something regressed; investigate before proceeding.
+5. Run `python -m unittest discover -s tests -q` **before** changing anything. Expect
+   **162 passing** (1 skip: the Playwright browser tests). A drop means something
+   regressed; investigate before proceeding.
 6. Confirm the working tree still shows the preserved local work as untracked/modified:
    `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`,
    `.playwright-mcp/`. Do not reset, clean, stash permanently, or stage them.
-7. Implement **S3, the six-page split**, per `SITE_EXPANSION_PLAN.md` §3 and §4. Fix the
-   two §20 traps **in the same change**, not afterwards.
+7. Decide S4's fate: ratify the robots exemption (§21) and stage it using the §18
+   allowlist, or drop the map and revert to the S3 tile grid. Both data files must be
+   staged with the code.
 8. Run the full suite, render, browser-check at 375px and 1440px, and get an independent
    review before staging anything.
 9. Commit only after the owner explicitly asks. Push was authorised once, on
    26 September 2026; it is **not** standing authorisation for future work.
 10. Do not deploy the request form or the poll until an approved HTTPS Apps Script
     endpoint is configured; both ship disabled until then.
+11. If the boundary snapshot ever needs re-fetching, note that
+    `python -m src.ingestion.lga_boundaries` refuses to overwrite an existing snapshot
+    without `--force`, and that the snapshot's SHA-256 is recorded in both
+    `source_register.csv` and `data/derived/lga_paths.json` — re-fetching changes the hash
+    and both records must be regenerated together.
 
 ### If you only have time for one thing
 
-Run S1's and S2's guards against a change you made:
+Run S1's, S2's, S3's and S4's guards against a change you made:
 
 ```text
-python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure -v
+python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure tests.test_atlas_map -v
 ```
 
 These cover the defects that are invisible in a visual check — untranslated strings,
-Hausa pasted into English columns, a missing emblem hash, an invert filter creeping
+Hausa pasted into an English column, a missing emblem hash, an invert filter creeping
 back, invented sponsor content, a duplicate `const` that would disable every script on a
-page, a nav link pointing at a page that was never generated, and a cron that would
-publish stale subpages.
+page, a nav link pointing at a page that was never generated, a cron that would publish
+stale subpages, a seam tearing between LGAs, quantization below the 3 dp floor, and a
+language switch that empties the map.
 
 The complete project contract remains in `IMPLEMENTATION_PLAN.md`. This handoff is
 the operational starting point for maintainers and deployment.

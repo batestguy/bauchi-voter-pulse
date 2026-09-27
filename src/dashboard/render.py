@@ -2,12 +2,15 @@ import csv
 import datetime
 import hashlib
 import html
+import json
 import pathlib
 import shutil
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 DATA = ROOT / "data" / "delivery"
 ASSETS = ROOT / "assets" / "brand"
+DERIVED = ROOT / "data" / "derived"
+LGA_PATHS_FILE = DERIVED / "lga_paths.json"
 DOCS = ROOT / "docs"
 OUT = DOCS / "index.html"
 
@@ -109,6 +112,18 @@ def attr(en, ha):
 
 def copy(en, ha):
     return f'<span {attr(en, ha)}>{esc(en)}</span>'
+
+
+def aria(en, ha):
+    """A localized accessible name that does NOT become a text-content swap target.
+
+    `setLanguage` rewrites `textContent` for every `[data-en][data-ha]` element, so putting
+    `attr()` on a container that has element children -- or is a whole subtree such as an
+    `<svg>` -- silently destroys them on the first language switch. Use this on anything
+    that carries children.
+    """
+    return (f'data-aria-label-en="{esc(en)}" data-aria-label-ha="{esc(ha or en)}" '
+            f'aria-label="{esc(en)}"')
 
 
 def localized(en, ha):
@@ -783,28 +798,168 @@ def arrow_card(sector, need, promise, achievements, sources):
     </article>'''
 
 
-def lga_atlas(lga_rows):
-    tiles = []
-    for lga in LGAS:
-        row = next((r for r in lga_rows if r.get("lga") == lga), {})
-        specific = row.get("coverage_type") == "lga_specific"
-        label = "LGA evidence" if specific else "Statewide"
-        label_ha = "Tabbacin LGA" if specific else "Jihada"
-        summary = row.get("achievement_summary", "")
-        summary_ha = row.get("achievement_summary_ha", summary)
-        promise = row.get("apm_promise", "")
-        promise_ha = row.get("apm_promise_ha", promise)
-        result = row.get("next_result", "")
-        result_ha = row.get("next_result_ha", result)
-        class_name = "lga-tile lga-specific" if specific else "lga-tile"
-        tiles.append(
-            f'<button class="{class_name}" type="button" data-lga="{esc(lga)}" '
-            f'data-summary="{esc(summary)}" data-summary-ha="{esc(summary_ha)}" '
-            f'data-promise="{esc(promise)}" data-promise-ha="{esc(promise_ha)}" '
-            f'data-result="{esc(result)}" data-result-ha="{esc(result_ha)}">'
-            f'<span class="lga-dot"></span><strong>{esc(lga)}</strong><small {attr(label, label_ha)}>{label}</small></button>'
+def load_lga_paths():
+    """Read the committed, pre-simplified boundary geometry.
+
+    The renderer never calls ArcGIS: the weekly Pages rebuild must stay deterministic and
+    offline, so the geometry is derived once by `python -m src.derived.lga_paths` and
+    committed. Failing closed here means a missing or stale derivative is a red build
+    rather than a silently missing map.
+    """
+    if not LGA_PATHS_FILE.exists():
+        raise FileNotFoundError(
+            f"{LGA_PATHS_FILE} is missing. Generate it with `python -m src.derived.lga_paths`."
         )
-    return "".join(tiles)
+    return json.loads(LGA_PATHS_FILE.read_text(encoding="utf-8"))
+
+
+def validate_lga_paths(paths, lga_rows):
+    """The map must cover exactly the 20 LGAs the rest of the site talks about."""
+    names = set(paths["lgas"])
+    if names != set(LGAS):
+        missing = sorted(set(LGAS) - names)
+        extra = sorted(names - set(LGAS))
+        raise ValueError(f"atlas geometry does not match LGAS: missing={missing} extra={extra}")
+    for lga, shape in paths["lgas"].items():
+        if not shape["d"].startswith("M") or not shape["d"].endswith("Z"):
+            raise ValueError(f"atlas path for {lga} is not a closed SVG path")
+    if paths["seams"]["tear_deg"] > 0:
+        raise ValueError(
+            f"atlas geometry has a seam tear of {paths['seams']['tear_deg']} deg; "
+            "neighbouring LGAs would be drawn with a gap between them"
+        )
+    if paths["seams"]["quantization_retention"] < 0.90:
+        raise ValueError(
+            "atlas quantization is below the 90% shared-edge retention floor; "
+            "borders would tear"
+        )
+    covered = {row.get("lga") for row in lga_rows}
+    if covered != set(LGAS):
+        raise ValueError("lga_delivery.csv does not cover exactly the 20 atlas LGAs")
+    return True
+
+
+def lga_map_svg(paths, lga_rows):
+    """Inline SVG of the 20 LGA outlines, each a labelled, focusable control.
+
+    Zero runtime third-party requests: the geometry is inline, so the map works offline
+    and adds no dependency to a page that otherwise has none.
+
+    The map is the *only* selector. An earlier build also shipped the 20-item CSS-tile
+    list beneath it, but every tile repeated a name the map already labels plus a badge
+    visible only as a fill colour, so it was ~460px of duplication and exactly the
+    "competing primary navigation" the phase plan warned against. Cutting it is why each
+    path now carries the per-LGA text itself, via the same `data-lga` contract the core
+    script already speaks, so `renderLgaDetail` needed no changes.
+
+    `role="group"`, not `role="img"`: an image role makes assistive technology treat the
+    whole SVG as one picture and hide the children, which would make 20 focusable shapes
+    unreachable. A labelled group exposes the paths as the 20 items they are.
+    """
+    coverage = {row.get("lga"): row for row in lga_rows}
+    shapes = []
+    labels = []
+    for lga in LGAS:
+        shape = paths["lgas"][lga]
+        row = coverage.get(lga, {})
+        specific = row.get("coverage_type") == "lga_specific"
+        scope_en = "LGA-specific evidence" if specific else "Statewide evidence"
+        scope_ha = "Tabbacin LGA" if specific else "Tabbacin jihada"
+        classes = "lga-shape lga-specific" if specific else "lga-shape"
+        shapes.append(
+            f'<path class="{classes}" data-lga="{esc(lga)}" tabindex="0" role="button" '
+            f'd="{shape["d"]}" '
+            f'data-summary="{esc(row.get("achievement_summary", ""))}" '
+            f'data-summary-ha="{esc(row.get("achievement_summary_ha") or row.get("achievement_summary", ""))}" '
+            f'data-promise="{esc(row.get("apm_promise", ""))}" '
+            f'data-promise-ha="{esc(row.get("apm_promise_ha") or row.get("apm_promise", ""))}" '
+            f'data-result="{esc(row.get("next_result", ""))}" '
+            f'data-result-ha="{esc(row.get("next_result_ha") or row.get("next_result", ""))}" '
+            f'{aria(f"{lga}, {scope_en}. Select this area.", f"{lga}, {scope_ha}. Zaɓi wannan area.")}>'
+            f'<title>{esc(lga)}</title></path>'
+        )
+        labels.append(
+            f'<text class="lga-map-label" x="{shape["label_x"]}" y="{shape["label_y"]}">'
+            f'{esc(lga)}</text>'
+        )
+    return (
+        f'<svg class="lga-map" viewBox="{esc(paths["viewbox"])}" role="group" '
+        f'{aria("Map of the 20 Bauchi local government areas. Indicative operational boundaries, not official. Select an area to load its evidence.",
+               "Taswirar LGA 20 na Bauchi. Makiyawa masu aiki ne, ba makiyawa na gwaji ba. Zaɓi wani area don duba bayaninsa.")}>'
+        f'<g class="lga-shapes">{"".join(shapes)}</g>'
+        f'<g class="lga-map-labels" aria-hidden="true">{"".join(labels)}</g>'
+        "</svg>"
+    )
+
+
+def lga_map_legend(lga_rows):
+    """Explains the two fills now that the tile badges are gone.
+
+    Derived from the data, not hardcoded: every LGA currently has `lga_specific` coverage, so
+    a fixed two-entry legend would advertise a "Statewide" state that never occurs. The
+    entry disappears by itself the day one LGA's row actually says `statewide`.
+    """
+    present = {row.get("lga"): row.get("coverage_type") for row in lga_rows}
+    if not any(value != "lga_specific" for value in present.values()):
+        return (
+            '<div class="lga-map-legend"><span class="lga-legend-item">'
+            '<span class="lga-legend-swatch lga-legend-specific"></span>'
+            + copy("LGA-specific evidence", "Tabbacin LGA")
+            + "</span></div>"
+        )
+    return (
+        '<div class="lga-map-legend">'
+        '<span class="lga-legend-item"><span class="lga-legend-swatch lga-legend-specific"></span>'
+        + copy("LGA-specific evidence", "Tabbacin LGA")
+        + '</span><span class="lga-legend-item"><span class="lga-legend-swatch"></span>'
+        + copy("Statewide evidence", "Tabbacin jihada")
+        + "</span></div>"
+    )
+
+
+def lga_map_figure(paths, lga_rows, sources):
+    """The map plus its licence credit and the caveats that make it honest."""
+    return (
+        '<figure class="lga-map-figure">'
+        + lga_map_svg(paths, lga_rows)
+        + '<figcaption class="lga-map-credit">'
+        + copy("Indicative operational boundaries, not gazetted. Simplified for display.",
+               "Makiyawa masu aiki ne, ba a tabbatar da su da dokof a cikin dokofa ba. An sauƙaƙe don nunawa.")
+        + f'<span class="lga-map-caveat-text" {attr(paths["caveat"], paths["caveat_ha"])}>'
+        + esc(paths["caveat"])
+        + "</span>"
+        + copy("Licence and credit", "Laiƙa da zance")
+        + f'<span class="lga-map-licence-text" {attr(paths["attribution"], paths["attribution_ha"])}>'
+        + esc(paths["attribution"])
+        + "</span>"
+        + "</figcaption></figure>"
+    )
+
+
+def lga_ra_list(ward_rows):
+    """Registration areas for the selected LGA, from `lga_wards.csv`.
+
+    These are electoral registration-area labels, not council wards, and `lga_wards.csv`
+    carries no coordinates. None are invented, so the list is explicitly labelled as not
+    geo-located and is never drawn on the map.
+    """
+    grouped = {}
+    for row in ward_rows:
+        grouped.setdefault(row.get("lga", ""), []).append(row)
+    blocks = []
+    for lga in LGAS:
+        rows = grouped.get(lga, [])
+        items = "".join(f"<li>{esc(row.get('ra_name_display') or row.get('ra_name_source', ''))}</li>"
+                        for row in rows)
+        blocks.append(
+            f'<div class="ra-list" data-ra-lga="{esc(lga)}" hidden>'
+            f'<div class="detail-label">'
+            + copy("Registration areas · not geo-located",
+                   "Wurare ƙaura zaye · ba a tantance su a geolocation ba")
+            + "</div>"
+            f'<ul class="ra-items">{items}</ul></div>'
+        )
+    return "".join(blocks)
 
 
 def request_form_section(ward_rows):
@@ -931,6 +1086,13 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;b
 a{color:inherit}
 .shell{width:min(1240px,calc(100% - 40px));margin:auto}
 .topbar{position:absolute;z-index:2;top:0;left:0;right:0;color:#fff;padding:22px 0}
+/* Party identity watermark. Decorative only: aria-hidden, not focusable, and never
+   intercepting a click. z-index 1 puts it above the page's own section backgrounds but
+   below the topbar (z-index 2), so it reads as texture rather than as an overlay. The
+   emblem is kept faint enough to stay clear of body text at full contrast. */
+.watermark{position:fixed;inset:0;z-index:1;overflow:hidden;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.watermark img{width:min(62vmin,460px);height:auto;opacity:.05;max-width:none}
+@media print{.watermark{display:none}}
 .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
 /* The emblem already has a transparent background, so it needs no colour filter.
@@ -1028,18 +1190,37 @@ a{color:inherit}
 .lga-section::before{content:"";position:absolute;width:600px;height:600px;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-180px;top:-260px;box-shadow:0 0 0 50px rgba(255,255,255,.025),0 0 0 100px rgba(255,255,255,.02)}
 .lga-section .section-head h2{color:#fff}
 .lga-section .section-head p{color:rgba(255,255,255,.65)}
-.lga-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative;z-index:1}
-.lga-tile{text-align:left;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;padding:18px 16px;min-height:105px;cursor:pointer;font:inherit;position:relative;transition:background .2s,transform .2s,border .2s}
-.lga-tile:hover,.lga-tile.active{background:rgba(216,155,49,.17);border-color:var(--gold);transform:translateY(-3px)}
-.lga-tile.lga-specific{border-color:rgba(216,155,49,.62);background:rgba(216,155,49,.08)}
-.lga-tile.lga-specific .lga-dot{box-shadow:0 0 0 4px rgba(216,155,49,.16)}
-.lga-tile strong{display:block;font-family:Georgia,serif;font-size:1.25rem;font-weight:400}
-.lga-tile small{display:block;color:rgba(255,255,255,.55);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-top:20px}
-.lga-dot{display:block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-bottom:12px}
-.lga-detail{margin-top:26px;border:1px solid rgba(255,255,255,.2);padding:25px;background:rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:30px;align-items:start}
-.lga-detail h3{font-family:Georgia,serif;font-size:2rem;font-weight:400;margin:0 0 8px}
+.lga-detail{margin-top:26px;border:1px solid rgba(255,255,255,.2);padding:25px;background:rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:30px;align-items:start;flex-wrap:wrap}
+.lga-detail h3{font-family:Georgia,serif;font-size:2rem;font-weight:400;margin:0 0 8px;min-height:1.1em}
 .lga-detail p{color:rgba(255,255,255,.66);font-size:14px;max-width:620px;margin:0}
 .lga-detail .detail-label{color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:.15em;white-space:nowrap}
+.lga-detail-head{flex:1 1 260px;min-width:0}
+.evidence-rows{flex:1 1 320px;min-width:0;margin:0;display:grid;gap:16px}
+.evidence-row dt{color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:.15em;margin-bottom:5px}
+.evidence-row dd{margin:0;font-size:14px;line-height:1.55;color:rgba(255,255,255,.82)}
+.lga-map-legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:12px;font-size:11px;color:rgba(255,255,255,.62)}
+.lga-legend-item{display:flex;align-items:center;gap:7px}
+.lga-legend-swatch{width:13px;height:13px;flex:none;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.35)}
+.lga-legend-swatch.lga-legend-specific{background:rgba(216,155,49,.45);border-color:rgba(216,155,49,.8)}
+.lga-map-layout{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:start;position:relative;z-index:1;margin-top:8px}
+.lga-map-column{position:sticky;top:96px}
+.lga-map-figure{margin:0}
+.lga-map{width:100%;height:auto;display:block;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.16)}
+.lga-shape{fill:rgba(255,255,255,.09);stroke:var(--navy);stroke-width:1.6;stroke-linejoin:round;cursor:pointer;transition:fill .18s,stroke .18s}
+.lga-shape.lga-specific{fill:rgba(216,155,49,.2)}
+.lga-shape:hover{fill:rgba(216,155,49,.42)}
+.lga-shape.active{fill:var(--gold);stroke:#fff;stroke-width:2.4}
+.lga-shape:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.lga-map-label{fill:rgba(255,255,255,.82);font-family:Georgia,serif;font-size:19px;text-anchor:middle;dominant-baseline:middle;pointer-events:none;paint-order:stroke;stroke:rgba(11,38,60,.85);stroke-width:3px;stroke-linejoin:round}
+.lga-map-credit{display:block;margin-top:12px;font-size:11px;line-height:1.55;color:rgba(255,255,255,.55)}
+.lga-map-credit span{display:block}
+.lga-map-credit .lga-map-caveat-text{color:rgba(255,255,255,.72);margin-top:3px}
+.lga-map-credit .lga-map-licence-text{color:rgba(255,255,255,.45);margin-top:7px}
+.lga-panel .lga-detail{margin-top:0}
+.ra-list{margin-top:18px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);padding:16px 18px}
+.ra-list .detail-label{color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:.15em}
+.ra-items{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+.ra-items li{font-size:12px;color:rgba(255,255,255,.7);line-height:1.5}
 .governance-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:start}
 .governor-card{background:var(--navy);color:#fff;padding:16px;box-shadow:var(--shadow);position:relative}
 .governor-card img{width:100%;height:440px;object-fit:cover;object-position:center top;display:block;filter:saturate(.8)}
@@ -1164,8 +1345,8 @@ a{color:inherit}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 @media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
 @media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}}
-@media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-grid{grid-template-columns:repeat(4,1fr)}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
-@media (max-width:760px){.shell{width:min(100% - 28px,1240px)}.hero{min-height:auto;padding-top:112px;padding-bottom:54px}.hero-grid,.intro-grid,.governance-grid{grid-template-columns:1fr}.hero h1{font-size:clamp(3.2rem,16vw,5.5rem)}.portrait-wrap{min-height:390px;margin-top:20px}.portrait-wrap::before{width:280px;height:280px;right:4%}.portrait-wrap::after{width:320px;height:400px;right:1%}.portrait{max-height:420px}.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}.stat:nth-child(2){border-right:0}.section{padding:70px 0}.section-head{display:block}.section-head p{margin-top:18px}.progress-path{grid-template-columns:1fr;padding:16px}.path-step{min-height:0;padding:14px 16px 24px}.path-step:not(:last-child)::after{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}.arrow-head{padding:15px 16px}.arrow-path{display:block;padding:14px}.path-node{margin-bottom:10px;padding:16px}.path-arrow{padding:0;height:24px;transform:rotate(90deg)}.lga-grid{grid-template-columns:1fr 1fr}.lga-detail{display:block}.lga-detail .detail-label{display:block;margin-bottom:12px}.governor-card img{height:340px}.agenda-grid{grid-template-columns:1fr 1fr}.source-list{grid-template-columns:1fr}.footer-inner{display:block}.deerflow{display:inline-block;margin-top:20px}}"""
+@media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-map-layout{grid-template-columns:1fr;gap:22px}.lga-map-column{position:static}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
+@media (max-width:760px){.shell{width:min(100% - 28px,1240px)}.hero{min-height:auto;padding-top:112px;padding-bottom:54px}.hero-grid,.intro-grid,.governance-grid{grid-template-columns:1fr}.hero h1{font-size:clamp(3.2rem,16vw,5.5rem)}.portrait-wrap{min-height:390px;margin-top:20px}.portrait-wrap::before{width:280px;height:280px;right:4%}.portrait-wrap::after{width:320px;height:400px;right:1%}.portrait{max-height:420px}.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}.stat:nth-child(2){border-right:0}.section{padding:70px 0}.section-head{display:block}.section-head p{margin-top:18px}.progress-path{grid-template-columns:1fr;padding:16px}.path-step{min-height:0;padding:14px 16px 24px}.path-step:not(:last-child)::after{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}.arrow-head{padding:15px 16px}.arrow-path{display:block;padding:14px}.path-node{margin-bottom:10px;padding:16px}.path-arrow{padding:0;height:24px;transform:rotate(90deg)}.lga-detail{display:block}.lga-detail .detail-label{display:block;margin-bottom:12px}.governor-card img{height:340px}.agenda-grid{grid-template-columns:1fr 1fr}.source-list{grid-template-columns:1fr}.footer-inner{display:block}.deerflow{display:inline-block;margin-top:20px}}"""
 
 SHELL_CSS = """
 /* --- shared multi-page shell ------------------------------------------- */
@@ -1215,6 +1396,16 @@ SHELL_CSS = """
 .nav-cards{grid-template-columns:1fr}
 .page-hero{padding:40px 0 46px}
 .nav-card{padding:20px}
+/* The topbar row is brand + language control + menu button. At 375px the three together
+   overflowed the shell by 27px and forced the whole page to scroll sideways. Tighten the
+   gaps and the type rather than dropping the "Language" label, which is what makes the
+   control self-describing. */
+.topbar-inner{gap:10px}
+.brand{gap:8px}
+.lang{gap:6px}
+.lang-label{font-size:9px;letter-spacing:.04em;gap:4px}
+.lang button{padding:5px 7px}
+.navmenu-toggle{font-size:10px;letter-spacing:.06em;padding:8px 10px}
 }
 """
 
@@ -1226,7 +1417,7 @@ const root=document.documentElement;
 let currentLanguage='en';
 let selectedLga='';
 let renderFeatured=()=>{};
-const renderLgaDetail=()=>{if(!selectedLga)return;const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const titleEl=document.getElementById('selected-lga');const copyEl=document.getElementById('selected-copy');if(!titleEl||!copyEl)return;const summary=currentLanguage==='ha'?btn.dataset.summaryHa:btn.dataset.summary;const promise=currentLanguage==='ha'?btn.dataset.promiseHa:btn.dataset.promise;const result=currentLanguage==='ha'?btn.dataset.resultHa:btn.dataset.result;titleEl.textContent=selectedLga;copyEl.textContent=currentLanguage==='ha'?selectedLga+': '+summary+' APM: '+promise+' Sami na gaba: '+result:selectedLga+': '+summary+' APM: '+promise+' Next result: '+result;};
+const renderLgaDetail=()=>{const titleEl=document.getElementById('selected-lga');if(!titleEl)return;const hintEl=document.getElementById('selected-hint');const rowsEl=document.getElementById('selected-rows');const evidenceEl=document.getElementById('selected-evidence');const promiseEl=document.getElementById('selected-promise');const resultEl=document.getElementById('selected-result');if(!evidenceEl||!promiseEl||!resultEl)return;if(!selectedLga){if(hintEl)hintEl.hidden=false;if(rowsEl)rowsEl.hidden=true;titleEl.textContent='';evidenceEl.textContent='';promiseEl.textContent='';resultEl.textContent='';return;}const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const hausa=currentLanguage==='ha';titleEl.textContent=selectedLga;evidenceEl.textContent=(hausa?btn.dataset.summaryHa:btn.dataset.summary)||'—';promiseEl.textContent=(hausa?btn.dataset.promiseHa:btn.dataset.promise)||'—';resultEl.textContent=(hausa?btn.dataset.resultHa:btn.dataset.result)||'—';if(hintEl)hintEl.hidden=true;if(rowsEl)rowsEl.hidden=false;};
 const LANGUAGE_KEY='apm-lang';
 const readStoredLanguage=()=>{try{const stored=window.localStorage.getItem(LANGUAGE_KEY);return stored==='ha'||stored==='en'?stored:null;}catch(error){return null;}};
 const storeLanguage=(lang)=>{try{window.localStorage.setItem(LANGUAGE_KEY,lang);}catch(error){/* blocked storage: the toggle still works for this page */}};
@@ -1234,11 +1425,21 @@ const setLanguage=(lang,persist=true)=>{currentLanguage=lang;root.lang=lang;docu
 document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',currentLanguage==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});
 document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
 const storedLanguage=readStoredLanguage();if(storedLanguage)setLanguage(storedLanguage,false);
-document.querySelectorAll('[data-lga]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-lga]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');selectedLga=btn.dataset.lga;renderLgaDetail();}));
+document.querySelectorAll('[data-lga]').forEach(btn=>{const select=()=>{document.querySelectorAll('[data-lga]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');selectedLga=btn.dataset.lga;renderLgaDetail();if(typeof lgaSelected==='function')lgaSelected(selectedLga);};btn.addEventListener('click',select);if(btn.tagName.toLowerCase()==='path'){btn.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '||event.key==='Spacebar'){event.preventDefault();select();}});}});
 """
 
 SCRIPT_INDEX = r"""
 document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const filter=btn.dataset.filter;document.querySelectorAll('.arrow-card').forEach(card=>card.hidden=filter!=='all'&&card.dataset.sector!==filter);}));
+"""
+
+# Atlas-only. The core script owns selection: it binds every `[data-lga]` element, and the
+# map paths now carry that same attribute, so the core click/keyboard handler drives the map
+# with no help. All that is left here is the one thing the map cannot do for itself -- reveal
+# the selected area's registration areas. `lgaSelected` is declared here and called by the
+# core handler through a `typeof` guard, so pages without this script are unaffected.
+ATLAS_SCRIPT = r"""
+const atlasRaBlocks=Array.from(document.querySelectorAll('[data-ra-lga]'));
+const lgaSelected=lga=>{atlasRaBlocks.forEach(block=>{block.hidden=block.dataset.raLga!==lga});};
 """
 
 PAGE_NAV = (
@@ -1337,6 +1538,27 @@ def site_footer(built):
         '</div></footer>')
 
 
+def watermark():
+    """A faint APM emblem behind the content of every page.
+
+    Decorative and identity-only, so it is `aria-hidden` and must never be announced or
+    focusable. It sits at `z-index: 1`, which paints it above the page's own section
+    backgrounds but below `.topbar` (z-index 2) -- so it reads as paper texture rather than
+    as an overlay sitting on top of the navigation. `pointer-events: none` keeps every click
+    on the page, including the map shapes, landing on the real control underneath.
+
+    ⚠️ This reuses the already-approved `apm-emblem.png`, so no new asset and no new rights
+    are introduced -- but it does make that emblem far more prominent, and its rights record
+    is still unratified. See `HANDOFF.md` §21.
+    """
+    return (
+        '<div class="watermark" aria-hidden="true">'
+        '<img src="assets/brand/apm-emblem.png" alt="" width="274" height="314" '
+        'loading="eager" decoding="async">'
+        "</div>"
+    )
+
+
 def document(*, slug, title, description, body, scripts="", built=""):
     """Assemble one page. The CSS is concatenated, never f-string interpolated, so
     the stylesheet's braces are never treated as format placeholders."""
@@ -1350,6 +1572,7 @@ def document(*, slug, title, description, body, scripts="", built=""):
         '<style>' + SITE_CSS + SHELL_CSS + '</style>\n'
         '</head>\n'
         f'<body class="page page--{esc(slug)}">\n'
+        f'{watermark()}\n'
         f'{body}\n'
         f'{site_footer(built)}\n'
         '<script>' + SCRIPT_CORE + scripts + '</script>\n'
@@ -1484,23 +1707,42 @@ def body_achievements(ctx):
 
 def body_atlas(ctx):
     header = subpage_open("atlas")
+    paths = load_lga_paths()
+    validate_lga_paths(paths, ctx["lga_rows"])
     section = (
         '<section class="section lga-section" id="atlas"><div class="shell"><div class="section-head"><div>'
         f'<div class="eyebrow">{copy("20 local government areas", "LGA 20")}</div>'
         f'<h2>{copy("A 20-LGA evidence queue for Bauchi.", "Bita na bayanai ga LGA 20 a Bauchi.")}</h2></div>'
         f'<p>{copy("All 20 LGAs have one curated source-backed evidence row. This is a starting evidence model, not comprehensive sector coverage for every community.", "Yanzu dukan LGA 20 suna da jimayi na bayanai mai goyon bayan sauro. Wannan ba cikakken bayanan kowane bangare ba.")}</p>'
-        '</div><div class="lga-grid">' + lga_atlas(ctx["lga_rows"]) + '</div>'
-        '<div class="lga-detail" id="lga-detail"><div>'
-        f'<div class="detail-label">{copy("Selected area · statewide evidence start", "Wanda za zaɓi · ci gaban jihada")}</div>'
-        '<h3 id="selected-lga">Bauchi</h3>'
-        '<p id="selected-copy" aria-live="polite" data-en="Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified." '
-        'data-ha="Zaɓi LGA don duba bita don bayanai. Ƙa bayanan farko ana sune a matsayin ci gaban jihada yayin da ake tabbatar da bayanan LGA.">Choose an LGA to preview the evidence queue. The first public records are being tracked as statewide progress while LGA-specific project evidence is verified.</p>'
-        f'</div><span class="detail-label" {attr("20 LGAs · 1 evidence model", "LGA 20 · 1 tsarin tabbaci")}>20 LGAs · 1 evidence model</span>'
-        '</div></div></section>')
+        '</div><div class="lga-map-layout">'
+        '<div class="lga-map-column">' + lga_map_figure(paths, ctx["lga_rows"], ctx["sources"])
+        + lga_map_legend(ctx["lga_rows"]) + "</div>"
+        '<div class="lga-panel">'
+        '<div class="lga-detail" id="lga-detail">'
+        '<div class="lga-detail-head">'
+        f'<div class="detail-label">{copy("Selected area", "Wanda za zaɓi")}</div>'
+        '<h3 id="selected-lga"></h3>'
+        '<p id="selected-hint" data-en="Select an area on the map to read what is recorded for it. The first public records are tracked as statewide progress while LGA-specific project evidence is verified." '
+        'data-ha="Zaɓi wani area a taswirar don karanta abin da aka record shi. Bayanan farko ana sune a matsayin ci gaban jihada yayin da ake tabbatar da bayanan LGA.">Select an area on the map to read what is recorded for it. The first public records are tracked as statewide progress while LGA-specific project evidence is verified.</p>'
+        "</div>"
+        '<dl class="evidence-rows" id="selected-rows" hidden>'
+        '<div class="evidence-row"><dt>' + copy("Recorded evidence", "Bayanai da aka tabbata") + '</dt>'
+        '<dd id="selected-evidence"></dd></div>'
+        '<div class="evidence-row"><dt>' + copy("APM commitment", "Alkawarin APM") + '</dt>'
+        '<dd id="selected-promise"></dd></div>'
+        '<div class="evidence-row"><dt>' + copy("Next result to measure", "Sami na gaba za auna") + '</dt>'
+        '<dd id="selected-result"></dd></div>'
+        "</dl>"
+        f'<span class="detail-label" {attr("20 LGAs · 1 evidence model", "LGA 20 · 1 tsarin tabbaci")}>20 LGAs · 1 evidence model</span>'
+        '</div>'
+        + lga_ra_list(ctx["ward_rows"]) +
+        '</div></div>'
+        '</div></section>'
+    )
     return (header + page_hero("LGA atlas", "Taswirar LGA",
                       "Twenty local government areas.", "LGA ashirin.",
-                      "Every Bauchi LGA with its source-backed evidence row. Select an area to read what is recorded for it.",
-                      "Kowane LGA na Bauchi tare da jimayin bayanai mai goyon bayan sauro. Zaɓi wani area don karanta abin da aka record shi.",
+                      "Every Bauchi LGA with its source-backed evidence row. Select an area on the map to read what is recorded for it.",
+                      "Kowane LGA na Bauchi tare da jimayin bayanai mai goyon bayan sauro. Zaɓi wani area a taswirar don karanta abin da aka record shi.",
                       "LGA atlas", "Taswirar LGA")
             + '<main id="main">' + section + "</main>")
 
@@ -1659,6 +1901,7 @@ def load_context():
             '</div><div class="indicator-grid">' + indicator_cards(indicator_rows, sources) +
             '</div></div></section>'),
         "request_section": request_form_section(ward_rows),
+        "ward_rows": ward_rows,
         "achievement_count": len(achievement_rows),
         "promise_count": len(promise_rows),
         "built": datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y · %H:%M UTC"),
@@ -1669,6 +1912,7 @@ PAGE_SCRIPTS = {
     "index": lambda: SCRIPT_INDEX,
     "achievements": lambda: FEATURED_SCRIPT,
     "poll": lambda: REQUEST_SCRIPT,
+    "atlas": lambda: ATLAS_SCRIPT,
 }
 
 

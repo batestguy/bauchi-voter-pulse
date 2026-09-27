@@ -46,12 +46,25 @@ class GeneratedPageTests(unittest.TestCase):
         titles, descriptions = set(), set()
         for slug in PAGE_SLUGS:
             html = read(slug)
-            titles_found = re.findall(r"<title>(.*?)</title>", html)
-            descs_found = re.findall(r'<meta name="description" content="(.*?)">', html)
+            # Scope to <head>. The atlas map carries SVG <title> elements so each outline
+            # has a native hover tooltip, and that is a different element from the
+            # document title -- counting them as titles made this guard fire on correct
+            # markup.
+            head = re.search(r"<head>(.*?)</head>", html, re.S)
+            if head is None:
+                self.fail(f"{slug} must have a <head>")
+            titles_found = re.findall(r"<title>(.*?)</title>", head.group(1))
+            descs_found = re.findall(r'<meta name="description" content="(.*?)">', head.group(1))
             self.assertEqual(len(titles_found), 1, f"{slug} must have exactly one title")
             self.assertEqual(len(descs_found), 1, f"{slug} must have exactly one description")
             self.assertGreater(len(titles_found[0]), 5)
             self.assertGreater(len(descs_found[0]), 20)
+            # A second document title outside <head> would silently override the first.
+            outside_svg = re.sub(r"<svg\b.*?</svg>", "", html[head.end():], flags=re.S)
+            self.assertNotIn(
+                "<title>", outside_svg,
+                f"{slug} has a <title> outside <head> that is not inside an <svg>",
+            )
             titles.add(titles_found[0])
             descriptions.add(descs_found[0])
         self.assertEqual(len(titles), len(PAGE_SLUGS), "titles must be unique per page")
@@ -201,13 +214,61 @@ class ScriptRoutingTests(unittest.TestCase):
             with self.subTest(page=slug):
                 self.assertEqual("data-filter" in html, slug == "index")
 
-    def test_lga_tile_binding_ships_everywhere_but_is_inert_off_atlas(self):
+    def test_lga_binding_ships_everywhere_but_is_inert_off_atlas(self):
         # renderLgaDetail is on the core script and null-guarded, so it is safe on
-        # pages with no [data-lga] buttons.
+        # pages with no [data-lga] elements.
         for slug in PAGE_SLUGS:
             js = "\n".join(re.findall(r"<script>(.*?)</script>", read(slug), re.S))
             with self.subTest(page=slug):
-                self.assertIn("if(!titleEl||!copyEl)return;", js)
+                self.assertIn("if(!titleEl)return;", js)
+                self.assertIn("if(!evidenceEl||!promiseEl||!resultEl)return;", js)
+
+    def test_stylesheet_braces_balance(self):
+        # A missing `}` inside a single-line @media block does not fail loudly: the rest
+        # of the stylesheet is silently swallowed into the media query, so the rules stop
+        # applying at desktop widths. The page still renders, which is what makes it
+        # expensive -- it cost a broken hero and topbar on every page before this test
+        # existed. CSS in render.py is hand-edited, so check it on every run.
+        from src.dashboard import render
+
+        for name, css in (("SITE_CSS", render.SITE_CSS),
+                          ("SHELL_CSS", render.SHELL_CSS)):
+            with self.subTest(stylesheet=name):
+                self.assertEqual(
+                    css.count("{"), css.count("}"),
+                    f"{name} has unbalanced braces: "
+                    f"{css.count('{')} open, {css.count('}')} close. Everything after the "
+                    "missing brace is being parsed inside the wrong at-rule.",
+                )
+
+    def test_every_media_query_starts_at_the_top_level(self):
+        """A missing `}` in one at-rule must not swallow the rules that follow it.
+
+        The real defect this guards: a single-line `@media (max-width:1050px){...}` lost the
+        brace closing its first rule, so the rest of the stylesheet was parsed *inside* that
+        media query and stopped applying at desktop widths. Total brace count stayed
+        plausible and the pages still rendered, just wrong.
+        """
+        from src.dashboard import render
+
+        for name, css in (("SITE_CSS", render.SITE_CSS),
+                          ("SHELL_CSS", render.SHELL_CSS)):
+            depth = 0
+            for match in re.finditer(r"@media|(\{)|(\})", css):
+                if match.group(0) == "@media":
+                    with self.subTest(stylesheet=name, at_rule=css[match.start():match.start() + 40]):
+                        self.assertEqual(
+                            depth, 0,
+                            "an @media query began while a previous rule or at-rule was "
+                            f"still open (depth {depth}); its contents have swallowed the "
+                            f"stylesheet from here: {css[match.start():match.start() + 60]!r}",
+                        )
+                elif match.group(0) == "{":
+                    depth += 1
+                else:
+                    depth -= 1
+            with self.subTest(stylesheet=name):
+                self.assertEqual(depth, 0, f"{name} ends inside an unclosed block")
 
     def test_every_page_script_parses(self):
         node = shutil.which("node")

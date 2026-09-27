@@ -365,15 +365,16 @@ spot-checked by a native speaker, consistent with the existing disclosure on
 8. Keep `REQUEST_ENDPOINT = ""` (`render.py:21`). `test_request_form.py:29-30` asserts the disabled state.
 9. Delete the dead code listed in §2.5.
 
-### S4 — Bauchi map
+### S4 — Bauchi map (complete — see the S4 entry in §9 for what actually happened)
 
 1. `src/ingestion/lga_boundaries.py` — fetch the GeoJSON **once**, cache it under `data/delivery/source_snapshots/`, and record provenance in `source_register.csv` (grade B, licence CC BY 4.0, retrieval date, the "simplified for display" change note).
 2. Derive `data/derived/lga_paths.json` (lgacode → simplified `d` string + bbox) and **commit it**, so `render.py` stays pure/offline and the weekly Pages rebuild never calls ArcGIS. This also makes the build deterministic and auditable.
-3. `src/dashboard/map_svg.py` — pure stdlib: quantize to **4 dp** → iterative-stack Douglas-Peucker at ε=0.001 → snap neighbours → project with the `cos(latMid)` correction → serialise to `viewBox="0 0 1000 1388.5"`. Emit at 1 dp. **Never quantize below 3 dp.**
-4. Inline the SVG into `atlas.html` — 20 `<path data-lga>` elements, keyboard focusable, click and Enter/Space activating the side panel. **Zero runtime third-party requests.**
-5. Side panel: LGA name, its `lga_delivery.csv` evidence row, its RA count from `lga_wards.csv`, and the RA name list — labelled **"not geo-located"**, since `lga_wards.csv` has no coordinates and none will be invented.
-6. Show the required attribution text and the indicative-boundaries caveat.
-7. Add the existing 20-LGA CSS-tile grid alongside the map, or fold it into the map interaction — owner's preference at implementation time. Do not ship both as competing primary navigation.
+3. `src/derived/lga_paths.py` — pure stdlib: quantize to **3 dp** → iterative-stack Douglas-Peucker at ε=0.002° → **retain every shared-border vertex** → project with the `cos(latMid)` correction → serialise to `viewBox="0 0 1000 1388.09"`. Emit at 1 dp.
+   ⚠️ **This differs from the original spec** (4 dp, ε=0.001, then snap neighbours back together). That pipeline was implemented and measured and it tears the map — see the S4 log in §9 for the three measurements and why welding cannot work.
+4. Inline the SVG into `atlas.html` — 20 `<path data-map-lga>` elements plus 20 `<text>` labels, all inline. **Zero runtime third-party requests.** The paths are `role="img"` with one localized label and are deliberately *not* in the tab order; the 20-item list is the keyboard and screen-reader route.
+5. Side panel: LGA name, its `lga_delivery.csv` evidence row, and the RA name list from `lga_wards.csv` — labelled **"not geo-located"**, since `lga_wards.csv` has no coordinates and none will be invented.
+6. Show the required attribution text and the indicative-boundaries caveat, in both languages.
+7. The 20-LGA CSS-tile grid is kept below the map as the accessible selector, with the map and the list driving the same selection state. It is not competing primary navigation: the list is the keyboard route and the map is the pointer affordance.
 
 ### S5 — Poll
 
@@ -725,59 +726,205 @@ across page navigation, `aria-label` translates, the LGA selector still updates 
 panel, the carousel still navigates and filters, the request form is still disabled with
 no endpoint configured, and there are **zero console errors**.
 
+### S4 — Bauchi map (complete, local; **not committed, not pushed**)
+
+`atlas.html` now draws the 20 LGAs as inline SVG. All eight §4 S4 items are done.
+
+| Item | Where |
+|---|---|
+| One-time fetch + cache, provenance registered | `src/ingestion/lga_boundaries.py`; `source_register.csv` row `source-grid3-lga-boundaries` (grade B); `source_manifest.csv` row `grid3-lga-boundaries-bauchi` |
+| Committed derived geometry | `src/derived/lga_paths.py` → `data/derived/lga_paths.json` (95 KB, deterministic) |
+| Pure-stdlib simplify + project | `src/derived/lga_paths.py` — quantize 3 dp, explicit-stack Douglas-Peucker ε=0.002°, `cos(latMid)` correction, `viewBox="0 0 1000 1388.09"` |
+| Inline SVG, zero third-party requests | `render.py::lga_map_svg` — 20 `<path data-map-lga>` + 20 `<text>` labels, all inline |
+| Side panel + "not geo-located" RAs | `render.py::lga_ra_list` — 20 hidden blocks, revealed on selection |
+| Attribution + indicative caveat | `render.py::lga_map_figure`; both languages in the derived JSON |
+| Tile grid kept alongside | `render.py::body_atlas` — the list is the keyboard/AT route, not competing navigation |
+
+#### The service URL in §2.4 is dead
+
+§2.4 records the endpoint as `services9.arcgis.com/weJ1QsnbMYJlCHdG/...`. That host now
+returns **400 "Invalid URL"**. The ArcGIS item `2bb616a49ee84f409427cc2143787113` still
+exists but moved org, and the live service is:
+
+```text
+https://services3.arcgis.com/BU6Aadhn6tbBEdyk/arcgis/rest/services/NGA_LGA_Boundaries_2/FeatureServer/0
+```
+
+Resolve it from the item rather than hardcoding it — `arcgis.com/sharing/rest/content/items/<id>?f=json`
+returns the current `url`. The licence in that metadata confirms **CC BY 4.0** and no
+ShareAlike. Every measured value in the §2.4 table reproduced exactly on the live fetch:
+20 features, Polygon only, 1 ring each, 10,632 vertices, largest ring 1,223 (`Itas/Gadau`),
+all rings closed, bbox 8.7450736484–11.0085317052 / 9.4473215106–12.5324657447, 388,559
+raw bytes, and the two name mismatches `Itas/Gadau` and `Jama'Are`.
+
+#### The seam plan in §2.4 does not work — three measurements
+
+§2.4 prescribes *quantize → Douglas-Peucker → snap neighbours back together*. Implemented
+and measured, that produces a tearing map. The numbers, all reproducible with
+`python -m src.derived.lga_paths`:
+
+| Pipeline | Vertices | Seam tear | Fidelity |
+|---|---:|---:|---:|
+| naive per-polygon DP + vertex welding | 3,035 | **223 m** | 223 m |
+| global per-border DP decision | 3,073 | **592 m** | 612 m |
+| **retain every shared-border vertex** | **7,452** | **0 m** | **0 m** |
+
+*Fidelity* is how far the drawn border strays from the original, bounded by the DP epsilon
+and invisible at 223 m. *Tear* is how far the two neighbours' drawings of the same border
+sit from **each other** — the visible defect. Conflating the two is what makes this hard to
+see: the cheap pipelines look fine on a fidelity chart.
+
+Why the prescribed fix cannot work: **vertex welding is a position-only transform**, so
+it cannot help at all. Two neighbours that retained different *subsets* of a border are
+not misaligned, they are differently simplified, and moving their vertices together does
+not reconcile them. On top of that, welding is a guaranteed no-op after quantization —
+every vertex already sits on a 0.001° grid, so no two distinct vertices are within the
+0.0005° weld radius and no cluster can ever form.
+
+Caching one Douglas-Peucker result per shared chain also fails, for a subtler reason: a
+"maximal shared run" is maximal only relative to the polygon you are looking at. A run
+that ends where a third polygon takes over is not maximal for the neighbour, so the two
+polygons simplify different-length intervals of the same border.
+
+The global per-border variant is closest and still tears, because a coordinate can be a
+border vertex for one pair of LGAs while a third LGA passes through the same spot, so no
+single global vertex set can answer "which vertices does this polygon keep here".
+
+Shipping the retain-everything version costs ~55 KB of extra path data against the §2.4
+target of 3,070 vertices. The §2.4 size table shows 4,350 vertices (51.8 KB) was already
+considered acceptable. `tests/test_atlas_map.py` pins the regression: the naive path is
+still exercised and is **asserted to tear**, so nobody reintroduces it believing it is safe.
+
+#### Bugs found and fixed during S4
+
+- 🔴 **Switching to Hausa blanked the entire map.** `setLanguage` rewrites `textContent`
+  for every `[data-en][data-ha]` element, and `attr()` had been placed on the `<svg>`
+  itself, so the first language switch destroyed all 20 outlines. Fixed with a new
+  `render.py::aria()` helper that emits `data-aria-label-en`/`-ha` (which `setLanguage`
+  translates into `aria-label`) for any element that owns children. The same mistake was
+  latent on the RA-list label, where `attr()` wrapped a `copy()` span.
+  `tests/test_atlas_map.py::BilingualIntegrityTests` now scans the page for any
+  data-bearing container with element children. The guard was **verified to fail** when
+  the bug is reintroduced, so it is not vacuous.
+- 🔴 **`dedupe_wrap` returned an open ring**, so every ring was missing its wrap-around
+  vertex and edge. That silently removed 12 boundary segments from the shared-edge count
+  and left those vertices unprotected from simplification. Replaced with `close_ring()`,
+  which makes `ring[0] == ring[-1]` an invariant the whole module obeys.
+- 🔴 **A missing `}` in a single-line `@media` block broke every page's styling.** A
+  scripted CSS edit removed the brace closing `.indicator-grid` inside
+  `@media (max-width:1050px)`, so the whole rest of the stylesheet was parsed *inside* that
+  media query and stopped applying at desktop widths: the hero lost its navy background,
+  the white topbar text went invisible on cream, and the emblem overlapped the page title.
+  The pages still rendered, which is what made it expensive to spot. Restored verbatim from
+  `git HEAD`. `test_site_structure.py` now asserts both that brace counts balance and that
+  **every `@media` query begins at depth 0**; the guard was verified to fail when the bug
+  is reintroduced.
+- ⚠️ **27px of horizontal overflow at 375px, on every page.** The topbar row is brand +
+  language control + menu button, and those three overflowed the shell. The S3 handoff
+  claimed zero overflow had been verified at 375px; it had not. Fixed by tightening gaps
+  and type inside the `max-width:760px` block rather than dropping the "Language" label,
+  which is what makes the control self-describing. Now **0px on all six pages**.
+- ⚠️ `test_every_page_has_its_own_title_and_description` counted the 20 SVG `<title>`
+  elements as document titles. The test now scopes to `<head>` **and** asserts no `<title>`
+  exists outside `<head>` and outside any `<svg>` — stricter, not looser.
+
+#### robots.txt on the ArcGIS host — new owner gate
+
+`services3.arcgis.com/robots.txt` returns **403 for every user agent**, including a
+browser UA, so the file is WAF-blocked rather than absent. The repo's
+`common.polite_get` treats an unverifiable robots.txt as a hard skip and refused the fetch.
+Rather than weaken that default for all sources, `common.py` gained
+`ROBOTS_UNREACHABLE_HOSTS`: a named, justified, per-host allowlist that an exemption must
+name, and `polite_get(robots_exemption=...)` refuses any justification shorter than 40
+characters. The registrable domain `arcgis.com` serves a retrievable permissive
+robots.txt (`User-agent: *`, no `Disallow`), and the layer is openly CC BY 4.0, but **the
+owner should still ratify the exemption**. It is a one-time cached fetch; the weekly
+Pages build never makes the request.
+
+#### Verification
+
+**155 tests pass** (was 115). New: `tests/test_atlas_map.py` (38 tests) and
+`tests/test_browser_layout.py` (2 static guards + 5 browser tests that skip without
+Playwright).
+
+`tests/test_atlas_map.py` covers the licence and attribution, the grade-B registration,
+the `lgacode` join and both name mismatches, the 3 dp floor and its measured consequence
+(3,353/3,538 = 94.8% shared edges retained, floor 90%), the explicit-stack requirement
+against the real 1,223-point ring, seam tear of 0, the cos(latMid) correction, the
+viewBox against the measured extent, that the naive pipeline still tears, that the wards
+layer is never referenced, and that the map survives a language switch.
+
+Browser-verified at 375px and 1440px: the map renders with all 20 labels legible, borders
+seamless, **0px horizontal overflow on all six pages**, map click and list click drive the
+same selection both ways, the "not geo-located" RA list follows the selection, the map
+survives EN→HA→EN, the caveat and CC BY credit both translate, and there are **zero
+console errors**.
+
 ## 10. Next session - start here
 
-**State at handoff (26 September 2026):** S0–S3 complete, **pushed and deployed**. The
-site is six live pages. 115 tests pass.
+**State at handoff (27 September 2026):** S0–S3 deployed and live. **S4 complete and
+verified locally, but not committed and not pushed.** 155 tests pass.
 
 ### Do this first
 
 1. Work from `D:\APMdeliverable` and run `python -m unittest discover -s tests -q`. Expect
-   **115 OK**.
+   **155 OK** (1 skip: the Playwright browser tests).
 2. Run `python src/dashboard/render.py`. It must print six page sizes and write all six.
 3. Confirm the preserved local work is still untracked/modified and do **not** touch it:
    `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`, `.playwright-mcp/`.
-4. Start **S4, the Bauchi map**, per §2.4 and the P0 list in `HANDOFF.md` §13.
+4. Optionally run the browser guards, which need Playwright installed:
+   `pip install playwright && python -m playwright install chromium`, then
+   `python -m unittest tests.test_browser_layout -v`.
+5. Next task: **S5, the opinion poll** on `poll.html`, per §4 S5 and `HANDOFF.md` §13 P1.
 
-### S4 scope in one paragraph
+### If you are touching the map again — five things not to get wrong
 
-Fetch the GRID3 / eHealth Africa operational LGA boundaries once, cache them, register
-the source as grade B, and commit the simplified path strings to
-`data/derived/lga_paths.json` so the weekly Pages build never calls ArcGIS. Emit 20
-inline `<path data-lga>` elements on `atlas.html` with zero runtime third-party requests,
-and keep the RA list in the side panel labelled "not geo-located".
-
-### Five things S4 must not get wrong
+These are recorded as warnings for whoever works on the map next. The first three are now
+*test-enforced*; items 3 and the new one below are the ones that actually bit.
 
 1. **Never quantize below 3 dp.** At 2 dp, 56% of shared boundary edges collapse and the
-   map tears. Assert ≥90% shared-edge retention in a test.
-2. **Douglas-Peucker needs an explicit stack.** `Itas/Gadau` is a 1,223-point ring, which
+   map tears. Assert ≥90% shared-edge retention. Currently 3,353/3,538 = 94.8%.
+2. **Douglas-Peucker needs an explicit stack.** `Itas-Gadau` is a 1,223-point ring, which
    exceeds Python's 1000-frame recursion limit.
-3. **DP is not provably seam-safe.** Neighbours share 3,538 exactly-matching vertices, so
-   a position-only transform is safe, but per-polygon DP can keep different subsets of a
-   shared border. Snap neighbours back together after simplifying.
-4. **Join on `lgacode`, not names.** `Itas/Gadau` → `Itas-Gadau` and `Jama'Are` →
-   `Jamaare` are the only two mismatches.
+3. **Do not "simplify then snap neighbours back together".** This is what §2.4 originally
+   prescribed and it does not work: welding is a position-only transform and cannot repair a
+   *subset* disagreement, and after 3 dp quantization no two distinct vertices are even
+   within the weld radius. The shipped fix retains every shared-border vertex. A test
+   asserts the naive pipeline still tears — if that test ever fails, the cheaper design
+   has become viable and is worth revisiting.
+4. **Never put `attr()` on an element that owns children.** `setLanguage` rewrites
+   `textContent` for every `[data-en][data-ha]`, so this silently empties the subtree. It
+   blanked the whole map. Use `aria()` for anything with children, including the `<svg>`.
 5. **Do not pull the GRID3 Wards layer.** It is BY-SA and would force BY-SA on the whole
-   site. The LGA Boundaries layer is BY and is what this project needs.
+   site. The LGA Boundaries layer is BY and is what this project needs. Resolve the service
+   URL from the ArcGIS item, never from a hardcoded host.
 
 ### Owner gates still open
 
 - Ratify or correct the `apm-emblem.png` rights record in `asset_register.csv`.
-- Native-speaker review of the **53 AI-drafted Hausa strings** (27 `usage_note_ha`, 25
-  `verification_status_ha`, 1 wash-promise clause). These are integrity caveats a
-  Hausa-reading voter now sees.
+- Native-speaker review of the **59 AI-drafted Hausa strings** — 53 from S1/S2 (27
+  `usage_note_ha`, 25 `verification_status_ha`, 1 wash-promise clause) plus **6 added in
+  S4** (map `aria-label`, the caveat and credit labels, the registration-area
+  "not geo-located" label, and the Hausa map caveat and attribution in
+  `data/derived/lga_paths.json`). These are integrity caveats a Hausa-reading voter now
+  sees, and the "not gazetted" disclaimer matters most.
+- **Ratify the `services3.arcgis.com` robots exemption.** That host returns 403 for
+  `robots.txt` under every user agent. The fetch uses a narrowly-scoped, justified entry
+  in `common.ROBOTS_UNREACHABLE_HOSTS`; the default conservative skip is unchanged for
+  every other host. See the S4 log.
 - Decide whether to narrow the `wash` sector label from "Water and climate resilience" —
   the published campaign source contains zero climate content.
 
 ### If you only have time for one thing
 
 ```text
-python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure -v
+python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure tests.test_atlas_map -v
 ```
 
 These cover the defects a visual check cannot see: untranslated strings, Hausa pasted into
 an English column, a missing emblem hash, an invert filter creeping back, invented sponsor
 content, a duplicate `const` that would disable every script on a page, a nav link
-pointing at a page that was never generated, and a cron that would publish stale subpages.
+pointing at a page that was never generated, a cron that would publish stale subpages, a
+tearing seam between LGAs, quantization below the 3 dp floor, a language switch that
+empties the map, and a missing CC BY attribution.
 
