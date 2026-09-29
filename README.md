@@ -157,9 +157,11 @@ cleared.
 The six-page split (S0–S3) and the Bauchi map (S4) have shipped. Next is **S5, the
 opinion poll** on `poll.html`, then S6 (CI and release gate) and S7 (documentation).
 
-⚠️ Both former release traps are closed and test-guarded: the weekly cron stages
-`docs/*.html` and fails if any page is missing, and the staging allowlist in
-`HANDOFF.md` §18 names all six. See `HANDOFF.md` §20.
+ℹ️ Three release traps are closed and test-guarded. The weekly cron stages `docs/*.html`
+and fails if any page is missing; the staging allowlist in `HANDOFF.md` §18 names all six;
+and the asset-authorization gate parses `asset_register.csv` with `csv.DictReader` instead
+of `awk -F,`, which had split inside quoted fields and made the cron's first scheduled run
+fail on an approved register. See `HANDOFF.md` §20.
 
 ℹ️ `services3.arcgis.com` serves **403 for `robots.txt` under every
 user agent**, so the boundary fetch carries a narrowly-scoped, explicitly justified

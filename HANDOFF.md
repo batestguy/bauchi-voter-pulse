@@ -201,11 +201,12 @@ promise rows ever share `promise_text` again.
 | `yakubu-adamu-hero.png`, `yakubu-adamu-portrait.png`, `bala-mohammed.png` | Candidate and governor imagery |
 | `achievement-*.jpg` / `.webp` (5) | Featured carousel images, source-attributed |
 
-⚠️ `apm-emblem.png` was registered as `campaign approved` by `campaign team` on
+✅ `apm-emblem.png` was registered as `campaign approved` by `campaign team` on
 26 September 2026 to unblock the build, recorded as a derived crop of the already-approved
-`apm-logo.png` with no new rights cleared. **The owner should ratify or correct that
-attribution**, since `asset_register.csv` is the rights record and
-`rebuild-pages.yml` fails closed on any row whose column 6 is not `campaign approved`.
+`apm-logo.png` with no new rights cleared. **The owner ratified that attribution on
+29 September 2026.** `asset_register.csv` is the rights record and `rebuild-pages.yml`
+fails closed on any row whose `usage_status` is not `campaign approved` or whose
+`approved_at` is empty.
 
 
 ## 3. Product Architecture
@@ -676,8 +677,9 @@ settings in GitHub if that configuration changes.
 - **224** `data-en`/`data-ha` pairs are byte-identical and **every one is legitimate**:
   electoral RA proper nouns, LGA names, the `LGA` acronym, the party motto, and numeric
   values that are genuinely identical in both languages. Zero unexplained.
-- 10 approved assets; all SHA-256 values reconcile, including `apm-emblem.png`.
-- The CI asset gate (`usage_status` in **column 6** of `asset_register.csv`) passes.
+- 11 approved assets; all SHA-256 values reconcile, including `apm-emblem.png` and the
+  contributor portrait.
+- The CI asset gate (`usage_status` read by column name from `asset_register.csv`) passes.
 - **All six** pages have a unique `<title>` and meta description, resolve every relative
   asset and nav path, and use no `../`.
 - Each heavy section appears on exactly one page: source register, request form, agenda,
@@ -1379,7 +1381,7 @@ Four things were load-bearing, and all four are now test-enforced:
 1. **The asset had to be derived, not copied.** The supplied file is 1139x1381 and 2.1 MB.
    It is cropped to a 900px square (head-and-shoulders, face centred) and resized to
    512x512 as `assets/brand/abdulkadir-ahmad-hammayo.png` — 339 KB. Its SHA-256
-   `71a879eb…` is in `asset_register.csv` with `usage_status` in **column 6** and
+   `71a879eb…` is in `asset_register.csv` with `usage_status` set and
    `approved_at` 2026-09-29, and it is listed in `ASSET_FILES` so `prepare_assets()` copies
    it into `docs/assets/brand/`. A file in `assets/` without an `ASSET_FILES` entry never
    reaches the published tree, and a register row without a matching hash fails
@@ -1497,11 +1499,51 @@ page.
 A maintainer following §18 would have staged nothing new. All six pages are now listed,
 along with `rebuild-pages.yml` and `tests/test_site_structure.py`.
 
+### ✅ Trap 3 — the asset gate read the CSV with `awk` (found 29 September 2026)
+
+This one was live for a week and nobody saw it, because the failure it caused is not
+visible on the site.
+
+The gate was:
+
+```bash
+awk -F, 'NR > 1 && $6 != "campaign approved" { bad = 1 } END { exit bad }' data/delivery/asset_register.csv
+```
+
+`awk -F,` splits on **every** comma, including the commas inside quoted CSV fields. The
+`description` and `approval_note` columns are full of them, so on any such row field 6 is
+not `usage_status` at all — it is the sha256:
+
+| Row | `awk` field 6 | Correct value |
+|---|---|---|
+| `apm-logo.png` | `campaign approved` | `campaign approved` |
+| `apm-emblem.png` | `c78a653a…8c8c` | `campaign approved` |
+| `abdulkadir-ahmad-hammayo.png` | `71a879eb…8a1c` | `campaign approved` |
+
+The derived `apm-emblem.png` row, added on 26 September, is the one that broke it. The
+gate started rejecting a **fully approved** register, so run `36424348032` on 28 September
+— the weekly cron's first and only scheduled run — failed with:
+
+```text
+##[error]Every campaign asset must be approved before public Pages publication.
+```
+
+The site looked fine throughout, because `docs/` is a tracked tree and Pages deploys on
+push. The cron's job is to regenerate and commit the pages to catch drift, and that job
+had never once run.
+
+The gate now parses with `csv.DictReader` and looks `usage_status` up **by name**, which
+is what it always meant to do. Five tests cover it in `ReleaseTrapTests`, including two
+that break-test it in opposite directions — a genuinely unapproved row must fail, and an
+approved register must pass — so the fix cannot become a check that never fires.
+
+**The lesson, and it generalises:** the two S3 traps were both *staging* problems and both
+would have shipped stale pages silently. This third one was a *validation* problem that
+failed closed, which is safer, but only because someone read a red build. A cron that has
+never run successfully is a cron that has never worked. Check the run list.
+
 ### Still true after S3
 
-- `rebuild-pages.yml` validates assets with `awk -F, 'NR > 1 && $6 != "campaign
-  approved"'`. That is **column-position coupled**; any new asset row must have
-  `usage_status` in exactly column 6 or CI fails closed.
 - A duplicate `const` in any page's inline script is a `SyntaxError` that disables every
   handler on that page while the HTML still renders. All six pages are now parsed with
   `node --check`, and a duplicate top-level declaration detector runs per page.
@@ -1514,7 +1556,7 @@ along with `rebuild-pages.yml` and `tests/test_site_structure.py`.
 A new maintainer should be able to answer “yes” to each question:
 
 - [ ] Can I render the live product locally and get all six pages?
-- [ ] Do I know the live site does **not** yet have the map, and that S4 is uncommitted?
+- [ ] Do I know the map is live, and that the weekly cron only regenerates the pages?
 - [ ] Can I explain why the two build-required map data files must be committed?
 - [ ] Can I explain the four-step narrative model?
 - [ ] Can I identify the source register, manifest, review queue and curated tables?
@@ -1546,7 +1588,8 @@ A new maintainer should be able to answer “yes” to each question:
       written, and that they are still not native-speaker translated?
 - [ ] Can I name the credited contributor and state that nothing around his name was
       invented?
-- [ ] Do I know that the two release-breaking traps in §20 are closed and test-guarded?
+- [ ] Do I know the three release traps in §20 are closed and test-guarded, and that the
+      third one (the `awk` asset gate) made the weekly cron fail on its first run?
 - [ ] Do I have a next-step list that does not mix current-product work with
       legacy evaluation work?
 

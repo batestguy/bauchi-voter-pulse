@@ -12,7 +12,9 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -298,7 +300,14 @@ class ScriptRoutingTests(unittest.TestCase):
 
 
 class ReleaseTrapTests(unittest.TestCase):
-    """Both traps failed silently before. These assert the fixes stay in place."""
+    """The traps that failed silently. These assert the fixes stay in place.
+
+    Trap 3 was found on 29 September 2026: the asset-authorization gate parsed
+    `asset_register.csv` with `awk -F,`, so any row whose quoted `description` or
+    `approval_note` contains a comma was read as unapproved. The derived
+    `apm-emblem.png` row is exactly such a row, so the first scheduled run of the
+    weekly cron failed and the site had never been regenerated automatically.
+    """
 
     def test_workflow_stages_every_generated_page(self):
         workflow = Path(".github/workflows/rebuild-pages.yml").read_text(encoding="utf-8")
@@ -311,9 +320,79 @@ class ReleaseTrapTests(unittest.TestCase):
         for slug in PAGE_SLUGS:
             self.assertIn(slug, workflow)
 
-    def test_workflow_keeps_the_column_six_asset_gate(self):
+    def _asset_gate_script(self):
+        """The exact check body from rebuild-pages.yml, dedented and runnable."""
+        gate = Path(".github/workflows/rebuild-pages.yml").read_text(encoding="utf-8")
+        self.assertIn("python -c '", gate, "asset gate no longer runs a Python check")
+        body = gate.split("python -c '", 1)[1].split("';", 1)[0]
+        return textwrap.dedent(body)
+
+    def test_asset_gate_parses_the_register_as_csv_not_awk(self):
+        # `awk -F,` reads field 6 as the sha256 on any row whose quoted description or
+        # approval_note contains a comma, so the gate rejected approved assets and the
+        # first scheduled run failed on the derived apm-emblem row. The gate must parse
+        # with the csv module and look `usage_status` up by name.
         workflow = Path(".github/workflows/rebuild-pages.yml").read_text(encoding="utf-8")
-        self.assertIn("$6 != \"campaign approved\"", workflow)
+        commands = "\n".join(line for line in workflow.splitlines()
+                             if not line.lstrip().startswith("#"))
+        self.assertNotIn("awk", commands)
+        self.assertIn("csv.DictReader", commands)
+        self.assertIn("usage_status", commands)
+
+    def test_asset_gate_passes_on_the_real_register(self):
+        result = subprocess.run([sys.executable, "-c", self._asset_gate_script()],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr.strip())
+
+    def test_asset_gate_rejects_an_unapproved_row(self):
+        # Break-test the check: a row that is genuinely unapproved must fail, so the pass
+        # above is not a gate that never fires. Approved status is set by column name via
+        # the csv module, so the substitution is on a whole parsed row.
+        script = self._asset_gate_script()
+        with tempfile.TemporaryDirectory() as tmp:
+            register = Path(tmp) / "asset_register.csv"
+            rows = Path("data/delivery/asset_register.csv").read_text(encoding="utf-8")
+            broken = rows.replace("campaign approved", "not approved", 1)
+            self.assertNotEqual(broken, rows, "fixture no longer contains an approved row")
+            register.write_text(broken, encoding="utf-8")
+            probe = script.replace("data/delivery/asset_register.csv",
+                                   str(register).replace("\\", "\\\\"))
+            result = subprocess.run([sys.executable, "-c", probe],
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0, "gate passed an unapproved asset")
+            self.assertIn("Unapproved campaign assets", result.stderr)
+
+    def test_asset_gate_still_passes_without_the_newest_row(self):
+        # Guards the other direction: the gate must not start rejecting a register that
+        # is entirely approved, which is how the old version failed on a clean file.
+        script = self._asset_gate_script()
+        with tempfile.TemporaryDirectory() as tmp:
+            register = Path(tmp) / "asset_register.csv"
+            lines = Path("data/delivery/asset_register.csv").read_text(
+                encoding="utf-8").splitlines(True)
+            register.write_text("".join(lines[:-1]), encoding="utf-8")
+            probe = script.replace("data/delivery/asset_register.csv",
+                                   str(register).replace("\\", "\\\\"))
+            result = subprocess.run([sys.executable, "-c", probe],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr.strip())
+
+    def test_asset_gate_rejects_an_approved_row_missing_its_date(self):
+        # usage_status alone is not enough: an undated approval is not an approval.
+        script = self._asset_gate_script()
+        with tempfile.TemporaryDirectory() as tmp:
+            register = Path(tmp) / "asset_register.csv"
+            rows = Path("data/delivery/asset_register.csv").read_text(encoding="utf-8")
+            broken = rows.replace("campaign approved,campaign team,2026-09-24",
+                                  "campaign approved,campaign team,", 1)
+            self.assertNotEqual(broken, rows, "fixture no longer contains a dated row")
+            register.write_text(broken, encoding="utf-8")
+            probe = script.replace("data/delivery/asset_register.csv",
+                                   str(register).replace("\\", "\\\\"))
+            result = subprocess.run([sys.executable, "-c", probe],
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0, "gate passed an undated approval")
+            self.assertIn("Unapproved campaign assets", result.stderr)
 
     def test_every_page_appears_in_the_handoff_allowlist(self):
         handoff = Path("HANDOFF.md").read_text(encoding="utf-8")

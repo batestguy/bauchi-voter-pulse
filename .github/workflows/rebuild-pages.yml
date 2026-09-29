@@ -18,8 +18,21 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Check asset authorization
         shell: bash
+        # `awk -F,` is wrong for this file. `description` and `approval_note` contain
+        # commas inside quotes, so field 6 is the sha256 on any such row and the gate
+        # reads an approved asset as unapproved. The first scheduled run failed for
+        # exactly that reason, on the derived apm-emblem row. Parse with the csv module
+        # and look the column up by name, which is what the check always meant to do.
         run: |
-          if awk -F, 'NR > 1 && $6 != "campaign approved" { bad = 1 } END { exit bad }' data/delivery/asset_register.csv; then
+          if python -c '
+          import csv, sys
+          with open("data/delivery/asset_register.csv", encoding="utf-8", newline="") as fh:
+              bad = [r["file"] for r in csv.DictReader(fh)
+                     if r.get("usage_status") != "campaign approved" or not r.get("approved_at")]
+          if bad:
+              print("Unapproved campaign assets: " + ", ".join(bad), file=sys.stderr)
+              sys.exit(1)
+          '; then
             :
           else
             echo "::error::Every campaign asset must be approved before public Pages publication."

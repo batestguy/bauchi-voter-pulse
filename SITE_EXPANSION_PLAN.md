@@ -249,7 +249,7 @@ changing this and the weekly cron will render them, then silently never commit t
 maintainer following that handoff verbatim would render, diff and commit **nothing** once five
 new pages exist.
 
-⚠️ **`rebuild-pages.yml:19-27` asset check is column-position coupled** — `awk -F, 'NR > 1 && $6 != "campaign approved"'`. Any new asset row must have `usage_status` in **exactly column 6** or CI fails closed.
+⚠️ **`rebuild-pages.yml:19-27` asset check is column-position coupled** — `awk -F, 'NR > 1 && $6 != "campaign approved"'`. Any new asset row must have `usage_status` in **exactly column 6** or CI fails closed. **This was itself a bug, found 29 September 2026** — see the trap-3 entry in `HANDOFF.md` §20. `awk -F,` also splits inside quoted fields, so every row with a comma in its `description` or `approval_note` was read as unapproved, and the first scheduled cron run failed on the derived `apm-emblem.png` row. Fixed to parse with `csv.DictReader` and look the column up by name.
 
 ⚠️ **`.source-link` is defined twice** — `render.py:926` and again at `render.py:1046` (which adds `justify-self:end`). Splitting CSS per page silently drops the override from any page that keeps 926.
 
@@ -476,7 +476,7 @@ Both files are **CWD-relative** — tests must run from the repo root.
 14. Poll: a disabled-endpoint build contains no code path that can send a request.
 15. Privacy: no personal data, request ID, address or free-text description in **any** generated page.
 16. No page ships a section it should not — e.g. `id="featured"` appears exactly once across all six, and `id="requests"` exactly once.
-17. Asset gate: every `asset_register.csv` row is `campaign approved` with `usage_status` in column 6 and a matching sha256.
+17. Asset gate: every `asset_register.csv` row is `campaign approved` with a non-empty `approved_at` and a matching sha256.
 
 Assert **counts from the data, not constants** — e.g. derive the arrow-card count the way
 `render.py:802-807` does, since it is 6 today but data-dependent.
@@ -490,7 +490,7 @@ Assert **counts from the data, not constants** — e.g. derive the arrow-card co
 | 1 | 🔴 Cron renders the new pages but never commits them | Fix `rebuild-pages.yml:33` in the same phase as S3 |
 | 2 | 🔴 Language toggle throws on a page lacking the LGA detail panel | Null-guard `render.py:1241` in S2, before S3 makes it reachable |
 | 3 | 🔴 Phones lose all navigation | Mobile menu is a required S3 deliverable |
-| 4 | 🔴 CI fails closed on an unapproved asset | Owner must approve the emblem; `usage_status` must sit in column 6 |
+| 4 | 🔴 CI fails closed on an unapproved asset | Emblem ratified 29 Sep 2026; the gate reads `usage_status` by name, not column position |
 | 5 | 🟠 Map tears between LGAs | Never quantize below 3 dp; test asserts ≥90% shared-edge retention |
 | 6 | 🟠 Boundaries presented as official | Ship the "operational / simplified / indicative" caveat and the CC BY attribution |
 | 7 | 🟠 Accidentally inheriting ShareAlike | Use only the LGA Boundaries layer; never the BY-SA Wards layers |

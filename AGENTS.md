@@ -91,7 +91,11 @@ These are enforced in code; keep them enforced.
 - **Never leave a required `_ha` column blank.** Enforced by `validate_data()` and the test suite.
 - **Source titles are citations** and stay in their original language, untranslated. Our own prose (`usage_note`, `verification_status`, indicator values) must translate.
 - **Do not invent published campaign content.** If the source does not state it, it does not go on the page. `promise-wash` is labelled a *clause* of the infrastructure commitment because the campaign published no water pillar.
-- **No new assets without approval.** `asset_register.csv` needs a matching SHA-256, `usage_status` in **column 6** (`rebuild-pages.yml` checks by position, not name), and an `approved_at` date. Derived crops must say so in `approval_note`.
+- **No new assets without approval.** `asset_register.csv` needs a matching SHA-256, a
+  `usage_status` of `campaign approved`, and an `approved_at` date. Derived crops must say
+  so in `approval_note`. Never parse this file with `awk -F,` or `line.split(",")`: the
+  `description` and `approval_note` fields contain commas inside quotes, so field
+  positions shift. That bug made the weekly cron fail on its first run. Use `csv.DictReader`.
 - **A duplicate `const` in a page's inline script silently disables every script on that page** while the HTML still renders. Guarded by a `node --check` parse in `tests/test_header_brand.py`. Run it.
 
 ## Legal / ethics
