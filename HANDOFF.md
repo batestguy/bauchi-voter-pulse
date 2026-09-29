@@ -1542,6 +1542,47 @@ would have shipped stale pages silently. This third one was a *validation* probl
 failed closed, which is safer, but only because someone read a red build. A cron that has
 never run successfully is a cron that has never worked. Check the run list.
 
+### ✅ Trap 4 — the manifest hashed local bytes, git had stored LF
+
+Found in the same session, immediately after trap 3 was fixed and the cron was re-run by
+hand. The asset gate passed, and then `render.py` failed:
+
+```text
+ValueError: source snapshot hash mismatch: delivery-89aec627d08a
+```
+
+`validate_data()` hashes the **working copy** of each snapshot and compares it with
+`content_hash` in `source_manifest.csv`. On Windows those match. On the Linux runner they
+never could:
+
+| | bytes | sha256 |
+|---|---|---|
+| `HEAD` blob | 76,524, LF | `374731ad…` |
+| Windows working copy | 78,771, CRLF | `527c462b…` |
+| `source_manifest.csv` | — | `527c462b…` |
+
+The cause is ordering. `.gitattributes` marks the snapshots `-text` so their bytes are
+never normalized — but that rule landed in `d9cf5f8`, *after* the snapshots were first
+committed in `3db2fc2`. Git had already converted CRLF to LF on the way into the object
+store, and adding `-text` afterwards does not re-normalize what is already there. The
+manifest hash was computed from the bytes on disk at fetch time, which is correct; the
+blob git was storing was not. Two records of the same fetch disagreed, and only one of
+them was right depending on where you stood.
+
+The fix was `git add --renormalize data/delivery/source_snapshots/`, which rewrites the
+blobs to the bytes the manifest describes. All 34 now agree. The boundary `.geojson` was
+also outside the `.gitattributes` rule, so the same corruption could have reached it; the
+rule now covers it and `AGENTS.md` warns against narrowing it back to `*.html`.
+
+**The generalisable lesson, and this is the one worth keeping.** `validate_data()` hashes
+the file in front of it. That is the right thing for a validator to do and it is *not
+enough*, because the same logical file has different bytes on different machines. A
+checksum that is only ever verified against a working copy is a checksum that has never
+been tested against what a consumer actually receives. Anything a build validates from
+disk needs at least one test that reads it back from the index or a clean checkout —
+`test_a_fresh_checkout_renders` now does exactly that, materialising the index into a temp
+directory and running the real entry point there.
+
 ### Still true after S3
 
 - A duplicate `const` in any page's inline script is a `SyntaxError` that disables every
@@ -1588,8 +1629,9 @@ A new maintainer should be able to answer “yes” to each question:
       written, and that they are still not native-speaker translated?
 - [ ] Can I name the credited contributor and state that nothing around his name was
       invented?
-- [ ] Do I know the three release traps in §20 are closed and test-guarded, and that the
-      third one (the `awk` asset gate) made the weekly cron fail on its first run?
+- [ ] Do I know the four release traps in §20 are closed and test-guarded, and that the
+      third and fourth (the `awk` asset gate, and the LF/CRLF manifest mismatch) each made
+      the weekly cron fail on its first run?
 - [ ] Do I have a next-step list that does not mix current-product work with
       legacy evaluation work?
 

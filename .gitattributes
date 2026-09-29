@@ -1,1 +1,10 @@
+# Source snapshots are provenance records. `validate_data()` compares their SHA-256
+# against source_manifest.csv, and the weekly cron runs that check on a Linux checkout,
+# so git must store and return the exact bytes that were fetched. `-text` disables
+# end-of-line normalisation for these paths; without it git rewrote CRLF to LF on the way
+# in and every CI run failed on a hash mismatch that no local run could reproduce.
+#
+# Do not narrow this to *.html. The GRID3 boundary snapshot is JSON and is hashed by the
+# same manifest, so it needs the same guarantee.
 data/delivery/source_snapshots/*.html -text
+data/delivery/source_snapshots/*.geojson -text

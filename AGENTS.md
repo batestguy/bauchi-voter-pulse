@@ -96,6 +96,13 @@ These are enforced in code; keep them enforced.
   so in `approval_note`. Never parse this file with `awk -F,` or `line.split(",")`: the
   `description` and `approval_note` fields contain commas inside quotes, so field
   positions shift. That bug made the weekly cron fail on its first run. Use `csv.DictReader`.
+- **Never narrow `.gitattributes` back to `*.html`.** `source_snapshots/*.geojson` is
+  hashed by the same manifest and needs the same `-text` guarantee.
+- **A checksum validated only against the working copy has never been tested against what
+  a consumer receives.** `validate_data()` hashes the file on disk, which on Windows differs
+  from the committed blob, so the failure it can cause is invisible locally and fatal on
+  the Linux runner. `test_a_fresh_checkout_renders` checks the index out into a temp
+  directory and runs `render.py` there; keep it.
 - **A duplicate `const` in a page's inline script silently disables every script on that page** while the HTML still renders. Guarded by a `node --check` parse in `tests/test_header_brand.py`. Run it.
 
 ## Legal / ethics
