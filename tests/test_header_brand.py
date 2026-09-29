@@ -143,20 +143,33 @@ class SponsorSlotTests(unittest.TestCase):
         self.assertIn(".sponsor-contribution b{color:#fff;font-weight:700}", self.html)
 
     def test_every_field_is_bilingual(self):
-        for en, ha in (("Sponsor", "Mai tallafi"),
-                       ("Contribution:", "Zuciya:"),
-                       ("Sponsor photo", "Hotun mai tallafi")):
+        for en, ha in (("Contributor", "Mai ba da daɗi"),
+                       ("Role:", "Darasi:"),
+                       ("A dedicated member of his campaign team.",
+                        "Memba mai ɗaukar hankali na hukumar sa.")):
             with self.subTest(label=en):
                 self.assertIn(en, self.html)
                 self.assertIn(ha, self.html)
 
-    def test_slot_ships_as_an_obvious_placeholder(self):
-        self.assertIn("[ Sponsor name ]", self.html)
-        self.assertIn("[ Suna na mai tallafi ]", self.html)
-        self.assertIn("to be completed by the campaign team", self.html)
+    def test_photo_alt_is_bilingual(self):
+        # A named person's portrait must not fall back to an empty alt when Hausa is active.
+        self.assertIn('data-alt-en="Portrait of Abdulkadir Ahmad (Hammayo)"', self.html)
+        self.assertIn('data-alt-ha="Hotun na Abdulkadir Ahmad (Hammayo)"', self.html)
+
+    def test_named_contributor_is_rendered(self):
+        self.assertIn("Abdulkadir Ahmad (Hammayo)", self.html)
+        self.assertIn("assets/brand/abdulkadir-ahmad-hammayo.png", self.html)
+
+    def test_no_placeholder_brackets_remain(self):
+        # The owner supplied the name and the role, so the slot is filled. A leftover
+        # "[ ... ]" placeholder here would mean the site contradicts what was supplied.
+        for stale in ("[ Sponsor name ]", "[ Suna na mai tallafi ]",
+                      "to be completed by the campaign team"):
+            with self.subTest(stale=stale):
+                self.assertNotIn(stale, self.html)
 
     def test_no_invented_sponsor_content(self):
-        # No amount, no organisation, no role may be fabricated into the slot.
+        # No amount, no organisation and no extra role may be fabricated into the slot.
         blocks = re.findall(r'<div class="sponsor">.*?</div></div>(?=<a class="deerflow")',
                             self.html, re.S)
         self.assertEqual(len(blocks), 1, "expected exactly one sponsor slot")
@@ -166,15 +179,35 @@ class SponsorSlotTests(unittest.TestCase):
         for invented in ("Dr. Yakubu Adamu", "APM", "Bauchi State Government"):
             self.assertNotIn(invented, text)
 
-    def test_slot_is_visually_a_placeholder(self):
+    def test_slot_is_no_longer_styled_as_a_placeholder(self):
+        # Dashed borders were the tell that the slot was empty. With a real name and a
+        # real photo they would misdescribe it, so they are asserted absent.
         style = self.html.split("</style>")[0]
         rules = re.findall(r"\.sponsor\{[^}]*\}", style)
         self.assertEqual(len(rules), 1, f"expected one .sponsor rule, got {rules}")
         for rule in rules:
-            self.assertIn("border:1px dashed", rule)
+            self.assertIn("border:1px solid", rule)
+            self.assertNotIn("dashed", rule)
         photo = re.findall(r"\.sponsor-photo\{[^}]*\}", style)
         for rule in photo:
-            self.assertIn("border:1px dashed", rule)
+            self.assertNotIn("dashed", rule)
+            self.assertIn("overflow:hidden", rule)
+
+    def test_contributor_portrait_is_registered_and_published(self):
+        rows = {r["file"]: r for r in render.read_csv("asset_register.csv")}
+        self.assertIn("abdulkadir-ahmad-hammayo.png", rows,
+                      "contributor portrait missing from asset_register.csv")
+        row = rows["abdulkadir-ahmad-hammayo.png"]
+        self.assertEqual(
+            hashlib.sha256(
+                (ASSETS / "abdulkadir-ahmad-hammayo.png").read_bytes()).hexdigest(),
+            row["sha256"])
+        # rebuild-pages.yml checks usage_status by column position, not by name.
+        self.assertEqual(list(row.values())[5], "campaign approved")
+        self.assertTrue(row["approved_at"])
+        self.assertTrue(
+            (DOCS_ASSETS / "abdulkadir-ahmad-hammayo.png").exists(),
+            "contributor portrait was not copied into the published tree")
 
     def test_footer_wraps_on_narrow_screens(self):
         # The tile is a third flex child; without wrapping it would squeeze the brand.

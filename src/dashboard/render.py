@@ -36,7 +36,7 @@ REQUEST_CATEGORIES = (
 
 ASSET_FILES = [
     "apm-logo.png", "apm-emblem.png", "yakubu-adamu-hero.png", "yakubu-adamu-portrait.png",
-    "bala-mohammed.png"
+    "bala-mohammed.png", "abdulkadir-ahmad-hammayo.png"
 ]
 
 FEATURED_ACHIEVEMENTS_FILE = "featured_achievements.csv"
@@ -1329,12 +1329,12 @@ a{color:inherit}
 .footer-inner strong{font-family:Georgia,serif;font-size:1.3rem;font-weight:400;display:block;margin-bottom:6px}
 .deerflow{font-size:10px;color:rgba(255,255,255,.45);text-decoration:none;border:1px solid rgba(255,255,255,.2);padding:7px 10px;border-radius:999px;white-space:nowrap}
 .deerflow:hover{color:#fff;border-color:#fff}
-/* Sponsor slot. Deliberately reads as an unfilled placeholder: no invented name, no
-   invented contribution, no amount. The contribution line is a factual disclosure the
-   owner completes, not a claim of delivered achievement. */
-.sponsor{display:flex;gap:14px;align-items:center;max-width:400px;padding:12px 16px;border:1px dashed rgba(255,255,255,.28);border-radius:4px;background:rgba(255,255,255,.03)}
-.sponsor-photo{width:58px;height:58px;flex:none;border:1px dashed rgba(255,255,255,.3);border-radius:3px;display:grid;place-items:center;text-align:center;padding:4px}
-.sponsor-photo span{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);line-height:1.3}
+/* Contributor credit. No longer a placeholder: the owner named the contributor and supplied
+   the portrait, so the dashed placeholder treatment is gone. No amount and no organisation
+   is stated -- the line is a factual role disclosure, not a claim of delivered achievement. */
+.sponsor{display:flex;gap:14px;align-items:center;max-width:400px;padding:12px 16px;border:1px solid rgba(255,255,255,.28);border-radius:4px;background:rgba(255,255,255,.03)}
+.sponsor-photo{width:58px;height:58px;flex:none;border:1px solid rgba(255,255,255,.3);border-radius:3px;overflow:hidden;background:#fff}
+.sponsor-photo img{display:block;width:100%;height:100%;object-fit:cover}
 .sponsor-body{min-width:0}
 .sponsor-label{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}
 .sponsor-name{display:block;font-family:Georgia,serif;font-size:1.05rem;font-weight:400;color:#fff}
@@ -1526,12 +1526,15 @@ def site_footer(built):
         f'{copy("Public information and campaign materials are labelled separately; this page is not private polling.", "Bayanan al\'umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra\'yu na ɓoye ba.")}'
         '</p></div>'
         '<div class="sponsor"><div class="sponsor-photo">'
-        f'<span>{copy("Sponsor photo", "Hotun mai tallafi")}</span></div>'
+        f'<img src="assets/brand/abdulkadir-ahmad-hammayo.png" alt="Portrait of Abdulkadir Ahmad (Hammayo)" '
+        'data-alt-en="Portrait of Abdulkadir Ahmad (Hammayo)" '
+        'data-alt-ha="Hotun na Abdulkadir Ahmad (Hammayo)" width="58" height="58" loading="lazy" decoding="async">'
+        '</div>'
         '<div class="sponsor-body">'
-        f'<span class="sponsor-label">{copy("Sponsor", "Mai tallafi")}</span>'
-        f'<span class="sponsor-name">{copy("[ Sponsor name ]", "[ Suna na mai tallafi ]")}</span>'
-        f'<span class="sponsor-contribution">{copy("Contribution:", "Zuciya:")} <b>'
-        f'{copy("[ What was contributed and by whom — to be completed by the campaign team ]", "[ Abin da aka ba da da kuɗi — za a cika shi da hukumar gaggawa ]")}'
+        f'<span class="sponsor-label">{copy("Contributor", "Mai ba da daɗi")}</span>'
+        f'<span class="sponsor-name">{copy("Abdulkadir Ahmad (Hammayo)", "Abdulkadir Ahmad (Hammayo)")}</span>'
+        f'<span class="sponsor-contribution">{copy("Role:", "Darasi:")} <b>'
+        f'{copy("A dedicated member of his campaign team.", "Memba mai ɗaukar hankali na hukumar sa.")}'
         '</b></span></div></div>'
         f'<a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" '
         f'{attr("Created By Deerflow", "An ƙirƙira Deerflow")}>Created By Deerflow</a>'

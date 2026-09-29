@@ -1,22 +1,29 @@
 # APM Bauchi Progress & Delivery — Project Handoff
 
-**Handoff date:** 27 September 2026
+**Handoff date:** 29 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** `1eac1bc` — **deployed to GitHub Pages 26 September 2026**, run `36274124728`, success. Contains phases S0–S3.
+**Current release:** `82eb16a` — **S4, the Bauchi LGA map, pushed to `main` 29 September 2026.** The last manual Pages deployment was `1eac1bc` on 26 September 2026 (run `36274124728`, success), so the map reaches the live site on the next cron or manual rebuild.
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
 **Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
 
-> ⚠️ **S4, the Bauchi map, is complete, verified and NOT yet committed.** It is local
-> only. The live site still shows the 20-LGA tile grid, because S4 has not been committed
-> or pushed.
+> ✅ **S4 is pushed, and `docs/` is tracked.** `82eb16a` is on `origin/main` as of
+> 29 September 2026 and it carried the regenerated `docs/*.html` with it, so the map is
+> published by the ordinary Pages deploy-on-push. The weekly cron is a *regeneration*
+> safety net, not the publication mechanism.
 >
-> **Live:** S0–S3, six pages, deployed 26 September 2026, run `36274124728`.
-> **Local:** S0–S4, six pages, `atlas.html` now carries a real 20-LGA map, 162 tests pass.
+> **Live (last manual deploy):** S0–S3, six pages, 26 September 2026, run `36274124728`.
+> **Pushed to `main`:** S0–S4, six pages, `atlas.html` carries a real 20-LGA map, and the
+> footer names the contributor. 165 tests pass.
 >
 > The **weekly cron is still the thing to watch**: `rebuild-pages.yml` regenerates and
 > stages all six pages and fails if any is missing. Its first scheduled run is the first
 > live exercise of that change.
+>
+> **Both owner gates from S4 are now closed.** The `services3.arcgis.com` robots exemption
+> (§21) was ratified by the owner on 29 September 2026, and the 69 AI-drafted Hausa strings
+> were reviewed and accepted as written on the same date. The disclosure stays, because the
+> strings are still AI-drafted rather than native-speaker translated.
 
 ---
 
@@ -30,11 +37,11 @@ records what actually happened and why the plan's seam fix had to be abandoned �
 
 ```bash
 cd D:\APMdeliverable
-python -m unittest discover -s tests -q     # expect 162 OK (1 skip)
+python -m unittest discover -s tests -q     # expect 165 OK (1 skip)
 python src/dashboard/render.py              # expect six page sizes
 ```
 
-If the test count is not 162, something has regressed. Investigate before proceeding.
+If the test count is not 165, something has regressed. Investigate before proceeding.
 
 **3. Do not touch the preserved local work.** It must still be untracked or modified:
 
@@ -47,11 +54,12 @@ data/human_review/filled/         untracked, local-only
 
 Never `git reset`, `git clean`, permanent `git stash`, or stage these.
 
-**4. S4 needs an owner decision before it ships.** The boundary fetch carries a
-**robots.txt exemption** for `services3.arcgis.com`; see §21. It is recorded and narrowly
-scoped, but the owner should ratify it.
+**4. S4's owner gates are closed.** The `services3.arcgis.com` robots exemption (§21) was
+ratified by the owner on 29 September 2026, and the AI-drafted Hausa strings were reviewed
+and accepted as written the same day. Both are no longer open questions; the Hausa
+disclosure stays because the strings are still not native-speaker translated.
 
-**5. Next task once S4 is committed: phase S5, the opinion poll.** Full brief in
+**5. Next task: phase S5, the opinion poll.** Full brief in
 `SITE_EXPANSION_PLAN.md` §4 S5 and §10, and the P1 list in §13 below.
 
 **6. If you only have time for one thing:**
@@ -62,7 +70,8 @@ python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_
 
 These cover the defects a visual check cannot see: untranslated strings, Hausa pasted
 into an English column, a missing asset hash, an invert filter creeping back, invented
-sponsor content, a duplicate `const` that would disable every script on a page, a nav
+contributor content, a placeholder creeping back into the filled credit, an English-only
+`alt` on the contributor's portrait, a duplicate `const` that would disable every script on a page, a nav
 link pointing at a page that was never generated, a cron that would publish stale
 subpages, a tearing seam between LGAs, quantization below the 3 dp floor, and a language
 switch that empties the map.
@@ -618,9 +627,9 @@ settings in GitHub if that configuration changes.
   browser by `tests/test_browser_layout.py`. Treat any "no overflow" claim in this file
   as unverified unless a test asserts it.
 
-### Local state after S4 (27 September 2026, not committed)
+### State after S4 and the contributor credit (29 September 2026, pushed)
 
-- **162 `unittest` tests pass** (115 after S3; the S4 additions bring it to 162).
+- **165 `unittest` tests pass** (115 after S3, 162 after S4, 165 after the contributor credit).
 - `python src/dashboard/render.py` writes **all six pages** and prints their sizes.
 - `render.validate_data()` passes, and now also cross-checks the GRID3 boundary snapshot's
   SHA-256 against both `source_register.csv` and `source_manifest.csv`.
@@ -924,16 +933,26 @@ Claims that became false or newly unsafe with the S1/S2 work:
 - ❌ **Do not claim the campaign published a water/sanitation policy.** It did not. The
   published manifesto has five pillars and no water pillar; `promise-wash` is the water
   **clause** of the Infrastructure Development commitment and is labelled as such.
-- ❌ **Do not claim the sponsor slot is filled.** It ships as a labelled placeholder with
-  no name, no photo and no contribution, by design.
+- ✅ **The sponsor slot is now filled** — but only with what the owner supplied. The footer
+  names **Abdulkadir Ahmad (Hammayo)** and states the role as "A dedicated member of his
+  campaign team." Nothing was invented around it: no amount, no organisation, no extra
+  title. `test_no_invented_sponsor_content` still fails on any of those, and
+  `test_no_placeholder_brackets_remain` fails if the credit drifts back to `[ ... ]`.
 - ❌ **Do not claim the emblem is a separately cleared asset.** It is a derived crop of the
-  already-approved `apm-logo.png` with no new rights cleared, and its `approval_note`
-  still needs owner ratification.
+  already-approved `apm-logo.png` with no new rights cleared. The `approval_note` was
+  ratified by the owner on 29 September 2026.
+- ❌ **Do not claim the contributor's portrait is a stock image.** It is a derived square
+  crop of a campaign-supplied photograph of the named person, registered with owner
+  approval on 29 September 2026. No third-party rights were cleared, which is why the
+  register records it as the subject's own photograph.
 
 Claims that became false with S4:
 
-- ❌ **Do not claim the live site has the map.** S4 is **not committed and not pushed**. The
-  live `atlas.html` still shows the 20-LGA tile grid; the map exists only locally.
+- ✅ **The map is pushed and the pages are committed.** `82eb16a` is on `origin/main` as of
+  29 September 2026 and included the regenerated `docs/*.html`, so GitHub Pages publishes
+  the map on the normal deploy-on-push. `docs/` is a tracked tree, and the cron regenerates
+  and commits it weekly to catch drift. Confirm against a live deployment run before
+  claiming the map is serving.
 - ❌ **Do not claim the map boundaries are official.** They are GRID3 *operational*
   boundaries descended from polio-vaccination microplanning data. GRID3 states they are
   not validated by government authorities and carry no gazetted status. The page says
@@ -1337,26 +1356,60 @@ src/aggregation/aggregate.py
 .evals/
 data/human_review/filled/
 .playwright-mcp/
+Abdulkadir Hammayo .png    untracked original 1139x1381 / 2.1 MB supplied portrait
 ```
 
-### Still to come: the sponsor photo and name
+The last one is the full-size original behind `assets/brand/abdulkadir-ahmad-hammayo.png`.
+It is deliberately not committed — it is 2.1 MB of the same photograph, and the registered
+512x512 crop is the only version the site needs. Do not `git add .`.
 
-The owner holds a sponsor photograph and name that are **not yet in the repository**. They
-are deliberately not committed, and nothing was invented to fill the slot. When they are
-supplied, the follow-up change needs:
+### The contributor credit is filled (29 September 2026)
 
-1. The image file placed in `assets/brand/`, with its SHA-256 and an
-   `approved_at` date. `asset_register.csv` must have `usage_status` = `campaign approved`
-   in **column 6** — `rebuild-pages.yml` checks by position, not by name — and CI fails
-   closed on any other value.
-2. The sponsor's name, and the contribution line ("what was contributed and by whom").
-3. `test_header_brand.py::test_no_invented_sponsor_content` must be updated: it currently
-   asserts the slot contains **no** organisation name and **no** 4-digit number, which is
-   what stops a fabricated sponsor being invented. Narrow it to reject *other* names rather
-   than all names, keeping the anti-fabrication intent.
-4. Both `render.py` placeholders (`[ Sponsor name ]`,
-   `[ What was contributed and by whom ... ]`) replaced with the real values, in English and
-   Hausa.
+The owner supplied the photograph and the name, and the slot is no longer a placeholder.
+The credit now reads, in both languages:
+
+```text
+Contributor / Mai ba da daɗi
+Abdulkadir Ahmad (Hammayo)
+Role: A dedicated member of his campaign team.
+```
+
+Four things were load-bearing, and all four are now test-enforced:
+
+1. **The asset had to be derived, not copied.** The supplied file is 1139x1381 and 2.1 MB.
+   It is cropped to a 900px square (head-and-shoulders, face centred) and resized to
+   512x512 as `assets/brand/abdulkadir-ahmad-hammayo.png` — 339 KB. Its SHA-256
+   `71a879eb…` is in `asset_register.csv` with `usage_status` in **column 6** and
+   `approved_at` 2026-09-29, and it is listed in `ASSET_FILES` so `prepare_assets()` copies
+   it into `docs/assets/brand/`. A file in `assets/` without an `ASSET_FILES` entry never
+   reaches the published tree, and a register row without a matching hash fails
+   `validate_data()`.
+2. **The dashed placeholder treatment had to go.** The dashed border was the visual tell
+   that the slot was empty. With a real name and a real photo it would misdescribe the
+   credit, so `.sponsor` and `.sponsor-photo` are now solid, and
+   `test_slot_is_no_longer_styled_as_a_placeholder` fails if `dashed` reappears.
+3. **The portrait needed a bilingual `alt`.** `setLanguage` rewrites `textContent` for
+   every `[data-en][data-ha]` element, so an `img` given `attr()` would be emptied on the
+   first language switch — the same defect that once blanked the whole map. The image
+   instead uses `data-alt-en`/`data-alt-ha`, which `setLanguage` already handles for `img`,
+   and `test_photo_alt_is_bilingual` guards it. Verified in a browser: EN shows
+   "Portrait of Abdulkadir Ahmad (Hammayo)", HA shows "Hotun na Abdulkadir Ahmad (Hammayo)",
+   and the image is intact in both.
+4. **The anti-fabrication test was narrowed, not deleted.**
+   `test_no_invented_sponsor_content` still rejects any amount, any four-digit number, and
+   any of `Dr. Yakubu Adamu`, `APM`, `Bauchi State Government` inside the slot. The owner's
+   own words went in and nothing around them. `test_no_placeholder_brackets_remain` fails if
+   `[ Sponsor name ]` or "to be completed by the campaign team" ever comes back.
+
+**Label wording.** The slot is labelled **Contributor**, not Sponsor. The owner's
+description of his relationship to the campaign is a team role, not a financial one, and
+"Role:" replaced "Contribution:" for the same reason. The CSS class names were left as
+`.sponsor*` to avoid a wide rename across the stylesheet and `test_site_structure.py`; the
+class name is now historical only.
+
+**Hausa.** "Mai ba da daɗi", "Darasi:", "Memba mai ɗaukar hankali na hukumar sa." and the
+portrait `alt` are **4 more AI-drafted strings**, bringing the unreviewed total to **69**.
+The owner accepted the set as written on 29 September 2026, and the disclosure stays.
 
 ## 21. The robots.txt Exemption on the ArcGIS Host — Needs Owner Ratification
 
@@ -1404,15 +1457,19 @@ becoming a blanket "skip robots" flag. Every exemption exercised is recorded in
 `robots_exemption_log()`. `lga_boundaries.py` restates the full justification at the call
 site and fails fast at import if the query host is ever moved off the list.
 
-**Why it still needs the owner.** This is a deliberate, documented deviation from a guard
+**Why it needed the owner.** This is a deliberate, documented deviation from a guard
 the repository treats as a hard rule. It is narrow, one host, one cached fetch, and the
 weekly build never makes the request — but the judgement that a WAF-blocked robots.txt on
 a subdomain with a permissive registrable domain is acceptable to fetch from is the
 owner's to make, not the implementer's.
 
-**If the owner declines**, the fallback is to drop the map and revert to the S3 tile grid.
-There is no second boundary source in the current data model, and inventing coordinates is
-not an option.
+**✅ Owner ratified 29 September 2026.** The exemption stands as written: one host, one
+cached fetch, justification restated at the call site, logged on every use, and the
+conservative default unchanged everywhere else. The map stays.
+
+**If the owner had declined**, the fallback was to drop the map and revert to the S3 tile
+grid. There is no second boundary source in the current data model, and inventing
+coordinates is not an option.
 
 ## 20. The Two Release Traps — Both Closed in S3
 
@@ -1478,13 +1535,17 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Can I explain why the boundaries are "indicative, not gazetted"?
 - [ ] Do I know why the registration areas are labelled "not geo-located"?
 - [ ] Can I state the licence of the boundary layer and why the Wards layer is forbidden?
-- [ ] Can I explain the `services3.arcgis.com` robots exemption and why it needs
-      ratification?
-- [ ] Can I identify the live GitHub Pages URL, and know it does **not** include S4?
+- [ ] Can I explain the `services3.arcgis.com` robots exemption and that the owner ratified
+      it on 29 September 2026?
+- [ ] Can I identify the live GitHub Pages URL, and know `docs/` is committed so a push
+      publishes rather than waiting for the cron?
 - [ ] Can I preserve the uncommitted aggregation and human-review work?
 - [ ] Do I know which pipeline is legacy and not part of the public product?
 - [ ] Do I know which outcome claims still require measurement?
-- [ ] Do I know which **59** Hausa strings are AI-drafted and unreviewed?
+- [ ] Do I know which **69** Hausa strings are AI-drafted, that the owner accepted them as
+      written, and that they are still not native-speaker translated?
+- [ ] Can I name the credited contributor and state that nothing around his name was
+      invented?
 - [ ] Do I know that the two release-breaking traps in §20 are closed and test-guarded?
 - [ ] Do I have a next-step list that does not mix current-product work with
       legacy evaluation work?

@@ -726,7 +726,7 @@ across page navigation, `aria-label` translates, the LGA selector still updates 
 panel, the carousel still navigates and filters, the request form is still disabled with
 no endpoint configured, and there are **zero console errors**.
 
-### S4 — Bauchi map (complete, local; **not committed, not pushed**)
+### S4 — Bauchi map (complete; **pushed as `82eb16a` on 29 September 2026**)
 
 `atlas.html` now draws the 20 LGAs as inline SVG. All eight §4 S4 items are done.
 
@@ -837,13 +837,16 @@ Rather than weaken that default for all sources, `common.py` gained
 `ROBOTS_UNREACHABLE_HOSTS`: a named, justified, per-host allowlist that an exemption must
 name, and `polite_get(robots_exemption=...)` refuses any justification shorter than 40
 characters. The registrable domain `arcgis.com` serves a retrievable permissive
-robots.txt (`User-agent: *`, no `Disallow`), and the layer is openly CC BY 4.0, but **the
-owner should still ratify the exemption**. It is a one-time cached fetch; the weekly
-Pages build never makes the request.
+robots.txt (`User-agent: *`, no `Disallow`), and the layer is openly CC BY 4.0. It is a
+one-time cached fetch; the weekly Pages build never makes the request.
+
+**✅ The owner ratified the exemption on 29 September 2026.** It stands as written: one
+host, one cached fetch, justification restated at the call site, logged on every use, and
+the conservative default unchanged for every other host.
 
 #### Verification
 
-**155 tests pass** (was 115). New: `tests/test_atlas_map.py` (38 tests) and
+**162 tests pass** at the end of S4 (was 115). New: `tests/test_atlas_map.py` (38 tests) and
 `tests/test_browser_layout.py` (2 static guards + 5 browser tests that skip without
 Playwright).
 
@@ -860,15 +863,29 @@ same selection both ways, the "not geo-located" RA list follows the selection, t
 survives EN→HA→EN, the caveat and CC BY credit both translate, and there are **zero
 console errors**.
 
+### Contributor credit — filled 29 September 2026 (between S4 and S5)
+
+The owner supplied the contributor's photograph and name, so the footer slot is no longer a
+placeholder. It reads **Contributor / Mai ba da daɗi**, then **Abdulkadir Ahmad (Hammayo)**,
+then **"A dedicated member of his campaign team."** The portrait is a derived 512x512
+square crop of the supplied 2.1 MB file, registered in `asset_register.csv` with owner
+approval. Full detail in `HANDOFF.md` §19.
+
+Four rules are now test-enforced, and they exist because this slot is the one place a real
+person is named: a placeholder bracket cannot return, no amount or organisation can be
+added, the portrait's `alt` must be bilingual, and the dashed placeholder styling is gone.
+
 ## 10. Next session - start here
 
-**State at handoff (27 September 2026):** S0–S3 deployed and live. **S4 complete and
-verified locally, but not committed and not pushed.** 155 tests pass.
+**State at handoff (29 September 2026):** S0–S3 deployed and live. **S4 pushed as `82eb16a`**,
+and because `docs/` is a tracked tree the regenerated pages went with it, so Pages publishes
+the map on the ordinary deploy-on-push. The footer contributor credit is filled. **165 tests
+pass.** Both former owner gates (the robots exemption, the AI-drafted Hausa) are closed.
 
 ### Do this first
 
 1. Work from `D:\APMdeliverable` and run `python -m unittest discover -s tests -q`. Expect
-   **155 OK** (1 skip: the Playwright browser tests).
+   **165 OK** (1 skip: the Playwright browser tests).
 2. Run `python src/dashboard/render.py`. It must print six page sizes and write all six.
 3. Confirm the preserved local work is still untracked/modified and do **not** touch it:
    `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`, `.playwright-mcp/`.
@@ -899,19 +916,27 @@ These are recorded as warnings for whoever works on the map next. The first thre
    site. The LGA Boundaries layer is BY and is what this project needs. Resolve the service
    URL from the ArcGIS item, never from a hardcoded host.
 
-### Owner gates still open
+### Owner gates — all closed as of 29 September 2026
 
-- Ratify or correct the `apm-emblem.png` rights record in `asset_register.csv`.
-- Native-speaker review of the **59 AI-drafted Hausa strings** — 53 from S1/S2 (27
-  `usage_note_ha`, 25 `verification_status_ha`, 1 wash-promise clause) plus **6 added in
-  S4** (map `aria-label`, the caveat and credit labels, the registration-area
-  "not geo-located" label, and the Hausa map caveat and attribution in
-  `data/derived/lga_paths.json`). These are integrity caveats a Hausa-reading voter now
-  sees, and the "not gazetted" disclaimer matters most.
-- **Ratify the `services3.arcgis.com` robots exemption.** That host returns 403 for
-  `robots.txt` under every user agent. The fetch uses a narrowly-scoped, justified entry
-  in `common.ROBOTS_UNREACHABLE_HOSTS`; the default conservative skip is unchanged for
-  every other host. See the S4 log.
+- ✅ **`apm-emblem.png` rights record ratified** by the owner on 29 September 2026.
+- ✅ **The `services3.arcgis.com` robots exemption was ratified** on 29 September 2026.
+  That host returns 403 for `robots.txt` under every user agent; the fetch uses a
+  narrowly-scoped, justified entry in `common.ROBOTS_UNREACHABLE_HOSTS`, and the default
+  conservative skip is unchanged for every other host. See the S4 log.
+- ✅ **The AI-drafted Hausa strings were reviewed and accepted as written** on
+  29 September 2026. The count is now **69** — 53 from S1/S2 (27 `usage_note_ha`, 25
+  `verification_status_ha`, 1 wash-promise clause), 6 from S4 (map `aria-label`, the caveat
+  and credit labels, the registration-area "not geo-located" label, and the Hausa map caveat
+  and attribution in `data/derived/lga_paths.json`), and 4 in the footer contributor credit.
+  **The disclosure stays**: the strings are still AI-drafted, not native-speaker
+  translated, and a Hausa-reading voter should know which strings that applies to.
+- ✅ **The contributor's photograph and name were supplied** and the footer credit is
+  filled. Its own rights are the subject's, and no third-party rights were cleared.
+
+Still open, and not owner gates in the same sense:
+
+- Independent image rights clearance for the campaign/press photography, which was never
+  verified for the achievement images either.
 - Decide whether to narrow the `wash` sector label from "Water and climate resilience" —
   the published campaign source contains zero climate content.
 

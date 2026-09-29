@@ -137,9 +137,20 @@ with no new rights cleared; its `approval_note` still needs owner ratification.
 
 S4 adds **6 more AI-drafted Hausa strings** on the atlas — the map `aria-label`, the
 cavity/credit labels, the registration-area "not geo-located" label, and the Hausa caveat
-and attribution in `data/derived/lga_paths.json`. The total unreviewed Hausa count is
-therefore **59**. The "not gazetted" disclaimer is the one that matters most to get right
-for a Hausa-reading visitor, so it is included rather than left English-only.
+and attribution in `data/derived/lga_paths.json`. The footer contributor credit adds **4
+more** ("Mai ba da daɗi", the role line, "Darasi:", and the portrait `alt`). The total
+unreviewed Hausa count is therefore **69**. The "not gazetted" disclaimer is the one that
+matters most to get right for a Hausa-reading visitor, so it is included rather than left
+English-only.
+
+The owner has reviewed and accepted the AI-drafted Hausa as written on 29 September 2026.
+The strings remain AI-drafted rather than native-speaker translated; the disclosure stays
+in place so a Hausa-reading visitor can see which strings that applies to.
+
+`abdulkadir-ahmad-hammayo.png` is a derived square crop of a campaign-supplied portrait of
+the named contributor, registered in `asset_register.csv` with owner approval on
+29 September 2026. It is the subject's own photograph and no third-party rights were
+cleared.
 
 ## Next implementation phase
 
@@ -150,11 +161,12 @@ opinion poll** on `poll.html`, then S6 (CI and release gate) and S7 (documentati
 `docs/*.html` and fails if any page is missing, and the staging allowlist in
 `HANDOFF.md` §18 names all six. See `HANDOFF.md` §20.
 
-⚠️ One new owner gate: `services3.arcgis.com` serves **403 for `robots.txt` under every
+ℹ️ `services3.arcgis.com` serves **403 for `robots.txt` under every
 user agent**, so the boundary fetch carries a narrowly-scoped, explicitly justified
 robots exemption recorded in `src/ingestion/common.py::ROBOTS_UNREACHABLE_HOSTS`. The
 registrable domain `arcgis.com` serves a retrievable permissive robots.txt, and the layer
 is openly CC BY 4.0, but the default conservative skip is unchanged for every other host.
+**The owner ratified this exemption on 29 September 2026.**
 Owner ratification of that exemption is still open.
 
 ## Handoff
