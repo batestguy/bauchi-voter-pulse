@@ -138,14 +138,19 @@ with no new rights cleared; its `approval_note` still needs owner ratification.
 S4 adds **6 more AI-drafted Hausa strings** on the atlas — the map `aria-label`, the
 cavity/credit labels, the registration-area "not geo-located" label, and the Hausa caveat
 and attribution in `data/derived/lga_paths.json`. The footer contributor credit adds **4
-more** ("Mai ba da daɗi", the role line, "Darasi:", and the portrait `alt`). The total
-unreviewed Hausa count is therefore **69**. The "not gazetted" disclaimer is the one that
-matters most to get right for a Hausa-reading visitor, so it is included rather than left
-English-only.
+more** ("Mai ba da daɗi", the role line, "Darasi:", and the portrait `alt`).
 
-The owner has reviewed and accepted the AI-drafted Hausa as written on 29 September 2026.
-The strings remain AI-drafted rather than native-speaker translated; the disclosure stays
-in place so a Hausa-reading visitor can see which strings that applies to.
+S5 adds **24 more** in the poll. The nine sector labels are reused from the request form
+and are not new, so the new ones are the question, the comment label and its note, the
+consent line, the identity note, the vote button, the four status messages, the
+confirmation, the empty state, the results heading, the self-selected disclosure, and the
+page's "what happens to this form" copy. The total unreviewed Hausa count is therefore
+**93**. The "not gazetted" disclaimer is the one that matters most to get right for a
+Hausa-reading visitor, so it is included rather than left English-only.
+
+The owner has reviewed and accepted the S1–S4 set (69 strings) as written on
+29 September 2026. **The 24 poll strings are new and not yet reviewed.** The disclosure
+stays in place so a Hausa-reading visitor can see which strings it applies to.
 
 `abdulkadir-ahmad-hammayo.png` is a derived square crop of a campaign-supplied portrait of
 the named contributor, registered in `asset_register.csv` with owner approval on
@@ -154,8 +159,9 @@ cleared.
 
 ## Next implementation phase
 
-The six-page split (S0–S3) and the Bauchi map (S4) have shipped. Next is **S5, the
-opinion poll** on `poll.html`, then S6 (CI and release gate) and S7 (documentation).
+The six-page split (S0–S3) and the Bauchi map (S4) have shipped. **S5, the opinion poll,
+is built and ships disabled** — connecting it is an owner decision, documented in
+`docs/POLL_SETUP.md`. Next is S6 (CI and release gate) and S7 (documentation).
 
 ℹ️ Four release traps are closed and test-guarded. The weekly cron stages `docs/*.html`
 and fails if any page is missing; the staging allowlist in `HANDOFF.md` §18 names all six;
@@ -172,7 +178,26 @@ robots exemption recorded in `src/ingestion/common.py::ROBOTS_UNREACHABLE_HOSTS`
 registrable domain `arcgis.com` serves a retrievable permissive robots.txt, and the layer
 is openly CC BY 4.0, but the default conservative skip is unchanged for every other host.
 **The owner ratified this exemption on 29 September 2026.**
-Owner ratification of that exemption is still open.
+
+## The opinion poll (phase S5)
+
+`poll.html` carries a one-question poll — which sector should APM prioritise first — plus
+its results panel. **It ships disabled.** `POLL_ENDPOINT` is `""`, the vote button renders
+`disabled`, and a test asserts no code path in `POLL_SCRIPT` can send before the endpoint
+guard. `docs/POLL_SETUP.md` is the owner guide for connecting it via Google Sheets and
+Apps Script.
+
+Three properties are enforced rather than merely intended:
+
+- **No PII.** The poll asks for no name, phone, email, address, ward, LGA, age, NIN, BVN or
+  voter ID, and any of those arriving in a payload is rejected with
+  `identity_field_forbidden` rather than quietly dropped.
+- **Q2 never moves a number.** The comment is validated, capped at 300 characters, stored —
+  and never counted, bucketed or published.
+- **An empty poll is empty.** There is no placeholder tally anywhere, and a test fails the
+  build if `data/delivery/poll_snapshot.json` exists while the poll is disconnected.
+
+The percentage cap is `min(share, 100 - floor)`, so one response can never render as 100%.
 
 ## Handoff
 
@@ -180,10 +205,10 @@ See `HANDOFF.md` for the complete operational handoff, deployment runbook, curre
 release counts, validation evidence, known limitations, preserved local work and
 prioritized next steps. Start with `SITE_EXPANSION_PLAN.md`.
 
-The current release is live at
-`https://batestguy.github.io/bauchi-voter-pulse/`, deployed 26 September 2026 in Pages
-run `36274124728`. All six pages are public and verified in a browser against the live
-URL.
+The current release is live at `https://batestguy.github.io/bauchi-voter-pulse/`. All six
+pages are public and verified in a browser against the live URL, including the Bauchi map
+(S4) and the contributor credit. The weekly `rebuild-pages.yml` cron now completes
+successfully; it had never once succeeded before 29 September 2026.
 
 ## Project history
 

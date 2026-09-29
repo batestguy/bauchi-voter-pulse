@@ -3,27 +3,26 @@
 **Handoff date:** 29 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** `82eb16a` — **S4, the Bauchi LGA map, pushed to `main` 29 September 2026.** The last manual Pages deployment was `1eac1bc` on 26 September 2026 (run `36274124728`, success), so the map reaches the live site on the next cron or manual rebuild.
+**Current release:** S4 (`82eb16a`) plus the contributor credit and S5 on `main`, 29 September 2026. S4 and the credit published on the ordinary Pages deploy-on-push. The weekly cron, previously never successful, is now green (run `36524274151`, which committed `a5d9b43`).
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
 **Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
 
-> ✅ **S4 is pushed, and `docs/` is tracked.** `82eb16a` is on `origin/main` as of
-> 29 September 2026 and it carried the regenerated `docs/*.html` with it, so the map is
-> published by the ordinary Pages deploy-on-push. The weekly cron is a *regeneration*
-> safety net, not the publication mechanism.
+> ✅ **S0–S4 are live.** `atlas.html` carries a real 20-LGA map and the footer names the
+> contributor. `docs/` is a tracked tree, so a push publishes; the weekly cron is a
+> *regeneration* safety net.
 >
-> **Live (last manual deploy):** S0–S3, six pages, 26 September 2026, run `36274124728`.
-> **Pushed to `main`:** S0–S4, six pages, `atlas.html` carries a real 20-LGA map, and the
-> footer names the contributor. 165 tests pass.
+> **S5, the opinion poll, is built and ships disabled.** `POLL_ENDPOINT` is `""`, the vote
+> button renders `disabled`, and no code path in `POLL_SCRIPT` can send. `poll.html` carries
+> the poll, its results panel and the request form. **228 tests pass.**
 >
-> The **weekly cron is still the thing to watch**: `rebuild-pages.yml` regenerates and
-> stages all six pages and fails if any is missing. Its first scheduled run is the first
-> live exercise of that change.
+> **The weekly cron now completes successfully** — run `36524274151`, green, which committed
+> `a5d9b43`. It had never succeeded before; see §20 traps 3 and 4.
 >
-> **Both owner gates from S4 are now closed.** The `services3.arcgis.com` robots exemption
-> (§21) was ratified by the owner on 29 September 2026, and the 69 AI-drafted Hausa strings
-> were reviewed and accepted as written on the same date. The disclosure stays, because the
-> strings are still AI-drafted rather than native-speaker translated.
+> **Owner gates:** the `services3.arcgis.com` robots exemption (§21) was ratified on
+> 29 September 2026, and 69 AI-drafted Hausa strings were reviewed and accepted as written
+> the same day. The disclosure stays, because those strings are still AI-drafted rather than
+> native-speaker translated. **S5 added 24 more unreviewed Hausa strings (total 93).**
+> Connecting the poll is an owner action; see `docs/POLL_SETUP.md`.
 
 ---
 
@@ -37,11 +36,11 @@ records what actually happened and why the plan's seam fix had to be abandoned �
 
 ```bash
 cd D:\APMdeliverable
-python -m unittest discover -s tests -q     # expect 165 OK (1 skip)
+python -m unittest discover -s tests -q     # expect 228 OK (1 skip)
 python src/dashboard/render.py              # expect six page sizes
 ```
 
-If the test count is not 165, something has regressed. Investigate before proceeding.
+If the test count is not 228, something has regressed. Investigate before proceeding.
 
 **3. Do not touch the preserved local work.** It must still be untracked or modified:
 
@@ -57,24 +56,29 @@ Never `git reset`, `git clean`, permanent `git stash`, or stage these.
 **4. S4's owner gates are closed.** The `services3.arcgis.com` robots exemption (§21) was
 ratified by the owner on 29 September 2026, and the AI-drafted Hausa strings were reviewed
 and accepted as written the same day. Both are no longer open questions; the Hausa
-disclosure stays because the strings are still not native-speaker translated.
+disclosure stays because the strings are still not native-speaker translated. **S5's 24
+new Hausa strings are still unreviewed.**
 
-**5. Next task: phase S5, the opinion poll.** Full brief in
-`SITE_EXPANSION_PLAN.md` §4 S5 and §10, and the P1 list in §13 below.
+**5. S5 is built and ships disabled. Next task: connect the poll (owner) or start S6.**
+`docs/POLL_SETUP.md` is the full Sheets + Apps Script guide. The sharpest open owner
+question is the **retention period for the comment column** — a 300-char free-text field
+held indefinitely is not anonymous in any meaningful sense.
 
 **6. If you only have time for one thing:**
 
 ```bash
-python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure tests.test_atlas_map -v
+python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure tests.test_atlas_map tests.test_poll -v
 ```
 
 These cover the defects a visual check cannot see: untranslated strings, Hausa pasted
 into an English column, a missing asset hash, an invert filter creeping back, invented
 contributor content, a placeholder creeping back into the filled credit, an English-only
-`alt` on the contributor's portrait, a duplicate `const` that would disable every script on a page, a nav
-link pointing at a page that was never generated, a cron that would publish stale
-subpages, a tearing seam between LGAs, quantization below the 3 dp floor, and a language
-switch that empties the map.
+`alt` on the contributor's portrait, a duplicate `const` that would disable every script
+on a page, a nav link pointing at a page that was never generated, a cron that would
+publish stale subpages, a tearing seam between LGAs, quantization below the 3 dp floor, a
+language switch that empties the map, a poll that can send with no endpoint, an identity
+field that slips into a poll payload, a comment that changes a published number, and a
+single vote rendering as 100%.
 
 ## 1. Handoff Summary
 
@@ -1413,7 +1417,88 @@ class name is now historical only.
 portrait `alt` are **4 more AI-drafted strings**, bringing the unreviewed total to **69**.
 The owner accepted the set as written on 29 September 2026, and the disclosure stays.
 
-## 21. The robots.txt Exemption on the ArcGIS Host — Needs Owner Ratification
+## 20b. S5, the Opinion Poll — Built, and Deliberately Inert
+
+`poll.html` now carries three things: the poll form, the results panel, and the request
+form. **The poll ships disabled.** `POLL_ENDPOINT = ""`, the vote button renders `disabled`,
+and `test_a_disabled_build_contains_no_code_path_that_can_send` asserts the endpoint guard
+appears *before* the `fetch` in `POLL_SCRIPT`. The contract is `src/poll/`, mirroring
+`src/requests/`, and `docs/POLL_SETUP.md` is the owner guide for connecting it via Sheets
+and Apps Script.
+
+**Why provider-agnostic was the right call.** The storage decision is the owner's, and it
+constrains nothing but one constant. Building against a guess would have meant a rewrite
+once Sheets was chosen. So the pure contract — schema, validation, tally — is done and
+tested now, and connecting is a one-line config change.
+
+### The four properties that make a published poll honest
+
+1. **It collects no PII, and that is enforced rather than intended.**
+   `FORBIDDEN_IDENTITY_FIELDS` covers `name`, `phone`, `email`, `address`, `ward_code`,
+   `lga`, `age`, `date_of_birth`, `nin`, `bvn` and the voter-ID names. Each is rejected
+   with `identity_field_forbidden` *before* the generic unknown-field check, so a
+   misconfigured form fails legibly rather than looking like a typo.
+
+   The dangerous alternative is the one that looks harmless: accepting the field,
+   stripping it, and returning 200. A dropped identity field is still an identity field on
+   the wire and in every log between the browser and the Sheet. `test_no_identity_field_is_
+   merely_silently_ignored` exists to make that regression obvious.
+
+2. **Q2 never moves a number.** `tally_poll_responses` reads `sector` only.
+   `public_projection` excludes the comment outright, so publishing it would turn an
+   anonymous preference count into a set of attributable public statements.
+   `test_the_comment_can_never_change_a_number` tallies two runs whose comments differ
+   wildly and asserts identical `by_sector`.
+
+3. **An empty poll renders as empty.** With no `data/delivery/poll_snapshot.json`, the page
+   says "No responses have been recorded yet." A row of zero bars reads as data, and it is
+   not data. `test_no_placeholder_tally_is_committed_anywhere` fails the build if a
+   snapshot is committed while the poll is disconnected. The bar chart was verified in a
+   browser against a **temporary local fixture** that was then deleted; nothing seeded
+   reaches the repository.
+
+4. **One vote is never 100%.** The cap is `min(share, 100 - floor)`.
+
+### The cap was wrong on the first attempt, and the direction is the point
+
+The initial implementation was `max(share, floor)`, which is the intuitive reading of "a
+floor" and is wrong twice over. `max(100, 10)` is 100, so it did not even stop the case it
+was written for. And a floor raises a 1-in-9 share to 11.1% for no reason, while
+pretending a small share is larger than it is.
+
+The correct shape is a **cap**: `min(share, 100 - floor)`. A single response renders 90%; a
+genuine 75% majority is untouched; a small minority is never inflated.
+`test_the_cap_never_invents_a_share_the_votes_do_not_support` pins that direction, because
+"correcting" it back into a minimum is the obvious and wrong next commit.
+
+### Two bugs worth remembering
+
+- **`render.py` cannot `import src.poll` when run as a script.** The cron runs
+  `python src/dashboard/render.py`, so the repo root is not on `sys.path` and the import
+  raised `ModuleNotFoundError` on the runner while every local test passed. Loading by
+  bare file path was tried first and fails for a different reason: `aggregate.py` uses a
+  relative import and needs a real package. `_poll_module` now puts `ROOT` on `sys.path`
+  once, if missing, and imports normally. The lesson generalises — *run the real entry
+  point the way CI runs it*, which is what `test_a_fresh_checkout_renders` now does for the
+  snapshot bytes too.
+
+- **Both scripts share one `<script>` on `poll.html`.** `POLL_SCRIPT` and `REQUEST_SCRIPT`
+  are concatenated into a single inline block. A duplicate top-level `const` across two
+  blocks is still one parse unit, so a collision would be a `SyntaxError` disabling every
+  handler on the page — the S3 trap, reintroduced by adding a second form.
+  `test_the_poll_script_never_defines_a_name_the_request_script_defines` asserts the two
+  declaration sets are disjoint.
+
+### Open for the owner
+
+- **`docs/POLL_SETUP.md` step 6: set a retention period for the comment column, and a
+  process that deletes on schedule.** This is the sharpest open question in S5. A 300-char
+  free-text field held indefinitely is not anonymous in any meaningful sense, and the
+  whole design rests on the poll not collecting identity.
+- **24 new AI-drafted Hausa strings**, unreviewed. Total now **93**.
+- Whether the poll closes, and what the page says when it does.
+
+## 21. The robots.txt Exemption on the ArcGIS Host — Ratified
 
 This is the one S4 decision that is a judgement call rather than code, so it is recorded
 prominently rather than buried in a diff.
@@ -1625,8 +1710,11 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Can I preserve the uncommitted aggregation and human-review work?
 - [ ] Do I know which pipeline is legacy and not part of the public product?
 - [ ] Do I know which outcome claims still require measurement?
-- [ ] Do I know which **69** Hausa strings are AI-drafted, that the owner accepted them as
-      written, and that they are still not native-speaker translated?
+- [ ] Do I know which **93** Hausa strings are AI-drafted, that the owner accepted the first
+      69 as written, and that the 24 poll strings are still unreviewed?
+- [ ] Do I know the poll ships disabled, that it collects no PII, and that the comment can
+      never move a published number?
+- [ ] Do I know the percentage cap **lowers** a share and never raises one?
 - [ ] Can I name the credited contributor and state that nothing around his name was
       invented?
 - [ ] Do I know the four release traps in §20 are closed and test-guarded, and that the

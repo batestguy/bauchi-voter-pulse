@@ -1,10 +1,13 @@
 import csv
 import datetime
+import functools
 import hashlib
 import html
+import importlib.util
 import json
 import pathlib
 import shutil
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 DATA = ROOT / "data" / "delivery"
@@ -22,6 +25,14 @@ LGAS = [
 
 LGA_WARDS_FILE = "lga_wards.csv"
 REQUEST_ENDPOINT = ""
+# The poll endpoint is deliberately empty, exactly like REQUEST_ENDPOINT. An empty
+# endpoint is the disabled state, not a missing feature: the submit button ships
+# `disabled` and no code path can send anything. `data/poll_snapshot.json` is a
+# committed, versioned snapshot of aggregated counts -- never raw responses.
+POLL_ENDPOINT = ""
+POLL_SNAPSHOT_FILE = "poll_snapshot.json"
+# One response must never render as "100%". The owner can set this to 0 to disable.
+POLL_PERCENTAGE_FLOOR = 10
 REQUEST_CATEGORIES = (
     ("water", "Water", "Ruwan sha"),
     ("electricity", "Electricity", "Wuta"),
@@ -701,6 +712,95 @@ if(publicRequestForm){
 '''
 
 
+POLL_SCRIPT = r'''
+const publicPollForm=document.querySelector('[data-poll-form]');
+if(publicPollForm){
+  const pollStatus=publicPollForm.querySelector('[data-poll-status]');
+  const pollConfirmation=publicPollForm.querySelector('[data-poll-confirmation]');
+  const pollSubmit=publicPollForm.querySelector('[data-poll-submit]');
+  const pollConfigStatus=publicPollForm.querySelector('[data-poll-config-status]');
+  const pollConsent=publicPollForm.querySelector('#poll-consent');
+  const POLL_SEEN_KEY='apm-poll-voted';
+  const POLL_RESPONSE_ID=/^APM-POLL-[0-9]{4}-[0-9]{4,12}$/;
+  const configuredPollEndpoint=(publicPollForm.dataset.pollEndpoint||'').trim();
+  let pollEndpointUrl=null;
+  try{
+    const parsedPollEndpoint=new URL(configuredPollEndpoint,window.location.href);
+    if(configuredPollEndpoint&&parsedPollEndpoint.protocol==='https:'&&!parsedPollEndpoint.username&&!parsedPollEndpoint.password&&!parsedPollEndpoint.hash)pollEndpointUrl=parsedPollEndpoint;
+  }catch(error){pollEndpointUrl=null;}
+  const pollEndpointReady=Boolean(pollEndpointUrl);
+  const readPollSeen=()=>{try{return window.localStorage.getItem(POLL_SEEN_KEY)==='1';}catch(error){return false;}};
+  const storePollSeen=()=>{try{window.localStorage.setItem(POLL_SEEN_KEY,'1');}catch(error){/* blocked storage: the vote still counts server-side */}};
+  const showPollStatus=key=>{
+    const english=pollStatus.dataset[key+'En'];
+    const hausa=pollStatus.dataset[key+'Ha'];
+    pollStatus.textContent=currentLanguage==='ha'?(hausa||pollStatus.dataset.ha):(english||pollStatus.dataset.en);
+    pollStatus.classList.toggle('is-error',key==='error');
+    pollStatus.hidden=false;
+  };
+  const applyPollBilingualValidity=()=>{
+    const sector=publicPollForm.querySelector('#poll-sector');
+    if(sector)sector.setCustomValidity(sector.value?'':'Choose a sector.');
+    if(pollConsent)pollConsent.setCustomValidity(pollConsent.checked?'':'Tick the consent box to cast your vote.');
+  };
+  publicPollForm.addEventListener('change',applyPollBilingualValidity);
+  applyPollBilingualValidity();
+  publicPollForm.setAttribute('aria-disabled',String(!pollEndpointReady));
+  if(!pollEndpointReady){
+    const notConnected=currentLanguage==='ha'?'Ba a saita wata ma?ai da ake amfani da ita a wannan gina ba. Ba a yin amsa ba.':'No usable poll endpoint is configured in this build. No vote is being recorded.';
+    pollConfigStatus.textContent=notConnected;
+    pollConfigStatus.dataset.en=notConnected;
+    pollConfigStatus.dataset.ha=notConnected;
+    pollSubmit.addEventListener('click',event=>{event.preventDefault();showPollStatus('unavailable');});
+  }
+  if(readPollSeen()){
+    // A per-browser marker only. It is trivially cleared and must never be presented as
+    // proof that a person voted only once; the server does not deduplicate either.
+    publicPollForm.querySelectorAll('select,textarea,input[type="checkbox"]').forEach(el=>{el.disabled=true;});
+    pollSubmit.disabled=true;
+  }
+  publicPollForm.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(!pollEndpointReady){
+      showPollStatus('unavailable');
+      return;
+    }
+    const sector=publicPollForm.querySelector('#poll-sector');
+    const comment=publicPollForm.querySelector('#poll-comment');
+    const honeypot=publicPollForm.querySelector('#poll-website');
+    if(!sector||!sector.value||!pollConsent||!pollConsent.checked){
+      showPollStatus('unavailable');
+      return;
+    }
+    // Deliberately minimal. No name, phone, email, address, ward or LGA is collected,
+    // so there is nothing here that could identify a respondent.
+    const payload={sector:sector.value,consent:true,website:(honeypot&&honeypot.value)||''};
+    if(comment&&comment.value.trim())payload.comment=comment.value.trim();
+    if(!payload.comment)delete payload.comment;
+    pollSubmit.disabled=true;
+    showPollStatus('submitting');
+    try{
+      const response=await fetch(pollEndpointUrl.href,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),credentials:'omit',referrerPolicy:'no-referrer'});
+      if(!response.ok)throw new Error('poll_endpoint_rejected');
+      const data=await response.json();
+      const trackingId=typeof data.response_id==='string'?data.response_id.trim().toUpperCase():'';
+      if(!POLL_RESPONSE_ID.test(trackingId))throw new Error('poll_endpoint_contract_violation');
+      pollConfirmation.dataset.trackingId=trackingId;
+      pollConfirmation.textContent=(currentLanguage==='ha'?'An karɓi amsa. Maƙai bin: ':'Vote received. Tracking reference: ')+trackingId+'.';
+      pollConfirmation.hidden=false;
+      publicPollForm.reset();
+      storePollSeen();
+      applyPollBilingualValidity();
+    }catch(error){
+      showPollStatus('error');
+    }finally{
+      pollSubmit.disabled=!pollEndpointReady||readPollSeen();
+    }
+  });
+}
+'''
+
+
 def source_footer(sources):
     return "".join(
         f'<li><span class="source-grade">{esc(row.get("source_grade", "?"))}</span> '
@@ -1072,6 +1172,202 @@ def request_form_section(ward_rows):
   </div>
 </section>'''
 
+
+@functools.lru_cache(maxsize=None)
+def _poll_module(name):
+    """Import a `src/poll/` module.
+
+    `render.py` is executed as a script by the weekly cron, so the repository root is
+    not on `sys.path` and `import src.poll...` raises ModuleNotFoundError there while
+    working fine under unittest. Putting the root on the path once, only if it is
+    missing, makes both contexts behave identically -- and the relative import inside
+    `src/poll/aggregate.py` needs a real package, which loading a bare file by path
+    would not provide.
+
+    The pure poll modules stay the single source of truth for the vocabulary, the
+    length caps and the percentage floor. The page reads them from here rather than
+    restating them, so a rule cannot drift between the validator and the form.
+    """
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    return importlib.import_module(f"src.poll.{name}")
+
+
+def load_poll_snapshot():
+    """Read the committed aggregate snapshot, or None when it does not exist yet.
+
+    The snapshot holds counts only -- no comment, no response ID, no timestamp of an
+    individual response. It is the artefact the weekly cron regenerates, and it is what
+    lets results be published on a static host with no live endpoint.
+    """
+    path = DATA / POLL_SNAPSHOT_FILE
+    if not path.exists():
+        return None
+    try:
+        snapshot = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(snapshot, dict):
+        return None
+    return snapshot
+
+
+def format_snapshot_timestamp(value):
+    """Render an ISO-8601 snapshot timestamp as a plain date a reader can parse.
+
+    A raw `2026-09-29T12:00:00Z` is machine output on a public page. The date is enough
+    for a reader and avoids implying a precision the poll does not have. An unparseable
+    value falls back to the raw string rather than disappearing, because a visible
+    malformed stamp is better than no provenance at all.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return ""
+    try:
+        parsed = datetime.datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return value.strip()
+    return parsed.strftime("%d %B %Y")
+
+
+def poll_results_section(snapshot):
+    """Results panel: live bars when a snapshot exists, an honest empty state when not.
+
+    An empty poll renders as empty. A bar chart of zeros reads as data, and it is not
+    data, so there is deliberately no placeholder tally anywhere in this file.
+    """
+    share_of_total = _poll_module("aggregate").share_of_total
+
+    floor = POLL_PERCENTAGE_FLOOR
+    if snapshot is None:
+        body = (
+            f'<p class="poll-empty" data-en="No responses have been recorded yet. Once the poll is '
+            'connected, results will appear here." data-ha="Bai sami amsa ba tukuna. Idan aka haɗa '
+            'hawsar, za a nuna sakamako a nan.">No responses have been recorded yet. Once the poll '
+            'is connected, results will appear here.</p>'
+        )
+    else:
+        total = int(snapshot.get("total_responses") or 0)
+        by_sector = snapshot.get("by_sector") or {}
+        floor = int(snapshot.get("percentage_floor", floor) or 0)
+        if total <= 0:
+            body = (
+                '<p class="poll-empty" data-en="No responses have been recorded yet." '
+                'data-ha="Bai sami amsa ba tukuna.">No responses have been recorded yet.</p>'
+            )
+        else:
+            rows = []
+            # Ranked by count, then alphabetically, so the order is stable between builds.
+            ordered = sorted(by_sector.items(), key=lambda item: (-item[1], item[0]))
+            for key, count in ordered:
+                label_en, label_ha = next(
+                    ((en, ha) for k, en, ha in REQUEST_CATEGORIES if k == key),
+                    (key.title(), key),
+                )
+                share = share_of_total(int(count), total, floor)
+                rows.append(
+                    f'<li class="poll-bar"><span class="poll-bar-label" '
+                    f'{attr(label_en, label_ha)}>{esc(label_en)}</span>'
+                    f'<span class="poll-bar-track"><span class="poll-bar-fill" '
+                    f'style="width:{share:.1f}%"></span></span>'
+                    f'<span class="poll-bar-value">{int(count)}'
+                    f'<span class="poll-bar-pct">{share:.0f}%</span></span></li>'
+                )
+            body = (
+                f'<p class="poll-total"><b data-en="{total} responses" '
+                f'data-ha="{total} amsa">{total} responses</b></p>'
+                f'<ol class="poll-bars">{"".join(rows)}</ol>'
+            )
+
+    generated = (snapshot or {}).get("generated_at")
+    stamp = ""
+    if generated:
+        pretty = format_snapshot_timestamp(generated)
+        stamp = (
+            f'<p class="poll-stamp" data-en="Counted from the anonymous response sheet on '
+            f'{esc(pretty)}. No comment or identifying detail is published." data-ha="An '
+            f'lissafi daga takarda amma a ran {esc(pretty)}. Ba a wallafa kommenta ko bayan da ke '
+            f'gano mutum ba.">Counted from the anonymous response sheet on {esc(pretty)}. No '
+            f'comment or identifying detail is published.</p>'
+        )
+
+    return (
+        '<section class="section poll-results" id="poll-results" aria-labelledby="poll-results-title">'
+        '<div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("What people have said", "Abin da mutane suka faɗa")}</div>'
+        f'<h2 id="poll-results-title">{copy("Sector priorities so far.", "Fihimmanci na sectors har yanzu.")}</h2>'
+        '</div></div>'
+        f'<div class="poll-chart">{body}</div>'
+        f'{stamp}'
+        '<div class="note-box">'
+        + copy(
+            "These are self-selected visitors, not a representative sample. This poll shows which "
+            "sector people who chose to answer want first. It is not a survey, it is not a vote, and "
+            "it does not measure how many people in Bauchi hold this view.",
+            "Wannan mutane da suka zaɓi da su jagoranta ba su cikin saminci da ke wakilai ba. Wannan "
+            "hawsar tana nuna wane sector mutane da suka amsa da su su fi so a fahimta. Ba aiki ta "
+            "hawsar ba, ba zafi ba, kuma ba ta aunawa yawanin mutane a Bauchi da wannan ra'ayi ba.")
+        + "</div></div></section>"
+    )
+
+
+def poll_section():
+    """Q1 sector choice plus an optional Q2 comment, both off until an endpoint exists."""
+    _validation = _poll_module("validation")
+    ALLOWED_SECTORS = _validation.ALLOWED_SECTORS
+    MAX_COMMENT_LENGTH = _validation.MAX_COMMENT_LENGTH
+
+    sector_options = "".join(
+        f'<option value="{esc(key)}" {attr(label_en, label_ha)}>{esc(label_en)}</option>'
+        for key, label_en, label_ha in REQUEST_CATEGORIES
+        if key in ALLOWED_SECTORS
+    )
+    endpoint_configured = bool(POLL_ENDPOINT.strip())
+    status_en = (
+        "A poll endpoint is configured. Submission availability depends on the receiving service."
+        if endpoint_configured else
+        "The poll is not connected yet, so nothing is sent from this build. No vote is being recorded."
+    )
+    status_ha = (
+        "An kunna maƙai don hawsar. Samun da zarfin ya dogara da sabis da karɓi."
+        if endpoint_configured else
+        "Ba a haɗa hawsar ba tukuna, don haka ba a tura komai daga wannan gina. Ba a yin amsa ba."
+    )
+    max_comment = MAX_COMMENT_LENGTH
+    return f'''
+<section class="section poll-section" id="poll" aria-labelledby="poll-title">
+  <div class="shell">
+    <div class="section-head">
+      <div><div class="eyebrow">{copy("One question", "Ƙa tambaya daya")}</div><h2 id="poll-title">{copy("Which sector should APM prioritise first?", "Wane sector APM ya fi fahimta da farko?")}</h2></div>
+      <p>{copy("Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied.", "Zaɓi sector daya. Shi kawai abin da wannan hawsar tana ƙirgita. Akwai ƙananan maƙalashin da ke tare da ita, ba tambaya ta biyu ba, kuma ba a taƙaita shi ba.")}</p>
+    </div>
+    <form class="poll-form" id="public-poll-form" method="post" action="about:blank" onsubmit="return false" data-poll-form data-poll-endpoint="{esc(POLL_ENDPOINT)}" data-poll-configured="{str(endpoint_configured).lower()}" aria-describedby="poll-config-status poll-identity-note">
+      <p class="poll-config-status" id="poll-config-status" data-poll-config-status data-en="{esc(status_en)}" data-ha="{esc(status_ha)}">{esc(status_en)}</p>
+      <div class="poll-field">
+        <label for="poll-sector">{copy("Sector", "Sector")} <span class="poll-required" aria-hidden="true">*</span></label>
+        <select id="poll-sector" name="sector" required>
+          <option value="" {attr("Choose a sector", "Zaɓi sector")} selected>Choose a sector</option>
+          {sector_options}
+        </select>
+      </div>
+      <div class="poll-field">
+        <label for="poll-comment">{copy("Comment (optional, not counted)", "Sharhi (zaɓi, ba a taƙaita ba)")}</label>
+        <textarea id="poll-comment" name="comment" rows="3" maxlength="{max_comment}" aria-describedby="poll-comment-note"></textarea>
+        <p class="poll-note" id="poll-comment-note" data-en="This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail." data-ha="Wannan sharhi yana tare da amsar kuma ba a taƙaita ko wallafa shi ba. Ka faɗa don shigar da suna, l waya, adireshi ko wani bayan da ke gano mutum.">This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail.</p>
+      </div>
+      <div class="poll-field poll-honeypot" aria-hidden="true"><label for="poll-website" data-en="Website" data-ha="Yanayin gari">Website</label><input id="poll-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+      <div class="poll-consent">
+        <input id="poll-consent" name="consent" type="checkbox" required>
+        <label for="poll-consent">{copy("I consent to this anonymous vote being recorded and counted. No identifying detail is collected.", "Na amince da wannan amsa a banda su kasance a lura da kuma a lissafa. Ba a tara bayan da ke gano mutum ba.")} <span class="poll-required" aria-hidden="true">*</span></label>
+      </div>
+      <p class="poll-note" id="poll-identity-note" data-en="No name, phone, email, address, ward or voter ID is requested. Any reference shown after you vote is a generated response tracking reference, not a voter ID." data-ha="Ba a nemi suna, l waya, imel, adireshi, ward ko ID na zabb'ar masu zayyawa ba. Kowane maƙai da za a nuna bayan amsa yana nufin bin amsa kawai, ba ID na zabb'ar masu zayyawa ba.">No name, phone, email, address, ward or voter ID is requested. Any reference shown after you vote is a generated response tracking reference, not a voter ID.</p>
+      <button class="btn poll-submit" type="submit" data-poll-submit {'disabled' if not endpoint_configured else ''}><span data-en="Cast vote" data-ha="Yi amsa">Cast vote</span></button>
+      <p class="poll-status" data-poll-status role="status" aria-live="polite" aria-atomic="true" data-en="Voting is currently unavailable. Please check the status above." data-ha="Ba a samu damar yin amsa yanzu. Duba matsayi a sama." data-unavailable-en="Voting is currently unavailable. Please check the status above." data-unavailable-ha="Ba a samu damar yin amsa yanzu. Duba matsayi a sama." data-submitting-en="Sending your vote." data-submitting-ha="Ana aika amsar." data-error-en="We could not send your vote. Please try again later." data-error-ha="Ba mu iya aika amsar. Ka sake gwada daga baya.">Voting is currently unavailable. Please check the status above.</p>
+      <div class="poll-confirmation" data-poll-confirmation role="status" aria-live="polite" aria-atomic="true" hidden data-en="Vote received. This reference tracks your response only and is not a voter ID." data-ha="An karɓi amsa. Wannan maƙai yana bin amsar kawai, ba ID na zabb'ar masu zayyawa ba.">Vote received. This reference tracks your response only and is not a voter ID.</div>
+    </form>
+  </div>
+</section>'''
+
+
 # ---------------------------------------------------------------------------
 # Multi-page shell (S3)
 # ---------------------------------------------------------------------------
@@ -1294,6 +1590,40 @@ a{color:inherit}
 .request-submit:hover{background:var(--blue)}
 .request-submit:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
 .request-submit:disabled{opacity:.55;cursor:wait;transform:none}
+.poll-section .section-head p{max-width:62ch}
+.poll-form{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:26px;display:grid;gap:18px;box-shadow:var(--shadow);max-width:720px}
+.poll-config-status{margin:0;font-size:12px;line-height:1.5;color:var(--muted);border-left:3px solid var(--gold);padding-left:12px}
+.poll-field{display:grid;gap:7px}
+.poll-field label{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);font-weight:700}
+.poll-field select,.poll-field textarea{font-family:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white);color:var(--ink);width:100%}
+.poll-field textarea{resize:vertical;min-height:84px;line-height:1.5}
+.poll-field select:focus-visible,.poll-field textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.poll-required{color:var(--gold)}
+.poll-note{margin:0;font-size:11px;line-height:1.55;color:var(--muted)}
+.poll-honeypot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.poll-consent{display:grid;grid-template-columns:20px 1fr;gap:11px;align-items:start}
+.poll-consent input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--navy)}
+.poll-consent label{font-size:12px;line-height:1.55;color:var(--ink);text-transform:none;letter-spacing:0;font-weight:400}
+.poll-submit{justify-self:start;border:0;background:var(--navy);color:#fff;cursor:pointer;padding:13px 24px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 10px 22px rgba(11,38,60,.18)}
+.poll-submit:hover{background:var(--blue)}
+.poll-submit:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.poll-submit:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.poll-status{margin:0;font-size:12px;line-height:1.5;color:var(--muted)}
+.poll-status.is-error{color:#a3341f}
+.poll-confirmation{margin:0;font-size:12px;line-height:1.5;color:var(--green);background:var(--green-soft);border:1px solid rgba(46,114,84,.3);border-radius:4px;padding:12px 14px}
+.poll-results{background:var(--sky)}
+.poll-chart{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:24px 26px;box-shadow:var(--shadow)}
+.poll-total{margin:0 0 16px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.poll-total b{font-family:Georgia,serif;font-size:1.5rem;color:var(--navy);font-weight:400;letter-spacing:0;text-transform:none;margin-right:8px}
+.poll-bars{list-style:none;margin:0;padding:0;display:grid;gap:11px;counter-reset:pollbar}
+.poll-bar{display:grid;grid-template-columns:minmax(120px,1.1fr) minmax(90px,2.4fr) auto;align-items:center;gap:14px}
+.poll-bar-label{font-size:12px;color:var(--ink);font-weight:700}
+.poll-bar-track{height:14px;background:rgba(11,38,60,.08);border-radius:2px;overflow:hidden}
+.poll-bar-fill{display:block;height:100%;background:var(--navy);border-radius:2px;min-width:2px}
+.poll-bar-value{font-size:12px;color:var(--navy);font-weight:700;white-space:nowrap}
+.poll-bar-pct{color:var(--muted);font-weight:400;margin-left:6px}
+.poll-empty{margin:0;font-size:13px;line-height:1.6;color:var(--muted)}
+.poll-stamp{margin:16px 0 0;font-size:11px;line-height:1.55;color:var(--muted)}
 .request-status,.request-confirmation{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.5}
 .request-status{background:#ecebe4;border-left:3px solid #7b8589;color:#46545a}
 .request-status.is-error{background:#fff0eb;border-left-color:#9a351f;color:#7a2818}
@@ -1344,7 +1674,7 @@ a{color:inherit}
 @keyframes rise{to{opacity:1;transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 @media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
-@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}}
+@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}.poll-form{padding:18px}.poll-bar{grid-template-columns:1fr;gap:5px}.poll-bar-track{height:12px}.poll-chart{padding:18px}}
 @media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-map-layout{grid-template-columns:1fr;gap:22px}.lga-map-column{position:static}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
 @media (max-width:760px){.shell{width:min(100% - 28px,1240px)}.hero{min-height:auto;padding-top:112px;padding-bottom:54px}.hero-grid,.intro-grid,.governance-grid{grid-template-columns:1fr}.hero h1{font-size:clamp(3.2rem,16vw,5.5rem)}.portrait-wrap{min-height:390px;margin-top:20px}.portrait-wrap::before{width:280px;height:280px;right:4%}.portrait-wrap::after{width:320px;height:400px;right:1%}.portrait{max-height:420px}.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}.stat:nth-child(2){border-right:0}.section{padding:70px 0}.section-head{display:block}.section-head p{margin-top:18px}.progress-path{grid-template-columns:1fr;padding:16px}.path-step{min-height:0;padding:14px 16px 24px}.path-step:not(:last-child)::after{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}.arrow-head{padding:15px 16px}.arrow-path{display:block;padding:14px}.path-node{margin-bottom:10px;padding:16px}.path-arrow{padding:0;height:24px;transform:rotate(90deg)}.lga-detail{display:block}.lga-detail .detail-label{display:block;margin-bottom:12px}.governor-card img{height:340px}.agenda-grid{grid-template-columns:1fr 1fr}.source-list{grid-template-columns:1fr}.footer-inner{display:block}.deerflow{display:inline-block;margin-top:20px}}"""
 
@@ -1751,22 +2081,37 @@ def body_atlas(ctx):
 
 
 def body_poll(ctx):
+    """The poll, its results, and the request form.
+
+    Two distinct things share this page, so the headings and the disclosure have to
+    keep them apart: the poll records an anonymous sector preference, while the
+    request form opens a follow-up channel that can collect contact details. A visitor
+    must never read one as the other.
+    """
     header = subpage_open("poll")
     note = (
         '<section class="section" id="how"><div class="shell"><div class="section-head"><div>'
         f'<div class="eyebrow">{copy("Before you send", "Kafin ka aika")}</div>'
         f'<h2>{copy("What happens to this form.", "Abin da zai faru da wannan fom.")}</h2></div>'
-        f'<p>{copy("This form is not connected to a public endpoint yet, so nothing is sent from this build.", "Wannan fom ba a haɗa da wata adireshin da za a iya amfani ba tukuna, don haka ba a tura komai daga wannan gina.")}</p>'
+        f'<p>{copy("The poll and the request form below are both not connected to a public endpoint yet, so nothing is sent from this build.", "Hawsar da fom na buƙatar da ke ƙasa duk ba a haɗa su da wata adireshin da za a iya amfani ba tukuna, don haka ba a tura komai daga wannan gina.")}</p>'
         '</div><div class="note-box">' + copy(
-            "No voter ID is requested. No electoral identity number is collected. Any confirmation "
-            "reference is a generated request tracking reference, not a voter ID.",
-            "Ba a nemi ID na zabb'ar masu zayyawa. Ba a tara lambar wayo da ke gano mutum. ID na tabbaci yana nufin bin buƙatar kawai, ba ID na zabb'ar masu zayyawa ba.") + '</div></div></section>')
+            "The poll asks for no name, phone number, email, address, ward or voter ID. It "
+            "records one sector choice and an optional comment, and the comment is never counted. "
+            "The request form below is separate and can ask for contact details if you choose to give "
+            "them. Any confirmation reference on either form is a generated tracking reference, not a "
+            "voter ID.",
+            "Hawsar ba ta nemi suna, l waya, imel, adireshi, ward ko ID na zabb'ar masu zayyawa. "
+            "Tana yin rikodin zaɓi na sector daya da sharhi na zaɓi, kuma ba a taƙaita sharhi ba. "
+            "Fom na buƙatar da ke ƙasa shi dabewa ne, yana iya nemi bayanan hulɗe idan ka zaɓi su bayar. "
+            "Kowane maƙai na tabbaci a koɗa cikin suna maƙai bin ne, ba ID na zabb'ar masu zayyawa ba.")
+        + '</div></div></section>')
     return (header + page_hero("Speak to us", "Yi magana da mu",
-                      "Tell us one need in your area.", "Faƙa mana buƙatar daya a cikin wurin da kake.",
-                      "Choose your local government area and the specific thing that matters to you. Contact details are optional and are never shown publicly.",
-                      "Zaɓi LGA da kuma abin da ke muhimmanci maka. Bayanan hulɗe na zaɗi ne kuma ba a nuna su a fili ba.",
+                      "One question, and one way to ask for something.", "Ƙa tambaya daya, da hanya daya ka nemi abin da kake buƙata.",
+                      "The poll records an anonymous sector priority. The request form below opens a follow-up channel for a specific need in your area. Contact details there are optional and are never shown publicly.",
+                      "Hawsar tana yin rikodin fihimmanci na sector a banda su sani. Fom na buƙatar da ke ƙasa yana buɗe hanya ta binfollow-up don buƙatar daya cikin wurin da kake. Bayanan hulɗe a nan zaɓi ne kuma ba a nuna su a fili ba.",
                       "Speak to us", "Yi magana da mu")
-            + '<main id="main">' + ctx["request_section"] + note + "</main>")
+            + '<main id="main">' + ctx["poll_section"] + ctx["poll_results"]
+            + ctx["request_section"] + note + "</main>")
 
 
 def body_agenda(ctx):
@@ -1904,6 +2249,8 @@ def load_context():
             '</div><div class="indicator-grid">' + indicator_cards(indicator_rows, sources) +
             '</div></div></section>'),
         "request_section": request_form_section(ward_rows),
+        "poll_section": poll_section(),
+        "poll_results": poll_results_section(load_poll_snapshot()),
         "ward_rows": ward_rows,
         "achievement_count": len(achievement_rows),
         "promise_count": len(promise_rows),
@@ -1914,7 +2261,11 @@ def load_context():
 PAGE_SCRIPTS = {
     "index": lambda: SCRIPT_INDEX,
     "achievements": lambda: FEATURED_SCRIPT,
-    "poll": lambda: REQUEST_SCRIPT,
+    # poll.html carries both intake forms, so it needs both scripts. A duplicate `const`
+    # across two script blocks is still a single parse unit in the browser, so the
+    # blocks are concatenated into one inline <script> and their top-level names are
+    # kept distinct.
+    "poll": lambda: POLL_SCRIPT + "\n" + REQUEST_SCRIPT,
     "atlas": lambda: ATLAS_SCRIPT,
 }
 

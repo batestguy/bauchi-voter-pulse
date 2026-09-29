@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:apm:contract:poll-schema:v1",
+  "title": "APM public opinion poll contract",
+  "description": "Untrusted public poll input for the Apps Script/Google Sheet adapter. This is a contract only, not an Apps Script deployment. The poll collects no personally identifying information, so this schema is strictly smaller than the request intake contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sector",
+    "consent"
+  ],
+  "properties": {
+    "sector": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "water",
+        "electricity",
+        "roads",
+        "healthcare",
+        "education",
+        "jobs_agriculture",
+        "security",
+        "housing_environment",
+        "other"
+      ],
+      "description": "Required Q1, single choice. The only field that can move a published number. The vocabulary is identical to the request intake categories so the two datasets are directly comparable; only a configured subset may be enabled."
+    },
+    "comment": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "Optional Q2. A free-text comment attached to the vote, NOT a second poll question. It is stored, it is never counted, and it is excluded from the public projection. Respondents can be asked for anything in a comment, so it is treated as the highest-abuse and highest-PII-risk field on the form."
+    },
+    "consent": {
+      "const": true,
+      "description": "Required affirmative consent. Only the JSON boolean true is valid; missing, false, string, numeric, and malformed values are rejected."
+    },
+    "website": {
+      "const": "",
+      "description": "Hidden optional honeypot field. When included, it must be an empty string and must never be shown to people."
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "maxLength": 64,
+      "description": "Optional timezone-aware client timestamp. If supplied, the server must pass an explicit timezone-aware now value and reject timestamps older than 24 hours or more than 5 minutes in the future."
+    }
+  },
+  "x-forbidden-fields": {
+    "description": "Rejected with identity_field_forbidden rather than silently ignored. A dropped identity field is still an identity field on the wire and in any intermediate log.",
+    "fields": [
+      "name",
+      "phone",
+      "email",
+      "address",
+      "ward_code",
+      "voter_id",
+      "voterid",
+      "registered_voter_number",
+      "nin",
+      "bvn",
+      "phone_number",
+      "full_name",
+      "lga",
+      "date_of_birth",
+      "age"
+    ]
+  },
+  "x-server-allocated-fields": {
+    "response_id": {
+      "client-submission-allowed": false,
+      "pattern": "^APM-POLL-[0-9]{4}-[0-9]{4,12}$",
+      "maxLength": 40,
+      "allocation": "The endpoint must allocate the year and sequence. The pure validator includes a reference only when the server supplies response_id or an explicit response_id_generator."
+    },
+    "created_at": {
+      "allocation": "Derived only from an explicit timezone-aware server time supplied by the endpoint."
+    }
+  },
+  "x-normalized-response": {
+    "type": "object",
+    "properties": {
+      "response_id": {
+        "type": "string"
+      },
+      "sector": {
+        "type": "string"
+      },
+      "comment": {
+        "type": "string"
+      },
+      "consent": {
+        "const": true
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "privacy": "Anonymous by design. This object has no name, phone, email, address, ward code, LGA or voter ID field, and none may be added to the Sheet."
+  },
+  "x-endpoint-response": {
+    "type": "object",
+    "required": [
+      "response_id"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "response_id": {
+        "type": "string",
+        "pattern": "^APM-POLL-[0-9]{4}-[0-9]{4,12}$",
+        "description": "Server-generated non-sensitive response tracking reference. It is not an official voter ID. The browser displays this value only after strict validation."
+      }
+    },
+    "note": "The endpoint must return JSON with response_id only. It must never echo the comment, the sector, or any stored field back to the client."
+  },
+  "x-public-snapshot": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schema_version",
+      "total_responses",
+      "by_sector",
+      "percentage_floor"
+    ],
+    "properties": {
+      "schema_version": {
+        "const": "poll-v1"
+      },
+      "reporting_period_start": {
+        "type": ["string", "null"]
+      },
+      "reporting_period_end": {
+        "type": ["string", "null"]
+      },
+      "total_responses": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "by_sector": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Every configured sector is present, so a zero-response sector reads as 0 rather than vanishing from the axis.",
+        "properties": {
+          "water": { "type": "integer", "minimum": 0 },
+          "electricity": { "type": "integer", "minimum": 0 },
+          "roads": { "type": "integer", "minimum": 0 },
+          "healthcare": { "type": "integer", "minimum": 0 },
+          "education": { "type": "integer", "minimum": 0 },
+          "jobs_agriculture": { "type": "integer", "minimum": 0 },
+          "security": { "type": "integer", "minimum": 0 },
+          "housing_environment": { "type": "integer", "minimum": 0 },
+          "other": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "percentage_floor": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Configurable display floor so a single response cannot render as 100%. The owner may set 0 to disable."
+      },
+      "generated_at": {
+        "type": "string"
+      }
+    },
+    "excluded-fields": [
+      "response_id",
+      "comment",
+      "consent",
+      "created_at"
+    ],
+    "note": "The comment field is excluded from the public projection by construction. Publishing it would convert an anonymous preference count into a set of attributable public statements."
+  },
+  "x-safety-rules": [
+    "Do not collect or request a name, phone number, email address, physical address, ward code, LGA, age, date of birth, NIN, BVN, official voter ID, registered voter number, or any equivalent identity credential.",
+    "A response_id is only a non-sensitive tracking reference and must not be described as an official voter ID.",
+    "The comment field is a comment attached to the vote, not a second poll question. It must never be counted, bucketed, or published.",
+    "The endpoint must repeat every validation rule and must not rely on browser validation.",
+    "Unknown payload fields, every field in x-forbidden-fields, malformed consent, invalid sector values, honeypot values, control characters and over-length comments are rejected.",
+    "Raw responses, comments, Google Sheet data, Apps Script source, credentials, and submitted values must not be committed, logged, or placed in docs.",
+    "An empty poll must render as empty. Never seed, example or placeholder results, and never render a chart of zeros that would read as data.",
+    "Published results must state that respondents are self-selected visitors and that the sample is not representative.",
+    "The poll is not a survey and not a vote. It is a single stated preference from a self-selected visitor and must never be described as either.",
+    "A single response must never render as 100%, because 100% reads as a unanimous mandate and a sample of one is not a mandate.",
+    "Poll responses are campaign input expressing a stated preference. They are not verified needs, achievements, promises, evidence, or outcome measurements, and must not be presented as any of those."
+  ]
+}

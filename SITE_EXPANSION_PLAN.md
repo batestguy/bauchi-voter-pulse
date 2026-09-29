@@ -876,24 +876,104 @@ Four rules are now test-enforced, and they exist because this slot is the one pl
 person is named: a placeholder bracket cannot return, no amount or organisation can be
 added, the portrait's `alt` must be bilingual, and the dashed placeholder styling is gone.
 
+### S5 — Poll (complete, 29 September 2026; **ships disabled**)
+
+The poll, its results panel and the request form all live on `poll.html`. All nine §4 S5
+items are done. The deliberate decision was to build it **provider-agnostic and inert**:
+`POLL_ENDPOINT` is `""`, so the vote button ships `disabled` and no code path can send.
+
+| Item | Where |
+|---|---|
+| New package mirroring `src/requests/` | `src/poll/` — `poll_schema.json`, `validation.py`, `aggregate.py` |
+| Q1 required single choice, reusing the request vocabulary | `validation.ALLOWED_SECTORS` is asserted equal to `REQUEST_CATEGORIES` by a test, so the two datasets stay comparable |
+| Q2 optional, ≤300 chars, never counted | `aggregate.tally_poll_responses` reads `sector` only; a test asserts two runs with very different comments tally identically |
+| Live bars, `N` prominent, disclosure on the page | `render.py::poll_results_section` |
+| Percentage cap, owner-configurable | `aggregate.share_of_total` = `min(share, 100 - floor)`, default floor 10 |
+| Static-host results via a committed snapshot | `render.py::load_poll_snapshot` reads `data/delivery/poll_snapshot.json` |
+| No PII at all | `validation.FORBIDDEN_IDENTITY_FIELDS` rejected as `identity_field_forbidden` |
+| No seeded results | `test_no_placeholder_tally_is_committed_anywhere` fails the build if a snapshot exists while disconnected |
+
+#### The cap lowers a share, it never raises one
+
+The first implementation used `max(share, floor)`, which is the intuitive reading of "a
+floor" and is wrong. It would raise a 1-in-9 share (11.1%) to nothing useful while
+*also* failing to stop 1-in-1 from showing as 100%, because `max(100, 10)` is 100. The
+correct cap is `min(share, 100 - floor)`: a single response renders 90%, a real 75%
+majority is untouched, and a small minority is never inflated into looking like support
+the votes do not show. `test_the_cap_never_invents_a_share_the_votes_do_not_support`
+pins that direction, because "fixing" it back into a minimum is the tempting regression.
+
+#### `validate_poll_response` puts `sectors` behind a keyword
+
+The first signature was `(payload, sectors, now)` with `sectors` positional, copied from
+the request validator. Type checking caught it immediately: every call passing server time
+positionally was passing a `datetime` where an iterable of strings was expected. `now` is
+now the second positional parameter and `sectors` is keyword-only, so the two can never be
+confused. This is why the request validator's shape is worth mirroring *and* worth
+questioning.
+
+#### `render.py` cannot `import src.poll` when run as a script
+
+The weekly cron runs `python src/dashboard/render.py`, so the repository root is not on
+`sys.path` and `from src.poll.aggregate import ...` raised `ModuleNotFoundError` on the
+runner while passing every local test. `render.py::_poll_module` now puts `ROOT` on
+`sys.path` once, if missing, and imports normally — loading by bare file path was tried
+first and fails because `aggregate.py` uses a relative import and so needs a real
+package. The page therefore renders on the runner exactly as it does locally.
+
+#### Both scripts share one `<script>` on `poll.html`
+
+`POLL_SCRIPT` and `REQUEST_SCRIPT` are concatenated into a single inline script. A
+duplicate top-level `const` across two blocks is still one parse unit, so a name collision
+would be a `SyntaxError` that silently disables **every** handler on the page — the S3
+trap. `test_the_poll_script_never_defines_a_name_the_request_script_defines` asserts the
+two declaration sets are disjoint, and the existing per-page `node --check` parse covers
+the rest.
+
+#### Verification
+
+**228 tests pass** (was 172). `tests/test_poll.py` adds 56 across the schema, the
+validator, the tally, the percentage cap and the rendered page.
+
+Browser-verified at 1440px and 390px: the form renders with the sector select, comment
+box, consent checkbox and a disabled vote button; the results panel shows the honest empty
+state; EN→HA translates the question, the comment label, the button, the results heading,
+the empty state and the disclosure; the footer portrait still loads; 0px horizontal
+overflow; zero console errors.
+
+The bar chart was verified separately against a **temporary local fixture** snapshot, then
+the fixture was deleted. The committed state has no snapshot, and a test enforces that.
+
+#### Owner actions still open
+
+- `docs/POLL_SETUP.md` is the full Sheets + Apps Script guide: Sheet columns, `doPost`
+  rules, CORS, the snapshot job, and the retention decision.
+- **The comment retention period is the sharpest open question.** A 300-char free-text
+  field held indefinitely is not anonymous in any meaningful sense. The guide asks the
+  owner to set a period and a deletion process.
+- The 24 new Hausa strings are AI-drafted and not yet reviewed.
+
 ## 10. Next session - start here
 
-**State at handoff (29 September 2026):** S0–S3 deployed and live. **S4 pushed as `82eb16a`**,
-and because `docs/` is a tracked tree the regenerated pages went with it, so Pages publishes
-the map on the ordinary deploy-on-push. The footer contributor credit is filled. **165 tests
-pass.** Both former owner gates (the robots exemption, the AI-drafted Hausa) are closed.
+**State at handoff (29 September 2026):** S0–S4 live, with the map shipped in `82eb16a` and
+the contributor credit filled. **S5, the opinion poll, is built and ships disabled** —
+`POLL_ENDPOINT` is `""` and no code path can send. **228 tests pass.** The weekly cron now
+completes successfully for the first time. The robots gate is closed; 69 of the 93
+AI-drafted Hausa strings have been reviewed and accepted, and the 24 new poll strings have
+not.
 
 ### Do this first
 
 1. Work from `D:\APMdeliverable` and run `python -m unittest discover -s tests -q`. Expect
-   **165 OK** (1 skip: the Playwright browser tests).
+**165 OK** (1 skip: the Playwright browser tests). **It is now 228 after S5.**
 2. Run `python src/dashboard/render.py`. It must print six page sizes and write all six.
 3. Confirm the preserved local work is still untracked/modified and do **not** touch it:
    `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`, `.playwright-mcp/`.
 4. Optionally run the browser guards, which need Playwright installed:
    `pip install playwright && python -m playwright install chromium`, then
    `python -m unittest tests.test_browser_layout -v`.
-5. Next task: **S5, the opinion poll** on `poll.html`, per §4 S5 and `HANDOFF.md` §13 P1.
+5. Next task: **connect the poll** (owner action, per `docs/POLL_SETUP.md`) or start
+   **S6, the CI and release gate**. S5's build work is done and ships disabled.
 
 ### If you are touching the map again — five things not to get wrong
 
