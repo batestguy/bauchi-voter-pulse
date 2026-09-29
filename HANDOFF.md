@@ -13,7 +13,8 @@
 >
 > **S5, the opinion poll, is built and ships disabled.** `POLL_ENDPOINT` is `""`, the vote
 > button renders `disabled`, and no code path in `POLL_SCRIPT` can send. `poll.html` carries
-> the poll, its results panel and the request form. **228 tests pass.**
+> the poll, its public dashboard (two charts, an LGA dropdown, a suppressed count
+> table) and the request form. **259 tests pass.**
 >
 > **The weekly cron now completes successfully** — run `36524274151`, green, which committed
 > `a5d9b43`. It had never succeeded before; see §20 traps 3 and 4.
@@ -21,7 +22,7 @@
 > **Owner gates:** the `services3.arcgis.com` robots exemption (§21) was ratified on
 > 29 September 2026, and 69 AI-drafted Hausa strings were reviewed and accepted as written
 > the same day. The disclosure stays, because those strings are still AI-drafted rather than
-> native-speaker translated. **S5 added 24 more unreviewed Hausa strings (total 93).**
+> native-speaker translated. **S5 added 66 unreviewed Hausa strings (total 129).**
 > Connecting the poll is an owner action; see `docs/POLL_SETUP.md`.
 
 ---
@@ -36,11 +37,11 @@ records what actually happened and why the plan's seam fix had to be abandoned �
 
 ```bash
 cd D:\APMdeliverable
-python -m unittest discover -s tests -q     # expect 228 OK (1 skip)
+python -m unittest discover -s tests -q     # expect 259 OK (1 skip)
 python src/dashboard/render.py              # expect six page sizes
 ```
 
-If the test count is not 228, something has regressed. Investigate before proceeding.
+If the test count is not 259, something has regressed. Investigate before proceeding.
 
 **3. Do not touch the preserved local work.** It must still be untracked or modified:
 
@@ -1431,18 +1432,74 @@ constrains nothing but one constant. Building against a guess would have meant a
 once Sheets was chosen. So the pure contract — schema, validation, tally — is done and
 tested now, and connecting is a one-line config change.
 
-### The four properties that make a published poll honest
+### The five properties that make a published poll honest
 
-1. **It collects no PII, and that is enforced rather than intended.**
-   `FORBIDDEN_IDENTITY_FIELDS` covers `name`, `phone`, `email`, `address`, `ward_code`,
-   `lga`, `age`, `date_of_birth`, `nin`, `bvn` and the voter-ID names. Each is rejected
-   with `identity_field_forbidden` *before* the generic unknown-field check, so a
-   misconfigured form fails legibly rather than looking like a typo.
+1. **It collects no direct identity, and that is enforced rather than intended.**
+   `FORBIDDEN_IDENTITY_FIELDS` covers `name`, `phone`, `email`, `address`, `nin`, `bvn`,
+   the voter-ID names, and the **exact-age aliases** `age`, `age_years`, `exact_age`,
+   `years_old`, `date_of_birth`, `dob`. Each is rejected with
+   `identity_field_forbidden` *before* the generic unknown-field check, so a misconfigured
+   form fails legibly rather than looking like a typo.
 
    The dangerous alternative is the one that looks harmless: accepting the field,
    stripping it, and returning 200. A dropped identity field is still an identity field on
-   the wire and in every log between the browser and the Sheet. `test_no_identity_field_is_
-   merely_silently_ignored` exists to make that regression obvious.
+   the wire and in every log between the browser and the Sheet.
+
+2. **Area and demographics ARE collected — this reversed the original design, and the
+   reversal is recorded here rather than quietly rewritten.**
+
+   On 29 September 2026 the owner asked for a dashboard with an LGA **and ward**
+   dropdown, and then for age and gender. The poll as built had deliberately collected
+   neither, so this was a genuine change of posture rather than a formatting request.
+   What ships:
+
+   | Field | Required | Notes |
+   |---|---|---|
+   | `lga` | yes | 20 broad buckets |
+   | `ward_code` | **no** | Optional so nobody is forced to narrow further than they want |
+   | `age_band` | **no** | Group only, closed list, with a decline option |
+   | `gender` | **no** | Closed list: Woman / Man / Prefer not to say |
+
+   **Why bands and a closed list rather than the literal request.** An exact age plus an
+   LGA plus a registration area in a small community is close to naming a person, which is
+   the one thing the poll was built to avoid. Bands are the standard answer and they are
+   not a compromise: an 18–25 slice tells you what you need about a constituency and
+   cannot single anyone out. Free-text gender is a re-identification channel and an abuse
+   target. The owner confirmed bands and a closed list.
+
+   **`sectors` is keyword-only on `validate_poll_response`.** The copied positional
+   signature put `sectors` second and type checking caught every call passing server time
+   where an iterable of strings belonged. Mirroring `src/requests/` is worth doing; copying
+   its argument order without thinking was not.
+
+3. **Small-cell suppression is mandatory, and it is the only thing making the above
+   publishable.** Any non-zero cell below `small_count_threshold` (default 5) becomes
+   `null` and renders as a dash or a hatched bar. The threshold has a hard lower bound of
+   2 — `validate_small_count_threshold` **refuses** 0 and 1 rather than honouring them,
+   because either would publish single respondents.
+
+   A cell of **0 is published, not suppressed.** "Nobody in this area chose water"
+   identifies nobody, and hiding it would make the page say "too few to publish", which is
+   a different and weaker statement. This was a bug on the first pass:
+   `if count < threshold` suppressed the zeros too.
+
+   **Expect the ward breakdown to be almost entirely empty.** A local fixture with 320
+   responses and 154 registration areas produced publishable figures for all 20 LGAs and
+   for **zero** LGAs at ward level. 212 areas at a floor of 5 needs roughly 1,000+
+   responses concentrated in a few areas to show anything. That is the arithmetic working.
+   The page says "too few to show" rather than inventing a figure.
+
+   **Demographics are never crossed with registration areas.** `by_lga_age_band` and
+   `by_lga_gender` stop at LGA. Ward × age is the combination that actually identifies
+   someone, and a test asserts the tally never builds it.
+
+4. **Q2 never moves a number.** `tally_poll_responses` reads `sector` only.
+   `public_projection` excludes the comment outright, so publishing it would turn an
+   anonymous preference count into a set of attributable public statements.
+   `test_the_comment_can_never_change_a_number` tallies two runs whose comments differ
+   wildly and asserts identical `by_sector`. The owner decided comments are kept for
+   **off-site qualitative study**, which is compatible — provided the boundary holds and
+   nothing derived from free text ever appears as a published figure.
 
 2. **Q2 never moves a number.** `tally_poll_responses` reads `sector` only.
    `public_projection` excludes the comment outright, so publishing it would turn an
@@ -1450,14 +1507,14 @@ tested now, and connecting is a one-line config change.
    `test_the_comment_can_never_change_a_number` tallies two runs whose comments differ
    wildly and asserts identical `by_sector`.
 
-3. **An empty poll renders as empty.** With no `data/delivery/poll_snapshot.json`, the page
+5. **An empty poll renders as empty.** With no `data/delivery/poll_snapshot.json`, the page
    says "No responses have been recorded yet." A row of zero bars reads as data, and it is
    not data. `test_no_placeholder_tally_is_committed_anywhere` fails the build if a
-   snapshot is committed while the poll is disconnected. The bar chart was verified in a
+   snapshot is committed while the poll is disconnected. The dashboard was verified in a
    browser against a **temporary local fixture** that was then deleted; nothing seeded
    reaches the repository.
 
-4. **One vote is never 100%.** The cap is `min(share, 100 - floor)`.
+6. **One vote is never 100%.** The cap is `min(share, 100 - floor)`.
 
 ### The cap was wrong on the first attempt, and the direction is the point
 
@@ -1489,14 +1546,44 @@ genuine 75% majority is untouched; a small minority is never inflated.
   `test_the_poll_script_never_defines_a_name_the_request_script_defines` asserts the two
   declaration sets are disjoint.
 
+### Four Hausa strings are known-wrong and must be fixed before connection
+
+Found by **reading** the strings, not by any structural test — the automated checks
+reported clean, because the failure mode here is meaning, not format.
+
+1. **`ba zafi ba`** — the disclosure's "it is not a vote". *Zafi* means *pain*. The word
+   for a vote is *zabi*. A Hausa reader gets nonsense in the single most important
+   sentence on the page. It was fixed to `ba zabi ba` on 29 September 2026.
+2. **"It is not a survey" has no Hausa word at all.** The English sentence carries two
+   caveats; the Hausa carried one, because there is no survey word in the draft. Half the
+   disclaimer was simply missing for a Hausa-reading visitor. Still open.
+3. **`jagoranta`** in "self-selected visitors" is not a recognised Hausa word. This is the
+   phrase establishing the whole sample caveat. Still open, and I am not confident enough
+   in a replacement to guess.
+4. **`maƙalashin`** (file attachment) was used where **`sharhi`** (comment) was meant,
+   directly contradicting the field label above it. Fixed to `sharhi`.
+
+Also noted and not corrected, lower severity: `Fihimmanci na sectors` for "sector
+priorities" is questionable (*fihimma* / *gabanawa* / *maƙasudi* are all candidates), and
+the consent line's `a banda su kasance a lura` is grammatically muddled.
+
+**I am not a native Hausa speaker and cannot certify any of these strings.** The structural
+checks — placeholders, terminology drift, untranslated English, identical pairs — all pass.
+The four items above are what reading the strings actually found, and a native speaker has
+to confirm the fixes.
+
 ### Open for the owner
 
+- **Get a native speaker to review the poll strings before connecting the poll.** A garbled
+  disclosure is worse than an English one, because it looks translated.
 - **`docs/POLL_SETUP.md` step 6: set a retention period for the comment column, and a
-  process that deletes on schedule.** This is the sharpest open question in S5. A 300-char
-  free-text field held indefinitely is not anonymous in any meaningful sense, and the
-  whole design rests on the poll not collecting identity.
-- **24 new AI-drafted Hausa strings**, unreviewed. Total now **93**.
+  process that deletes on schedule.** Comments are now explicitly kept for study, which
+  makes this a live obligation rather than a hypothetical. A 300-char free-text field held
+  indefinitely is not anonymous in any meaningful sense.
+- **Google retains IP addresses in Apps Script logs** regardless of what the Sheet stores.
+  Not fixable in code; a conscious decision, not a discovery.
 - Whether the poll closes, and what the page says when it does.
+- `small_count_threshold` is 5. The owner may raise it; it must not go below 2.
 
 ## 21. The robots.txt Exemption on the ArcGIS Host — Ratified
 
@@ -1710,11 +1797,16 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Can I preserve the uncommitted aggregation and human-review work?
 - [ ] Do I know which pipeline is legacy and not part of the public product?
 - [ ] Do I know which outcome claims still require measurement?
-- [ ] Do I know which **93** Hausa strings are AI-drafted, that the owner accepted the first
-      69 as written, and that the 24 poll strings are still unreviewed?
-- [ ] Do I know the poll ships disabled, that it collects no PII, and that the comment can
-      never move a published number?
+- [ ] Do I know which **129** Hausa strings are AI-drafted, that the owner accepted the
+      first 69 as written, and that the 66 poll strings are still unreviewed?
+- [ ] Do I know the poll ships disabled, that it collects no *direct* identity, and that
+      the comment can never move a published number?
+- [ ] Do I know that area and demographics **are** collected, that this reversed the
+      original design, and that small-cell suppression is the only thing making it safe to
+      publish?
 - [ ] Do I know the percentage cap **lowers** a share and never raises one?
+- [ ] Do I know that four poll Hausa strings are known-suspect and that a native speaker
+      must review them before the poll is connected?
 - [ ] Can I name the credited contributor and state that nothing around his name was
       invented?
 - [ ] Do I know the four release traps in §20 are closed and test-guarded, and that the

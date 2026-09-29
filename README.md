@@ -140,13 +140,16 @@ cavity/credit labels, the registration-area "not geo-located" label, and the Hau
 and attribution in `data/derived/lga_paths.json`. The footer contributor credit adds **4
 more** ("Mai ba da daɗi", the role line, "Darasi:", and the portrait `alt`).
 
-S5 adds **24 more** in the poll. The nine sector labels are reused from the request form
-and are not new, so the new ones are the question, the comment label and its note, the
-consent line, the identity note, the vote button, the four status messages, the
-confirmation, the empty state, the results heading, the self-selected disclosure, and the
-page's "what happens to this form" copy. The total unreviewed Hausa count is therefore
-**93**. The "not gazetted" disclaimer is the one that matters most to get right for a
-Hausa-reading visitor, so it is included rather than left English-only.
+S5 adds more in the poll, including the area and demographic fields and the dashboard
+copy. The nine sector labels are reused from the request form and are not new.
+
+**Four poll strings are known-suspect and need a native speaker before the poll is
+connected:** `ba zafi ba` should be `ba zabi ba` (*zafi* is "pain", not "vote"); the
+"not a survey" sentence has no word for *survey* in Hausa at all; `jagoranta` in
+"self-selected visitors" is not a recognised Hausa word; and `maƙalashin` (file attachment)
+was used where `sharhi` (comment) was meant, contradicting the label above it. These were
+found by reading the strings, not by a structural test, and the disclosure is a mitigation
+rather than a fix.
 
 The owner has reviewed and accepted the S1–S4 set (69 strings) as written on
 29 September 2026. **The 24 poll strings are new and not yet reviewed.** The disclosure
@@ -187,15 +190,28 @@ its results panel. **It ships disabled.** `POLL_ENDPOINT` is `""`, the vote butt
 guard. `docs/POLL_SETUP.md` is the owner guide for connecting it via Google Sheets and
 Apps Script.
 
-Three properties are enforced rather than merely intended:
+The page carries a **public dashboard**: two charts (sector priorities, responses by LGA),
+an LGA dropdown that filters both, and an exact-count table.
 
-- **No PII.** The poll asks for no name, phone, email, address, ward, LGA, age, NIN, BVN or
-  voter ID, and any of those arriving in a payload is rejected with
-  `identity_field_forbidden` rather than quietly dropped.
-- **Q2 never moves a number.** The comment is validated, capped at 300 characters, stored —
-  and never counted, bucketed or published.
-- **An empty poll is empty.** There is no placeholder tally anywhere, and a test fails the
-  build if `data/delivery/poll_snapshot.json` exists while the poll is disconnected.
+Four properties are enforced rather than merely intended:
+
+- **No direct identity.** No name, phone, email, address, NIN, BVN, voter ID or exact age.
+  Exact-age aliases are refused by name, because the form collects age *bands* and those
+  are the keys someone would reach for to defeat that.
+- **Area and demographics ARE collected** — required LGA, optional registration area,
+  optional age group, optional gender from a closed list. This is a deliberate owner
+  decision to allow an area breakdown, and it is why the next rule is load-bearing.
+- **Small-cell suppression is mandatory, with a hard floor of 2.** A published cell of 1
+  or 2 from a dataset that records an LGA and a registration area is a published cell of
+  identifiable people. A cell of **0 is published**, because "nobody chose this" identifies
+  nobody. Suppressed cells render as a dash or a hatched bar, never as a zero — a
+  zero-width bar reads as "nobody wants water", which is the opposite of the truth.
+- **Q2 never moves a number.** The comment is validated, capped at 300 characters, stored
+  for off-site study — and never counted, bucketed or published.
+
+**Expect the ward breakdown to be mostly empty.** At 320 responses in a test fixture, all
+20 LGAs were publishable but *no* LGA had a usable registration-area breakdown. That is the
+data being honest, and the page says "too few to show" rather than inventing a figure.
 
 The percentage cap is `min(share, 100 - floor)`, so one response can never render as 100%.
 
@@ -209,6 +225,10 @@ The current release is live at `https://batestguy.github.io/bauchi-voter-pulse/`
 pages are public and verified in a browser against the live URL, including the Bauchi map
 (S4) and the contributor credit. The weekly `rebuild-pages.yml` cron now completes
 successfully; it had never once succeeded before 29 September 2026.
+
+**Google retains IP addresses in Apps Script execution logs** regardless of what the Sheet
+stores. That is a platform property, not something the code can engineer away, and the
+owner should decide about it consciously rather than discover it later.
 
 ## Project history
 

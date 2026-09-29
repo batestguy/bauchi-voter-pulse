@@ -55,10 +55,29 @@ These are enforced in code; keep them enforced.
   not exist while the poll is disconnected, and
   `test_no_placeholder_tally_is_committed_anywhere` fails the build if it does. An empty
   poll renders as "No responses have been recorded yet", never as a chart of zeros.
-- **The poll collects no PII.** `name`, `phone`, `email`, `address`, `ward_code`, `lga`,
-  `age`, `nin`, `bvn` and voter-ID fields are rejected with `identity_field_forbidden`, not
-  silently dropped — a dropped identity field is still on the wire and in any log. Do not
-  add a "just for later" column to the Sheet.
+- **The poll collects no direct identity.** `name`, `phone`, `email`, `address`, `nin`,
+  `bvn`, voter-ID and **exact-age** fields are rejected with `identity_field_forbidden`,
+  not silently dropped — a dropped identity field is still on the wire and in any log. The
+  exact-age aliases (`age`, `age_years`, `exact_age`, `years_old`, `date_of_birth`) are
+  refused by name, because the form collects age *bands* and those are the keys someone
+  would reach for to defeat that. Do not add a "just for later" column to the Sheet.
+- **Geography and demographics ARE collected, and that reverses the old rule.** `lga` is
+  required, `ward_code` is optional, `age_band` and `gender` are optional closed lists.
+  That is a deliberate owner decision (29 Sep 2026) to allow an area breakdown. **The
+  snapshot's suppression is the only thing making it safe to publish** — see the next rule.
+  Do not treat the old "no PII at all" wording as current.
+- **Small-cell suppression is MANDATORY, with a hard floor of 2.** Any non-zero cell below
+  `small_count_threshold` is published as `null` and renders as a dash or a hatched bar.
+  `validate_small_count_threshold` *refuses* 0 and 1 rather than honouring them. A
+  published cell of 1 or 2 from a dataset that records an LGA and a registration area is a
+  published cell of identifiable people. A cell of **0 is published, not suppressed** —
+  nobody chose this identifies nobody, and hiding it would wrongly read as "too few to say".
+- **Never cross a demographic with a registration area.** No `by_lga_ward` × age, no
+  ward × gender. Age and gender breakdowns are statewide and per-LGA only. Ward × age is
+  the combination that actually identifies someone.
+- **The `response_id` must be sequential, never derived from the response content.** A
+  content hash is a stable fingerprint: anyone with a guess at someone's comment can
+  confirm it by hash. `APM-POLL-YYYY-NNNNNN` is a receipt and nothing more.
 - **Q2 never moves a number.** `tally_poll_responses` reads `sector` only. The comment is
   validated and length-capped but never counted, bucketed or published. A test asserts two
   runs with very different comments produce identical tallies.
@@ -66,7 +85,13 @@ These are enforced in code; keep them enforced.
   `min(share, 100 - floor)`, so a single response cannot render as 100%. Do not "fix" it
   into a minimum: raising a small share would invent support the votes do not show.
 - **The poll is not a survey and not a vote.** The self-selected / not-representative
-  disclosure must stay on the page; a test asserts it is present.
+  disclosure must stay on the page, and a test asserts it is present **in the empty state
+  too**, not only once a snapshot exists. A reader arriving before the first response
+  should learn what this is before seeing a number, not after.
+- **A suppressed cell is never a zero.** The page distinguishes "too few to publish" from
+  "nobody chose this" by rendering an explicit dash or hatched bar. A zero-width bar reads
+  as "nobody wants water", which is the opposite of the truth, and a reader could not tell
+  the two apart.
 
 ## Map rules (phase S4)
 These are enforced in code; keep them enforced.
@@ -133,7 +158,15 @@ These are enforced in code; keep them enforced.
 ## Legal / ethics
 Public sources only; anonymize; disclose outputs are social/news analysis, not private polling. Version everything so any dashboard cell traces to schema + model + data.
 
-**93** Hausa strings added in September 2026 are AI-drafted and not native-speaker reviewed — 53 from S1/S2, 6 from S4 (the map `aria-label`, the caveat and credit labels, the "not geo-located" RA label, and the Hausa map caveat and attribution in `data/derived/lga_paths.json`), 4 in the footer contributor credit, and 24 in the S5 poll. Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler. **The owner reviewed and accepted the S1–S4 set as written on 29 September 2026**; the 24 poll strings are new and **not yet reviewed**. The disclosure stays, because they are still AI-drafted rather than native-speaker translated.
+**129** Hausa strings added in September 2026 are AI-drafted and not native-speaker reviewed — 53 from S1/S2, 6 from S4, 4 in the footer contributor credit, and 66 in the S5 poll (counted across both dashboard states, which ship different strings). Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler. **The owner reviewed and accepted the S1–S4 set as written on 29 September 2026**; the poll strings are new and **not yet reviewed**. The disclosure stays, because they are still AI-drafted rather than native-speaker translated.
+
+**Four poll Hausa strings are known-suspect and must be checked by a native speaker before
+the poll is connected.** Found by reading the strings, not by a structural test:
+`ba zafi ba` should be `ba zabi ba` (*zafi* is "pain", not "vote"); the sentence saying
+"not a survey" has no word for *survey* in Hausa at all; `jagoranta` in "self-selected
+visitors" is not a recognised Hausa word; and `maƙalashin` (file attachment) was used
+where `sharhi` (comment) was meant, contradicting the label directly above it. These are
+AI-drafted and unreviewed, and the disclosure is a mitigation, not a fix.
 
 `services3.arcgis.com` serves **403 for `robots.txt` under every user agent**, so the one-time boundary fetch uses a narrowly-scoped, justified entry in `src/ingestion/common.py::ROBOTS_UNREACHABLE_HOSTS`. The default conservative skip is unchanged for every other host. **The owner ratified that exemption on 29 September 2026** — see `HANDOFF.md` §21.
 

@@ -4,21 +4,31 @@ This module has no Google dependencies and performs no logging, exactly like
 `src/requests/validation.py`. It is intended to be called by a server adapter and is
 safe to exercise directly from unit tests.
 
-Two properties are the reason this is a separate package rather than a reuse of the
-request validator, and both are load-bearing:
+Three properties are the reason this is a separate package, and all three are
+load-bearing:
 
-1. **The poll collects no PII at all.** No name, no phone, no email, no address, no ward
-   code, no voter ID. `ALLOWED_PAYLOAD_FIELDS` is a strict allowlist that does not
-   contain those names, so `validate_poll_response` rejects a payload carrying them
-   rather than storing and ignoring them. An identity field that the validator silently
-   drops is an identity field that is still on the wire and in the access log of whatever
-   sits in front of the endpoint.
-2. **Q2 is a comment attached to the vote, not a second question.** It is validated,
-   length-capped and stored, but `tally_poll_responses` never reads it. Only `sector`
-   (Q1) can move a number. A test asserts that property directly.
+1. **The poll collects no direct identity.** No name, no phone, no email, no address, no
+   NIN, no BVN, no official voter ID. `FORBIDDEN_IDENTITY_FIELDS` is a strict allowlist of
+   refusal, and `validate_poll_response` rejects a payload carrying one of those rather
+   than storing and ignoring it. An identity field the validator silently drops is still
+   an identity field on the wire and in the access log of whatever sits in front of the
+   endpoint.
 
-A `response_id` is a generated tracking reference. It is not an official voter ID and
-must never be described as one.
+2. **Geography is accepted, and that is a weaker guarantee than it looks.** `lga` and an
+   optional `ward_code` were added on 29 September 2026 so the results could be broken
+   down by area. `lga` is 20 broad buckets and is defensible. `ward_code` is a provisional
+   INEC registration area out of 212, which is **not** a council ward and is **not**
+   geo-located, and it is *optional* precisely so that a respondent who does not want to
+   narrow themselves further is not forced to.
+
+   The reason this needs saying plainly: an area plus a sector plus a date is closer to a
+   person than a sector alone. This is why the published snapshot must suppress small
+   cells, which is the sole thing that makes public ward-level output defensible. See
+   `src/poll/aggregate.py`.
+
+3. **Q2 is a comment attached to the vote, not a second question.** It is validated,
+   length-capped and stored, but `tally_poll_responses` never reads it. Only `sector` can
+   move a number. A test asserts that property directly.
 """
 
 from __future__ import annotations
@@ -47,17 +57,52 @@ ALLOWED_SECTORS = (
     "other",
 )
 
-REQUIRED_FIELDS = ("sector", "consent")
-OPTIONAL_FIELDS = ("comment",)
+BAUCHI_LGAS = (
+    "Alkaleri", "Bauchi", "Bogoro", "Dambam", "Darazo", "Dass", "Gamawa",
+    "Ganjuwa", "Giade", "Itas-Gadau", "Jamaare", "Katagum", "Kirfi", "Misau",
+    "Ningi", "Shira", "Tafawa-Balewa", "Toro", "Warji", "Zaki",
+)
+
+REQUIRED_FIELDS = ("sector", "lga", "consent")
+OPTIONAL_FIELDS = ("ward_code", "comment", "age_band", "gender")
 # Deliberately exhaustive. If a future field is wanted, it must be added here and
 # reasoned about, not appended to the form and picked up automatically.
 ALLOWED_PAYLOAD_FIELDS = frozenset(
     REQUIRED_FIELDS + OPTIONAL_FIELDS + ("website", "submitted_at")
 )
 
+# Age is collected as BANDS, never as a number. Bands are optional and answered from a
+# closed list, so the form cannot leak an exact age even by accident, and no respondent
+# is forced to narrow themselves further than they want to. Age plus LGA plus ward is
+# already a lot of dimensions; an exact age on top of that is the thing that turns an
+# aggregate into a person.
+AGE_BANDS = (
+    "age_18_25",
+    "age_26_35",
+    "age_36_45",
+    "age_46_55",
+    "age_56_65",
+    "age_66_plus",
+    "age_unspecified",
+)
+
+# Closed set with a decline option. Free text here would be a re-identification channel
+# and an abuse target, so the field is a choice, never a sentence.
+GENDER_OPTIONS = (
+    "woman",
+    "man",
+    "gender_unspecified",
+)
+
+DECLINE = "unspecified"
+
 MAX_LENGTHS = {
     "sector": 32,
+    "lga": 80,
+    "ward_code": 40,
     "comment": 300,
+    "age_band": 32,
+    "gender": 32,
 }
 MAX_RESPONSE_ID_LENGTH = 40
 HONEYPOT_FIELDS = ("website",)
@@ -72,26 +117,38 @@ MAX_SUBMITTED_CLOCK_SKEW = timedelta(minutes=5)
 MIN_PERCENTAGE_FLOOR = 0
 DEFAULT_PERCENTAGE_FLOOR = 10
 
+# Small-cell suppression is mandatory for published geographic output. A cell below this
+# count is withheld rather than shown, because "1 response from this registration area"
+# is one person's registration area.
+DEFAULT_SMALL_COUNT_THRESHOLD = 5
+
 _RESPONSE_ID_SHAPE = re.compile(r"^APM-POLL-[0-9]{4}-[0-9]{4,12}$")
 
-# Fields that must never appear in a poll payload. Named explicitly so the rejection is
-# reportable and testable, and so a future contributor sees why the field is refused.
+# Fields that must never appear in a poll payload. `lga`, `ward_code`, `age_band` and
+# `gender` are NOT here: they are the approved area/demographic breakdown, and the
+# snapshot's small-cell suppression is what keeps them safe to publish. Everything below
+# names a person or a credential directly, or is an alias that would smuggle an exact age
+# past the band list.
 FORBIDDEN_IDENTITY_FIELDS = (
     "name",
+    "full_name",
     "phone",
+    "phone_number",
     "email",
     "address",
-    "ward_code",
     "voter_id",
     "voterid",
     "registered_voter_number",
     "nin",
     "bvn",
-    "phone_number",
-    "full_name",
-    "lga",
     "date_of_birth",
+    "dob",
+    # Exact-age aliases. The form collects bands; these are the keys someone would reach
+    # for to defeat that, so they are refused by name rather than by accident.
     "age",
+    "age_years",
+    "exact_age",
+    "years_old",
 )
 
 
@@ -189,6 +246,79 @@ def validate_sector(value: Any, sectors: Iterable[str] | None = None) -> str:
     return normalized
 
 
+def _comparison_key(value: str) -> str:
+    return " ".join(value.split()).casefold()
+
+
+def canonical_lga_lookup(lgas: Iterable[str] | None = None) -> dict[str, str]:
+    """Map a case-insensitive LGA key to its canonical spelling."""
+    source = BAUCHI_LGAS if lgas is None else tuple(lgas)
+    if isinstance(source, (str, bytes)) or not isinstance(source, Iterable):
+        raise PollValidationError("invalid_lga_configuration")
+    lookup: dict[str, str] = {}
+    for value in source:
+        if not isinstance(value, str) or not value.strip():
+            raise PollValidationError("invalid_lga_configuration")
+        if any(unicodedata.category(c) in {"Cc", "Cf"} for c in value):
+            raise PollValidationError("invalid_lga_configuration")
+        if len(value.strip()) > MAX_LENGTHS["lga"]:
+            raise PollValidationError("invalid_lga_configuration")
+        canonical = " ".join(value.split())
+        key = _comparison_key(canonical)
+        if key in lookup:
+            raise PollValidationError("invalid_lga_configuration")
+        lookup[key] = canonical
+    if not lookup:
+        raise PollValidationError("invalid_lga_configuration")
+    return lookup
+
+
+def validate_lga(value: Any, lgas: Iterable[str] | None = None) -> str:
+    """Normalize and validate the respondent's LGA, returning the configured spelling."""
+    lookup = canonical_lga_lookup(lgas)
+    cleaned = validate_text_length(value, "lga")
+    key = _comparison_key(cleaned)
+    if key not in lookup:
+        raise PollValidationError("invalid_lga", field="lga")
+    return lookup[key]
+
+
+def validate_ward_code(
+    value: Any,
+    lga: str,
+    wards_by_lga: Mapping[str, Iterable[str]],
+    lgas: Iterable[str] | None = None,
+) -> str:
+    """Validate an optional registration-area code against the respondent's own LGA.
+
+    The code must belong to the LGA the respondent selected. Accepting a ward that
+    belongs to a different LGA would let a cell be misattributed, which is a correctness
+    bug as well as a privacy one.
+    """
+    cleaned = validate_text_length(value, "ward_code", required=False)
+    if not cleaned:
+        return ""
+    if not isinstance(wards_by_lga, Mapping):
+        raise PollValidationError("invalid_ward_configuration")
+    lga_lookup = canonical_lga_lookup(lgas)
+    lga_key = _comparison_key(lga)
+    if lga_key not in lga_lookup:
+        raise PollValidationError("invalid_lga", field="lga")
+    codes = wards_by_lga.get(lga_lookup[lga_key])
+    if not codes:
+        raise PollValidationError("ward_not_configured_for_lga", field="ward_code")
+    if isinstance(codes, (str, bytes)) or not isinstance(codes, Iterable):
+        raise PollValidationError("invalid_ward_configuration")
+    for code in codes:
+        if not isinstance(code, str) or not code.strip():
+            raise PollValidationError("invalid_ward_configuration")
+        if any(unicodedata.category(c) in {"Cc", "Cf"} for c in code):
+            raise PollValidationError("invalid_ward_configuration")
+        if _comparison_key(code) == _comparison_key(cleaned):
+            return " ".join(code.split())
+    raise PollValidationError("invalid_ward", field="ward_code")
+
+
 def validate_consent(value: Any) -> bool:
     """Require the JSON boolean ``true``; strings and numbers are not consent."""
 
@@ -267,40 +397,97 @@ def validate_percentage_floor(value: Any) -> int:
     return value
 
 
+def validate_closed_choice(
+    value: Any, allowed: Iterable[str], field: str
+) -> str:
+    """Validate an optional closed-list choice, normalising a decline to ''.
+
+    A closed list, never free text. A declined value is stored as an empty string and so
+    is excluded from the demographic breakdowns, rather than becoming a slice of its own
+    that would have to be published and suppressed like any other.
+
+    The decline marker is matched by suffix as well as by equality, because the
+    vocabulary is namespaced (`age_unspecified`, `gender_unspecified`). Matching on the
+    bare word "unspecified" would accept a decline but fail to recognise the actual
+    values the form sends.
+    """
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise PollValidationError("invalid_type", field=field)
+    if any(unicodedata.category(c) in {"Cc", "Cf"} for c in value):
+        raise PollValidationError("control_character_rejected", field=field)
+    cleaned = value.strip()
+    if not cleaned:
+        return ""
+    if len(cleaned) > MAX_LENGTHS.get(field, 32):
+        raise PollValidationError("too_long", field=field)
+    normalized = cleaned.casefold()
+    vocabulary = set(allowed)
+    if normalized not in vocabulary:
+        raise PollValidationError("invalid_choice", field=field)
+    if normalized == DECLINE or normalized.endswith(f"_{DECLINE}"):
+        return ""
+    return normalized
+
+
+def validate_small_count_threshold(value: Any) -> int:
+    """Validate the mandatory small-cell suppression floor.
+
+    This is not a cosmetic setting. Published geographic output without it would render
+    "1 response from this registration area", which is one person's registration area.
+    """
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise PollValidationError(
+            "invalid_small_count_threshold", field="small_count_threshold")
+    if value < 2:
+        # A floor of 0 or 1 would publish single respondents, which is the exact failure
+        # the floor exists to prevent.
+        raise PollValidationError(
+            "invalid_small_count_threshold", field="small_count_threshold")
+    return value
+
+
 def validate_poll_response(
     payload: Mapping[str, Any],
     now: datetime | None = None,
     *,
     sectors: Iterable[str] | None = None,
+    lgas: Iterable[str] | None = None,
+    wards_by_lga: Mapping[str, Iterable[str]] | None = None,
     response_id: str | None = None,
     response_id_generator: Callable[[], str] | None = None,
 ) -> dict[str, Any]:
-    """Validate and normalize one anonymous poll response.
+    """Validate and normalize one poll response.
 
     Args:
         payload: Untrusted form data. Unknown fields are rejected, including every
-            identity field named in :data:`FORBIDDEN_IDENTITY_FIELDS`.
+            direct-identity field named in :data:`FORBIDDEN_IDENTITY_FIELDS`.
         now: Explicit timezone-aware server time. Required when ``submitted_at`` is
             present; when supplied, its normalized value becomes ``created_at``.
         sectors: Optional server-supplied subset of :data:`ALLOWED_SECTORS`. Keyword
             only, so passing server time positionally can never be mistaken for it.
+        lgas: Optional server-supplied LGA vocabulary. Defaults to the 20 Bauchi LGAs.
+        wards_by_lga: Optional map of LGA to its registration-area codes. Required when a
+            ``ward_code`` is supplied; without it a supplied code is rejected rather
+            than accepted unverified, because an unverified area is a misattributed one.
         response_id: Tracking reference already allocated by the endpoint. Clients must
-            not submit it. It is not an official voter ID.
+            not submit it. It is not a voter ID.
         response_id_generator: Optional zero-argument endpoint-owned generator. This
             module never allocates a sequence and requires either this callable or
             ``response_id`` before adding a reference.
 
     Returns:
         A new response dictionary. It does not retain the input mapping, and it never
-        contains a name, phone, email, address, ward code, or voter ID.
+        contains a name, phone, email, address, or voter ID.
     """
 
     if not isinstance(payload, Mapping):
         raise PollValidationError("invalid_payload")
 
-    # Reject identity fields with a specific, reportable code before the generic unknown
-    # field check, so a misconfigured form fails loudly and legibly instead of looking
-    # like a typo.
+    # Reject direct-identity fields with a specific, reportable code before the generic
+    # unknown field check, so a misconfigured form fails loudly and legibly instead of
+    # looking like a typo.
     for forbidden in FORBIDDEN_IDENTITY_FIELDS:
         if forbidden in payload:
             raise PollValidationError("identity_field_forbidden", field=forbidden)
@@ -318,7 +505,22 @@ def validate_poll_response(
 
     consent = validate_consent(payload["consent"])
     sector = validate_sector(payload["sector"], configured)
+    lga = validate_lga(payload["lga"], lgas)
+
+    raw_ward = payload.get("ward_code")
+    if raw_ward is not None and str(raw_ward).strip():
+        if wards_by_lga is None:
+            raise PollValidationError(
+                "ward_map_required_for_ward_code", field="ward_code")
+        ward_code = validate_ward_code(raw_ward, lga, wards_by_lga, lgas)
+    else:
+        ward_code = ""
+
     comment = validate_text_length(payload.get("comment"), "comment", required=False)
+    age_band = validate_closed_choice(
+        payload.get("age_band"), AGE_BANDS, "age_band")
+    gender = validate_closed_choice(
+        payload.get("gender"), GENDER_OPTIONS, "gender")
 
     normalized_now = (
         _normalize_aware_datetime(now, field="now") if now is not None else None
@@ -345,7 +547,11 @@ def validate_poll_response(
 
     record: dict[str, Any] = {
         "sector": sector,
+        "lga": lga,
+        "ward_code": ward_code,
         "comment": comment,
+        "age_band": age_band,
+        "gender": gender,
         "consent": consent,
     }
     if normalized_now is not None:
@@ -366,7 +572,10 @@ def public_projection(response: Mapping[str, Any]) -> dict[str, str]:
     if not isinstance(response, Mapping):
         raise PollValidationError("invalid_response_record")
 
-    projection = {"sector": validate_sector(response.get("sector"))}
+    projection = {
+        "sector": validate_sector(response.get("sector")),
+        "lga": validate_lga(response.get("lga")),
+    }
 
     created_at = response.get("created_at")
     if created_at is not None:
@@ -389,10 +598,15 @@ def public_projection(response: Mapping[str, Any]) -> dict[str, str]:
 
 
 __all__ = [
+    "AGE_BANDS",
     "ALLOWED_PAYLOAD_FIELDS",
     "ALLOWED_SECTORS",
+    "BAUCHI_LGAS",
+    "DECLINE",
     "DEFAULT_PERCENTAGE_FLOOR",
+    "DEFAULT_SMALL_COUNT_THRESHOLD",
     "FORBIDDEN_IDENTITY_FIELDS",
+    "GENDER_OPTIONS",
     "HONEYPOT_FIELDS",
     "MAX_COMMENT_LENGTH",
     "MAX_LENGTHS",
@@ -402,14 +616,18 @@ __all__ = [
     "REQUIRED_FIELDS",
     "SCHEMA_VERSION",
     "PollValidationError",
+    "canonical_lga_lookup",
     "is_allowed_sector",
     "is_honeypot_empty",
     "public_projection",
     "validate_consent",
     "validate_honeypot",
+    "validate_lga",
     "validate_percentage_floor",
     "validate_poll_response",
     "validate_response_id",
     "validate_sector",
+    "validate_small_count_threshold",
     "validate_text_length",
+    "validate_ward_code",
 ]

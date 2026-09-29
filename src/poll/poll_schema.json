@@ -7,6 +7,7 @@
   "additionalProperties": false,
   "required": [
     "sector",
+    "lga",
     "consent"
   ],
   "properties": {
@@ -37,33 +38,71 @@
     },
     "website": {
       "const": "",
-      "description": "Hidden optional honeypot field. When included, it must be an empty string and must never be shown to people."
+      "description": "Hidden optional honeypot field. When included, it must be an empty string and must never be shown to people. It is the one field a bot will fill, and it is the only spam control the poll has."
     },
     "submitted_at": {
       "type": "string",
       "format": "date-time",
       "maxLength": 64,
       "description": "Optional timezone-aware client timestamp. If supplied, the server must pass an explicit timezone-aware now value and reject timestamps older than 24 hours or more than 5 minutes in the future."
+    },
+    "lga": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "Required respondent LGA, matched case-insensitively against the server's 20 Bauchi LGAs and returned in the configured spelling. 20 broad buckets. This is geography, not identity, but it is why the published snapshot MUST suppress small cells."
+    },
+    "ward_code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "description": "Optional provisional INEC registration-area code. NOT a council ward and NOT geo-located. It must belong to the LGA the respondent selected, and the server must refuse it rather than accept it unverified when no approved ward map is configured. Optional so nobody is forced to narrow themselves further than they want to."
+    },
+    "age_band": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "age_18_25",
+        "age_26_35",
+        "age_36_45",
+        "age_46_55",
+        "age_56_65",
+        "age_66_plus",
+        "age_unspecified"
+      ],
+      "description": "Optional age GROUP only. An exact age is refused by name (age, age_years, exact_age, years_old, date_of_birth) because an exact age plus an LGA plus a registration area is close to identifying a person. Omitted, empty or age_unspecified all mean declined."
+    },
+    "gender": {
+      "type": "string",
+      "maxLength": 32,
+      "enum": [
+        "woman",
+        "man",
+        "gender_unspecified"
+      ],
+      "description": "Optional closed list with a decline option. Free text is rejected: it is a re-identification channel and an abuse target, so this field is a choice, never a sentence. Omitted, empty or gender_unspecified all mean declined."
     }
   },
   "x-forbidden-fields": {
-    "description": "Rejected with identity_field_forbidden rather than silently ignored. A dropped identity field is still an identity field on the wire and in any intermediate log.",
+    "description": "Rejected with identity_field_forbidden rather than silently ignored. A dropped identity field is still an identity field on the wire and in any log. lga, ward_code, age_band and gender are NOT in this list: they are the approved area/demographic breakdown, and the snapshot's mandatory small-cell suppression is what keeps them safe to publish. The exact-age aliases are here because they are the keys someone would reach for to defeat the band list.",
     "fields": [
       "name",
+      "full_name",
       "phone",
+      "phone_number",
       "email",
       "address",
-      "ward_code",
       "voter_id",
       "voterid",
       "registered_voter_number",
       "nin",
       "bvn",
-      "phone_number",
-      "full_name",
-      "lga",
       "date_of_birth",
-      "age"
+      "dob",
+      "age",
+      "age_years",
+      "exact_age",
+      "years_old"
     ]
   },
   "x-server-allocated-fields": {
@@ -86,8 +125,23 @@
       "sector": {
         "type": "string"
       },
+      "lga": {
+        "type": "string"
+      },
+      "ward_code": {
+        "type": "string",
+        "description": "Empty string when declined."
+      },
       "comment": {
         "type": "string"
+      },
+      "age_band": {
+        "type": "string",
+        "description": "Empty string when declined."
+      },
+      "gender": {
+        "type": "string",
+        "description": "Empty string when declined."
       },
       "consent": {
         "const": true
@@ -97,7 +151,7 @@
         "format": "date-time"
       }
     },
-    "privacy": "Anonymous by design. This object has no name, phone, email, address, ward code, LGA or voter ID field, and none may be added to the Sheet."
+    "privacy": "No direct identity by design. This object has no name, phone, email, address, NIN, BVN, exact age or voter ID field, and none may be added to the Sheet. It does carry lga, an optional registration area, an optional age band and an optional gender, which is why the published snapshot must suppress small cells."
   },
   "x-endpoint-response": {
     "type": "object",
@@ -121,43 +175,101 @@
       "schema_version",
       "total_responses",
       "by_sector",
-      "percentage_floor"
+      "by_lga",
+      "by_lga_sector",
+      "by_ward",
+      "percentage_floor",
+      "small_count_threshold",
+      "suppressed_cell_count"
     ],
     "properties": {
       "schema_version": {
         "const": "poll-v1"
       },
       "reporting_period_start": {
-        "type": ["string", "null"]
+        "type": [
+          "string",
+          "null"
+        ]
       },
       "reporting_period_end": {
-        "type": ["string", "null"]
+        "type": [
+          "string",
+          "null"
+        ]
       },
       "total_responses": {
         "type": "integer",
         "minimum": 0
       },
+      "with_area_responses": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "with_ward_responses": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "with_age_band": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "with_gender": {
+        "type": "integer",
+        "minimum": 0
+      },
       "by_sector": {
+        "$ref": "#/x-public-snapshot/x-count-map"
+      },
+      "by_lga": {
+        "$ref": "#/x-public-snapshot/x-count-map"
+      },
+      "by_lga_sector": {
         "type": "object",
-        "additionalProperties": false,
-        "description": "Every configured sector is present, so a zero-response sector reads as 0 rather than vanishing from the axis.",
-        "properties": {
-          "water": { "type": "integer", "minimum": 0 },
-          "electricity": { "type": "integer", "minimum": 0 },
-          "roads": { "type": "integer", "minimum": 0 },
-          "healthcare": { "type": "integer", "minimum": 0 },
-          "education": { "type": "integer", "minimum": 0 },
-          "jobs_agriculture": { "type": "integer", "minimum": 0 },
-          "security": { "type": "integer", "minimum": 0 },
-          "housing_environment": { "type": "integer", "minimum": 0 },
-          "other": { "type": "integer", "minimum": 0 }
+        "description": "LGA -> sector -> count, each subject to suppression.",
+        "additionalProperties": {
+          "$ref": "#/x-public-snapshot/x-count-map"
+        }
+      },
+      "by_ward": {
+        "$ref": "#/x-public-snapshot/x-count-map"
+      },
+      "by_lga_ward": {
+        "type": "object",
+        "description": "Registration areas are small by definition, so this is the map most likely to be almost entirely suppressed. That is the honest outcome, not a bug.",
+        "additionalProperties": {
+          "$ref": "#/x-public-snapshot/x-count-map"
+        }
+      },
+      "by_lga_age_band": {
+        "type": "object",
+        "description": "Demographics are computed statewide and per LGA and NEVER crossed with registration areas. Ward x age is the combination that actually identifies someone.",
+        "additionalProperties": {
+          "$ref": "#/x-public-snapshot/x-count-map"
+        }
+      },
+      "by_lga_gender": {
+        "type": "object",
+        "description": "Never crossed with registration areas, for the same reason.",
+        "additionalProperties": {
+          "$ref": "#/x-public-snapshot/x-count-map"
         }
       },
       "percentage_floor": {
         "type": "integer",
         "minimum": 0,
         "maximum": 100,
-        "description": "Configurable display floor so a single response cannot render as 100%. The owner may set 0 to disable."
+        "description": "Display cap of 100 - floor, so a single response cannot render as 100%. Set 0 to disable."
+      },
+      "small_count_threshold": {
+        "type": "integer",
+        "minimum": 2,
+        "description": "Mandatory. Any non-zero cell below this is published as null. A value of 0 or 1 is refused by the validator rather than honoured, because it would publish single respondents."
+      },
+      "suppressed_cell_count": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Stated on the page so a sparse dataset cannot masquerade as a complete one."
       },
       "generated_at": {
         "type": "string"
@@ -167,21 +279,38 @@
       "response_id",
       "comment",
       "consent",
-      "created_at"
+      "created_at",
+      "age_band_raw",
+      "gender_raw",
+      "ward_display_name"
     ],
-    "note": "The comment field is excluded from the public projection by construction. Publishing it would convert an anonymous preference count into a set of attributable public statements."
+    "note": "The comment field is excluded from the public projection by construction. Publishing it would convert an anonymous preference count into a set of attributable public statements. A cell of 0 is NOT suppressed: nobody chose this identifies nobody, and hiding it would wrongly read as 'too few to say'.",
+    "x-count-map": {
+      "type": "object",
+      "description": "A published cell. null means 'too few answers to publish' and must render as an explicit dash or hatched bar, never as 0.",
+      "additionalProperties": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      }
+    }
   },
   "x-safety-rules": [
-    "Do not collect or request a name, phone number, email address, physical address, ward code, LGA, age, date of birth, NIN, BVN, official voter ID, registered voter number, or any equivalent identity credential.",
-    "A response_id is only a non-sensitive tracking reference and must not be described as an official voter ID.",
-    "The comment field is a comment attached to the vote, not a second poll question. It must never be counted, bucketed, or published.",
+    "Do not collect or request a name, phone number, email address, physical address, NIN, BVN, official voter ID, registered voter number, an exact age or any equivalent identity credential.",
+    "Age is collected as a group only, from a closed list, and both age and gender are optional with a decline option.",
+    "A response_id is only a non-sensitive tracking reference and must not be described as an official voter ID. It must be sequential, never derived from the response content: a content hash is a stable fingerprint that can be confirmed by guess.",
+    "The comment field is a comment attached to the vote, not a second poll question. It must never be counted, bucketed or published.",
     "The endpoint must repeat every validation rule and must not rely on browser validation.",
-    "Unknown payload fields, every field in x-forbidden-fields, malformed consent, invalid sector values, honeypot values, control characters and over-length comments are rejected.",
+    "Unknown payload fields, every field in x-forbidden-fields, malformed consent, invalid sector or LGA values, a ward code that does not belong to the selected LGA, a ward code with no approved map configured, invalid closed-list values, honeypot values, control characters and over-length comments are rejected.",
+    "Small-cell suppression is MANDATORY for every published cell, and the threshold must be at least 2. Publishing a cell of 1 or 2 from a dataset that records an LGA and a registration area is publishing identifiable people.",
+    "A cell of zero is published, not suppressed.",
+    "Age and gender breakdowns are never crossed with registration areas.",
     "Raw responses, comments, Google Sheet data, Apps Script source, credentials, and submitted values must not be committed, logged, or placed in docs.",
     "An empty poll must render as empty. Never seed, example or placeholder results, and never render a chart of zeros that would read as data.",
-    "Published results must state that respondents are self-selected visitors and that the sample is not representative.",
-    "The poll is not a survey and not a vote. It is a single stated preference from a self-selected visitor and must never be described as either.",
-    "A single response must never render as 100%, because 100% reads as a unanimous mandate and a sample of one is not a mandate.",
-    "Poll responses are campaign input expressing a stated preference. They are not verified needs, achievements, promises, evidence, or outcome measurements, and must not be presented as any of those."
+    "Published results must state that respondents are self-selected visitors and that the sample is not representative, and must say the poll is not a survey and not a vote.",
+    "Poll responses are campaign input expressing a stated preference. They are not verified needs, achievements, promises, evidence, or outcome measurements, and must not be presented as any of those.",
+    "Google retains IP addresses in Apps Script execution logs regardless of what the Sheet stores. That is a platform property that cannot be engineered away, and the owner should decide about it consciously."
   ]
 }
