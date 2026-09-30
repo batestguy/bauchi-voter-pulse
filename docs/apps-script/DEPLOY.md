@@ -8,9 +8,11 @@ that can be written in advance has been, and tested.
 | File | What it is |
 |---|---|
 | `Code.gs` | The complete endpoint. Paste it, don't edit it. **Generated** — see below. |
-| `appsscript.json` | The manifest. Paste it over the default one. |
+| `appsscript.json` | The manifest. |
 | `test_endpoint.mjs` | 64 checks that run the real `doPost` against test payloads. |
 | `build_code_gs.py` | Regenerates `Code.gs` from `Code.gs.template` + the real ward map. |
+| `.claspignore` | Keeps non-script files out of the deployment. |
+| `.clasp.json` | Your project id. **Gitignored** — copy `.clasp.json.example` and fill it in. |
 
 **Why the code needed its own test harness.** An agent cannot reach a Google account, so
 this file is the one piece of code that would otherwise ship unreviewed by anything that can
@@ -26,47 +28,105 @@ node docs/apps-script/test_endpoint.mjs    # expect: 64/64 checks passed
 
 ---
 
+## How to push changes: use clasp, not copy-paste
+
+**`clasp` 3.4.1 is installed globally on this machine** (30 September 2026). Pasting code
+into the Apps Script editor is slow and unreliable — the editor is a CodeMirror instance
+whose select-all does not always behave, and a paste that lands *inside* the default
+`myFunction()` stub produces a file that looks fine and deploys as an endpoint with no entry
+points. That happened. Use clasp.
+
+### One-time setup (5 min)
+
+1. **Find your Script ID.** In the Apps Script editor: the **gear icon** in the left sidebar
+   → **Project Settings** → **Script ID**. It is also in the editor URL, between
+   `/dashboards/` and `/edit`.
+   > Take it from the project that is **bound to the Sheet**, not a standalone one.
+2. **Copy `.clasp.json.example` to `.clasp.json`** in this folder and paste the ID in.
+   `.clasp.json` is gitignored on purpose: the script id is deployment-scoped, and the repo
+   rule is no Sheet or deployment ids in git. The example file is committed so the workflow
+   is discoverable.
+3. **Authorise clasp once.** From `docs/apps-script/`:
+   ```bash
+   clasp login
+   ```
+   Your default browser opens a Google consent screen. Approve it. This is the only
+   browser step clasp needs you for.
+4. **Push:**
+   ```bash
+   clasp push
+   ```
+
+After that, editing `Code.gs` in this repo and running `clasp push` is the whole workflow.
+No editor, no pasting.
+
+### What clasp still cannot do
+
+**It cannot create a web app deployment.** Steps 3 and 4 below are always done in the
+browser. That is a long-standing clasp limitation, not a misconfiguration. What it removes
+is every paste, which is where all the friction was.
+
+---
+
 ## 1. Create the Sheet (2 min)
 
 1. Go to <https://sheets.new> and create a blank spreadsheet.
-2. Name it something you'll recognise, e.g. `APM poll responses`.
-3. **Leave it alone otherwise.** You do not type the columns by hand — step 2 creates both
-   tabs for you. Do not add a name, phone, email, address, NIN, BVN, exact-age, date-of-birth
-   or voter-ID column, ever: a column that is never written is still a column someone will
+2. Name it `APM poll responses` (double-click the tab at the bottom-left). A bound script
+   inherits this name.
+3. **Leave the columns alone.** You do not type them by hand — step 2 creates both tabs.
+   Do not add a name, phone, email, address, NIN, BVN, exact-age, date-of-birth or
+   voter-ID column, ever: a column that is never written is still a column someone will
    eventually fill in by hand.
 
 ## 2. Add the code (3 min)
 
-1. With the Sheet open: **Extensions → Apps Script**. A script editor opens.
-2. Delete everything in the `Code.gs` tab.
-3. Open `Code.gs` from this folder, select all, paste it in.
-4. In the Apps Script editor, click the gear icon **Project Settings** and tick
-   **Show "appsscript.json" manifest file in editor**.
-5. Open the `appsscript.json` tab, delete its contents, and paste this folder's
-   `appsscript.json` over it.
-6. In the editor's function dropdown (above the code), choose **`setupSheets`** and press
-   **Run**. It will ask for permission — click through. The Execution log should end with
-   `setup complete: 0 response row(s)`.
-   - This creates two tabs: `Responses` (10 columns) and `Audit` (3 columns).
-   - It also adds a conditional format on column A that highlights a duplicate
-     `response_id` in red. The public form sends no idempotency token and the
-     one-per-browser marker in `localStorage` is trivially cleared, so **the Sheet is the
-     record of what was actually cast**.
+**Preferred — clasp.** Do the one-time setup above, then `clasp push`. Skip to step 3.
 
-## 3. Deploy (3 min)
+**Only if clasp is unavailable**, paste it manually:
+
+1. **Extensions → Apps Script** from inside the sheet. This must be a **bound** script; the
+   code calls `SpreadsheetApp.getActiveSpreadsheet()`, which returns nothing in a
+   standalone project, and `setupSheets` will fail with a `null` error that looks like a
+   code bug but is not.
+2. In the Files pane, **right-click the default file → Delete**, then **+ → Script**, name
+   it exactly `Code.gs`, **Add**. Start from a genuinely empty file rather than pasting over
+   the `myFunction()` stub — a paste that lands inside the stub compiles but exposes no
+   entry points, and Apps Script will still report "No functions" in the dropdown.
+3. Click into the empty editor and paste the whole of `Code.gs`.
+4. In Project Settings, tick **"Show `appsscript.json` manifest file in editor"**. Select all
+   in that new file and replace it with this folder's `appsscript.json`. This is not
+   cosmetic: the default manifest requests access to **all** your spreadsheets, whereas this
+   one restricts it to `spreadsheets.currentonly` — only the sheet it is attached to.
+5. **Ctrl+S.**
+
+## 3. Run setupSheets (1 min)
+
+1. In the function dropdown, select **`setupSheets`**.
+2. **Run.** First run: **Review permissions → Advanced → Go to (project name) → Allow.**
+3. The **Execution log** at the bottom should end with:
+   ```
+   setup complete: 0 response row(s)
+   ```
+
+It creates two tabs: `Responses` (10 columns) and `Audit` (3 columns), and adds a
+conditional format on column A that highlights a duplicate `response_id` in red. The public
+form sends no idempotency token and the one-per-browser marker in `localStorage` is
+trivially cleared, so **the Sheet is the record of what was actually cast**.
+
+## 4. Deploy (3 min)
 
 1. **Deploy → New deployment**.
-2. Click the gear beside *Select type* → **Web app**.
+2. Gear beside *Select type* → **Web app**.
 3. **Description:** `APM poll intake`.
 4. **Execute as:** **Me** (`<your email>`).
 5. **Who has access:** **Only myself**.
    > Apps Script offers three levels. *Only myself* is correct and it is not a limitation:
-   > the endpoint is called by the browser from a public page, and the deployment's
-   > access level governs *who can use the script*, not who can send it a request. Anyone
-   > who can load the page can POST to it — which is exactly why step 2's validation
-   > matters and must not be skipped.
-6. **Deploy.** Copy the **Web app URL**. It ends `/exec`.
-7. Authorise when prompted.
+   > the deployment's access level governs *who can use the script*, not who can send it a
+   > request. Anyone who can load the page can POST to it — which is exactly why the
+   > validation in step 2 matters and must not be skipped.
+6. **Deploy**, approve the authorisation screen, and copy the **Web app URL**. It ends
+   `/exec`.
+
 
 ## 4. Connect it to the site (1 min)
 

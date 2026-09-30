@@ -9,3 +9,7 @@ venv/
 .DS_Store
 Thumbs.db
 data/.robots_cache.json
+
+# clasp holds the Apps Script project id, which is deployment-scoped. Commit the example
+# (.clasp.json.example) so the workflow is documented, never the real id.
+docs/apps-script/.clasp.json

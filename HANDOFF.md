@@ -1,10 +1,10 @@
 # APM Bauchi Progress & Delivery — Project Handoff
 
-**Handoff date:** 30 September 2026
+**Handoff date:** 30 September 2026, end of session
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** S5 plus the interactive poll dashboard and the Hausa review of 30 September 2026, on `main`. The dashboard and the Hausa corrections are **committed but not pushed**; see "What is not deployed" below.
-**Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
+**Current release:** S5 plus the interactive poll dashboard, the Hausa review, and the Apps Script endpoint — all **committed on `main` but NOT pushed**. Pushing was authorised once, on 26 September 2026, and is not a standing authorisation; the owner has not asked for it this session. See "What is NOT deployed" below.
+**Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/) — note the live site does **not** yet have the new dashboard.
 **Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
 
 > ✅ **S0–S4 are live.** `atlas.html` carries a real 20-LGA map and the footer names the
@@ -14,13 +14,25 @@
 > **S5, the opinion poll, is built and ships disabled.** `POLL_ENDPOINT` is `""`, the vote
 > button renders `disabled`, and no code path in `POLL_SCRIPT` can send.
 >
+> ### ⏭ Start here next session
+>
+> **One thing to hand over:** the poll `/exec` URL. The owner was mid-way through
+> `docs/apps-script/DEPLOY.md` when the session ended — **`Code.gs` is pasted into the
+> bound script and working** (the dropdown lists `doPost`). Seven steps remain, listed in
+> full under "Where the connection stands" below. Steps 3–7 are all in the owner's browser;
+> steps 1–2 and 8 are mechanical.
+>
+> **Two open owner decisions**, neither blocking: the **retention period for the comment
+> column**, and **a native Hausa speaker** to review `docs/HAUSA_REVIEW.md`.
+>
 > ### New on 30 September 2026: the poll dashboard can now be explored by area and group
 >
 > `poll.html` carries **three scope controls** — LGA, registration area, and one
 > mutually-exclusive Group lens (Woman, Man, or an age band) — over one sector chart and
 > one exact-counts table. The tally gained five crosses to make this possible:
 > `by_ward_sector`, `by_lga_gender_sector`, `by_lga_age_band_sector`, `by_gender_sector`,
-> `by_age_band_sector`. **279 tests pass** (1 skip: Playwright).
+> `by_age_band_sector`. **279 tests pass** (1 skip: Playwright), plus **64/64** endpoint
+> checks in `docs/apps-script/test_endpoint.mjs`.
 >
 > **Two rules make it safe, and both are enforced:**
 > - A registration area and a demographic are **never** published in the same figure. The
@@ -60,7 +72,7 @@
 > correction is a candidate. A native speaker must still confirm them and the disclosure
 > stays.
 >
-> ### The poll endpoint is BUILT and TESTED; only the Google account steps remain
+> ### The poll endpoint is BUILT and TESTED; clasp is installed; only Google account steps remain
 >
 > `docs/apps-script/` contains the complete Apps Script intake endpoint, a manifest, a
 > click-by-click deployment guide, and **a 64-check harness that runs the real `doPost`
@@ -75,9 +87,51 @@
 > decline marker matched at a fixed offset that never matched, with the same effect. Both
 > are fixed and both are break-tested.
 >
-> **What remains is ten minutes of clicking on the owner's Google account:** create the
-> Sheet, paste the file, deploy as a web app, copy the `/exec` URL, set `POLL_ENDPOINT`.
-> Full steps, including the CORS check everyone skips, are in `docs/apps-script/DEPLOY.md`.
+> **`clasp` 3.4.1 is installed globally** (`npm i -g @google/clasp`; the first attempt
+> failed with a transient `ERR_SSL_CIPHER_OPERATION_FAILED` and succeeded on retry). Use it
+> instead of pasting into the editor. `docs/apps-script/.claspignore` keeps the generator,
+> harness, guide and template out of the deployment, and `clasp status` confirms only
+> `Code.gs` and `appsscript.json` are tracked.
+>
+> ### Where the connection stands: stopped partway on 30 September 2026
+>
+> The owner created a Sheet and a **bound** script, and **`Code.gs` is pasted in and working**
+> — the function dropdown lists `doPost`. The work then paused for the session.
+>
+> **Still to do, in order:**
+> 1. **Copy the Script ID** — Apps Script → gear in the left sidebar → Project Settings →
+>    Script ID. Take it from the *bound* project. Then copy `.clasp.json.example` to
+>    `.clasp.json` in `docs/apps-script/` and paste the ID in.
+> 2. **`clasp login`** from `docs/apps-script/` — one Google consent screen in the owner's
+>    browser; this has NOT been done yet (an attempt on 30 September was aborted before
+>    the consent screen was approved). Then `clasp push` replaces any further manual
+>    pasting. It also replaces the manifest step below, since `clasp push` uploads
+>    `appsscript.json` too.
+> 3. **Paste the manifest** if not already done: Project Settings → tick *Show
+>    "appsscript.json" manifest file in editor*, then replace its contents with
+>    `docs/apps-script/appsscript.json`. `clasp push` does this automatically. The default
+>    manifest requests access to **all** the owner's spreadsheets; ours restricts it to
+>    `spreadsheets.currentonly`.
+> 4. **Run `setupSheets`** — dropdown → `setupSheets` → Run → approve. Execution log must
+>    read `setup complete: 0 response row(s)`. Creates `Responses` and `Audit`.
+> 5. **Deploy → New deployment → Web app**, Execute as **Me**, access **Only myself**, then
+>    approve the authorisation screen and copy the `/exec` URL.
+> 6. **Hand the `/exec` URL to an agent**, who sets `POLL_ENDPOINT`, re-renders and runs the
+>    suite. It is still `""`.
+> 7. **Cast one real vote from the page and check the browser console.** This is the step
+>    that gets skipped and it is the one that catches CORS — see `DEPLOY.md` step 5.
+>
+> ### Two things learned the hard way about the Apps Script editor
+>
+> - **A paste that lands *inside* the default `myFunction()` stub looks fine and breaks
+>   silently.** The file compiles, but `doPost` is no longer top-level, so Apps Script
+>   exposes no entry points and the dropdown still reads "No functions". Ctrl+A in that
+>   CodeMirror instance was also unreliable. **The reliable path is to delete the file and
+>   add a fresh one named `Code.gs`**, then paste into a genuinely empty editor.
+> - **Playwright cannot reach the owner's browser.** The agent's browser is headless and a
+>   separate profile, and the owner uses Brave. Driving the account from the agent side is
+>   therefore not possible at all, which is why clasp exists in this workflow and why the
+>   two Authorise-type screens are the owner's to click.
 >
 > ### What is NOT deployed, and why
 >
@@ -88,8 +142,16 @@
 > - **No snapshot exists**, so the page renders the honest empty state. Connecting the poll
 >   does not publish results; a separate owner-controlled job must build
 >   `data/delivery/poll_snapshot.json` (see `POLL_SETUP.md` §5, field list now corrected).
-> - **The dashboard is committed but not pushed.** The standing instruction is that pushing
->   was authorised once, on 26 September 2026, and is not a standing authorisation.
+> - **The dashboard and the endpoint are committed but not pushed.** The standing
+>   instruction is that pushing was authorised once, on 26 September 2026, and is not a
+>   standing authorisation.
+>
+> **One housekeeping item for the owner:** a Google account password was written to
+> `C:\Users\TOSHIBA\Desktop\googlepass.txt` in plaintext during this session so the agent
+> could have used it. The agent declined to read it — a password read into a conversation is
+> exposed permanently, unlike one typed into a form field — and the owner then completed
+> the steps by hand. **That file should be deleted**, and the password changed if there is
+> any doubt about where the machine has been.
 >
 > **Owner gates:** the `services3.arcgis.com` robots exemption (§21) was ratified on
 > 29 September 2026, and 69 AI-drafted Hausa strings were reviewed and accepted as written
@@ -1931,32 +1993,52 @@ A new maintainer should be able to answer “yes” to each question:
 ## Restart and Resume Procedure
 
 1. Start a new session from `D:\APMdeliverable` and follow **Start here next session**
-   at the top of this file.
-2. **Read `SITE_EXPANSION_PLAN.md` §9 first.** The S4 entry records what actually happened
-   with the map, including the two places the plan was wrong and why.
-3. Read `HANDOFF.md` §3 (architecture), §9 (validation evidence), §13 (priorities),
-   §18 (staging), §19 (checklist), §20 (release traps) and §21 (the robots exemption).
-4. Read `AGENTS.md` for repository rules and preserve all local-only legacy work.
-5. Run `python -m unittest discover -s tests -q` **before** changing anything. Expect
-   **162 passing** (1 skip: the Playwright browser tests). A drop means something
-   regressed; investigate before proceeding.
-6. Confirm the working tree still shows the preserved local work as untracked/modified:
+   at the top of this file. That block is the current state; this list is the mechanics.
+2. **Verify the baseline before changing anything:**
+   ```bash
+   cd D:\APMdeliverable
+   python -m unittest discover -s tests -q   # expect 279 OK (1 skip: Playwright)
+   node docs/apps-script/test_endpoint.mjs  # expect 64/64 checks passed
+   python src/dashboard/render.py            # expect six page sizes
+   ```
+   A drop in either suite means something regressed. Investigate before proceeding. The
+   endpoint harness is wired into the Python suite as well, so `unittest discover` runs it
+   too — but run it directly when you have touched `Code.gs`.
+3. **Confirm the preserved local work is still untracked/modified, and do not touch it:**
    `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`,
-   `.playwright-mcp/`. Do not reset, clean, stash permanently, or stage them.
-7. Decide S4's fate: ratify the robots exemption (§21) and stage it using the §18
-   allowlist, or drop the map and revert to the S3 tile grid. Both data files must be
-   staged with the code.
-8. Run the full suite, render, browser-check at 375px and 1440px, and get an independent
-   review before staging anything.
-9. Commit only after the owner explicitly asks. Push was authorised once, on
-   26 September 2026; it is **not** standing authorisation for future work.
-10. Do not deploy the request form or the poll until an approved HTTPS Apps Script
-    endpoint is configured; both ship disabled until then.
-11. If the boundary snapshot ever needs re-fetching, note that
-    `python -m src.ingestion.lga_boundaries` refuses to overwrite an existing snapshot
-    without `--force`, and that the snapshot's SHA-256 is recorded in both
-    `source_register.csv` and `data/derived/lga_paths.json` — re-fetching changes the hash
-    and both records must be regenerated together.
+   `.playwright-mcp/`. Never `git reset`, `git clean`, permanent `git stash`, or stage them.
+4. **The one thing to pick up: the poll `/exec` URL.** The endpoint is written and tested;
+   only the owner's Google account steps remain. See "Where the connection stands" in the
+   header block, and `docs/apps-script/DEPLOY.md` for the clicks. Once you have the URL:
+   set `POLL_ENDPOINT` in `src/dashboard/render.py`, re-render, run the suite, and tell the
+   owner to cast one real vote from the page and check the browser console for CORS.
+5. **To change the endpoint code, edit `Code.gs.template` and regenerate** — never `Code.gs`
+   directly, or the next build discards the change:
+   ```bash
+   python docs/apps-script/build_code_gs.py   # template + lga_wards.csv -> Code.gs
+   clasp push                                 # from docs/apps-script/
+   ```
+   Then re-run both suites in step 2. `clasp` 3.4.1 is installed globally; `clasp login` is
+   not yet authorised, so the first push needs one Google consent screen from the owner.
+6. **Commit only after the owner explicitly asks.** Push was authorised once, on
+   26 September 2026; it is **not** standing authorisation, and the two commits from
+   30 September 2026 (`49b828b`, `3b33146`) are still unpushed. Ask.
+7. Do not deploy the request form or the poll until an approved HTTPS Apps Script endpoint
+   is configured; both ship disabled until then, and a guessed URL is worse than a disabled
+   build because it discards votes silently.
+8. If the boundary snapshot ever needs re-fetching, note that
+   `python -m src.ingestion.lga_boundaries` refuses to overwrite an existing snapshot
+   without `--force`, and that the snapshot's SHA-256 is recorded in both
+   `source_register.csv` and `data/derived/lga_paths.json` - re-fetching changes the hash
+   and both records must be regenerated together.
+
+### Two things the owner still has to decide
+
+- **Retention for the comment column.** 300 characters of free text, never counted and never
+  published, but held indefinitely it is not anonymous in any meaningful sense. Google also
+  retains IP addresses in Apps Script execution logs regardless of what the Sheet stores.
+- **A native Hausa speaker** to review `docs/HAUSA_REVIEW.md`: 22 corrected strings plus ~11
+  deliberately left alone. An AI reviewing AI-drafted Hausa does not close that gate.
 
 ### If you only have time for one thing
 

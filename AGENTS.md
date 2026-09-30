@@ -162,6 +162,21 @@ the change.
 - **`Code.gs` is committed deliberately.** It contains no credential, no Sheet ID and no
   deployment ID; the only data in it is the public registration-area map, which is already in
   `lga_wards.csv` and on the form.
+- **Push the endpoint with `clasp`, never by pasting into the editor.** `clasp` 3.4.1 is
+  installed globally. `docs/apps-script/.claspignore` keeps the generator, harness, template
+  and guide out of the deployment, so `clasp status` must show only `Code.gs` and
+  `appsscript.json` as tracked. `clasp push` after `clasp login` and a filled-in
+  `.clasp.json`. **clasp cannot create a web app deployment** -- that and the two Google
+  authorisation screens stay owner actions, and that is a clasp limitation, not a
+  misconfiguration.
+- **`.clasp.json` is gitignored and must stay that way.** It holds the script id, which is
+  deployment-scoped. `.clasp.json.example` is committed instead so the workflow is
+  discoverable.
+- **A paste into the Apps Script editor can land *inside* the default `myFunction()` stub
+  and still look correct.** The file compiles, but `doPost` is no longer top-level, so
+  Apps Script exposes no entry points and the dropdown still reads "No functions". Ctrl+A in
+  that editor is unreliable. **Delete the file and add a fresh one named `Code.gs`** rather
+  than pasting over the stub.
 
 ## Map rules (phase S4)
 These are enforced in code; keep them enforced.
