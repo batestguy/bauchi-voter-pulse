@@ -158,18 +158,28 @@ reading the Sheet in the browser.
 
 1. A scheduled, owner-controlled job reads the `Responses` tab and builds a snapshot with
    `src.poll.aggregate.build_public_snapshot(...)`.
-2. Write it to `data/delivery/poll_snapshot.json` with exactly these fields:
+2. Write it to `data/delivery/poll_snapshot.json`. **The field set is not yours to choose** —
+   it is `aggregate.PUBLIC_SNAPSHOT_FIELDS`, and a test asserts the file's keys match it
+   exactly. Build the snapshot with `build_public_snapshot` rather than assembling the
+   dictionary by hand, and the shape is correct by construction:
 
-```text
-schema_version
-reporting_period_start
-reporting_period_end
-total_responses
-by_sector
-percentage_floor
-generated_at
-```
+   ```text
+   schema_version            reporting_period_start   reporting_period_end
+   total_responses           with_area_responses      with_ward_responses
+   with_age_band             with_gender
+   by_sector                 by_lga                   by_lga_sector
+   by_ward                   by_ward_sector           by_lga_ward
+   by_lga_age_band           by_lga_gender
+   by_lga_age_band_sector    by_lga_gender_sector
+   by_age_band_sector        by_gender_sector
+   percentage_floor          small_count_threshold    suppressed_cell_count
+   generated_at
+   ```
 
+   Every `by_*` map is subject to the same suppression floor. The three-way maps
+   (`by_lga_gender_sector`, `by_lga_age_band_sector`) and the area map (`by_ward_sector`)
+   are what the interactive dashboard reads; see `SITE_EXPANSION_PLAN.md` for the
+   dashboard's scope rules and `AGENTS.md` for the crossings that are refused.
 3. Commit it. The weekly `rebuild-pages.yml` cron picks it up and republishes.
 4. Never commit raw rows, comments, response IDs, or timestamps of individual responses.
 

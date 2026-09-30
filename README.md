@@ -143,13 +143,19 @@ more** ("Mai ba da daɗi", the role line, "Darasi:", and the portrait `alt`).
 S5 adds more in the poll, including the area and demographic fields and the dashboard
 copy. The nine sector labels are reused from the request form and are not new.
 
-**Four poll strings are known-suspect and need a native speaker before the poll is
-connected:** `ba zafi ba` should be `ba zabi ba` (*zafi* is "pain", not "vote"); the
-"not a survey" sentence has no word for *survey* in Hausa at all; `jagoranta` in
-"self-selected visitors" is not a recognised Hausa word; and `maƙalashin` (file attachment)
-was used where `sharhi` (comment) was meant, contradicting the label above it. These were
-found by reading the strings, not by a structural test, and the disclosure is a mitigation
-rather than a fix.
+**The poll's Hausa strings still need a native speaker before the poll is connected.** An
+independent AI pass on 30 September 2026 found and corrected **20 defects** — including a
+re-identification warning that had lost its negation, a privacy disclosure that had dropped
+the word "exact", and the map's licensing caveat that said "colours" where it meant
+"boundaries". Every string and its correction is in `docs/HAUSA_REVIEW.md`. **That pass does
+not close the gate:** an AI reviewed AI-drafted Hausa, so each correction is a candidate, and
+the strings it flagged as merely questionable were deliberately left alone.
+
+**A correction to this file's earlier claim.** It previously named four known-suspect
+strings. Three had already been fixed in `7ce2ff9` and no longer existed: `ba zafi ba` ->
+`ba zabi ba`, `jagoranta` -> `da kansa su amsa`, and `maƙalashin` -> `sharhi`. Only the "no
+Hausa word for survey" defect survived, and it is now fixed. Do not spend native-speaker
+time re-checking the three that are already right.
 
 The owner has reviewed and accepted the S1–S4 set (69 strings) as written on
 29 September 2026. **The 24 poll strings are new and not yet reviewed.** The disclosure

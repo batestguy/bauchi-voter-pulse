@@ -171,17 +171,17 @@
   "x-public-snapshot": {
     "type": "object",
     "additionalProperties": false,
-    "required": [
-      "schema_version",
-      "total_responses",
-      "by_sector",
-      "by_lga",
-      "by_lga_sector",
-      "by_ward",
-      "percentage_floor",
-      "small_count_threshold",
-      "suppressed_cell_count"
-    ],
+      "required": [
+        "schema_version",
+        "total_responses",
+        "by_sector",
+        "by_lga",
+        "by_lga_sector",
+        "by_ward",
+        "percentage_floor",
+        "small_count_threshold",
+        "suppressed_cell_count"
+      ],
     "properties": {
       "schema_version": {
         "const": "poll-v1"
@@ -234,6 +234,13 @@
       "by_ward": {
         "$ref": "#/x-public-snapshot/x-count-map"
       },
+      "by_ward_sector": {
+        "type": "object",
+        "description": "Registration area -> sector -> count. This is an AREA cross, the same shape as by_lga_sector one level down, and it is what makes the ward-level view useful. It stops at area: no demographic is ever added on top of it.",
+        "additionalProperties": {
+          "$ref": "#/x-public-snapshot/x-count-map"
+        }
+      },
       "by_lga_ward": {
         "type": "object",
         "description": "Registration areas are small by definition, so this is the map most likely to be almost entirely suppressed. That is the honest outcome, not a bug.",
@@ -253,6 +260,26 @@
         "description": "Never crossed with registration areas, for the same reason.",
         "additionalProperties": {
           "$ref": "#/x-public-snapshot/x-count-map"
+        }
+      },
+      "by_lga_age_band_sector": {
+        "type": "object",
+        "description": "LGA -> age band -> sector -> count. LGA is the floor for a demographic, so this is the finest grain an age band is ever published at. It answers the planning question, 'what does this age group want prioritised in this LGA', without ever narrowing to a registration area.",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/x-public-snapshot/x-count-map"
+          }
+        }
+      },
+      "by_lga_gender_sector": {
+        "type": "object",
+        "description": "LGA -> gender -> sector -> count, at the same LGA floor as by_lga_age_band_sector.",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/x-public-snapshot/x-count-map"
+          }
         }
       },
       "percentage_floor": {
@@ -306,7 +333,8 @@
     "Unknown payload fields, every field in x-forbidden-fields, malformed consent, invalid sector or LGA values, a ward code that does not belong to the selected LGA, a ward code with no approved map configured, invalid closed-list values, honeypot values, control characters and over-length comments are rejected.",
     "Small-cell suppression is MANDATORY for every published cell, and the threshold must be at least 2. Publishing a cell of 1 or 2 from a dataset that records an LGA and a registration area is publishing identifiable people.",
     "A cell of zero is published, not suppressed.",
-    "Age and gender breakdowns are never crossed with registration areas.",
+    "Age and gender breakdowns are never crossed with registration areas. The permitted grains are: area x sector (including registration area x sector), and LGA x demographic x sector. The refused grain is any combination carrying BOTH a registration area and a demographic, including ward x gender, ward x age, and ward x sector x gender.",
+    "The dashboard must not offer a control combination that would reconstruct a refused cross. Age band and gender are presented as mutually exclusive lenses, and a registration-area selection disables the demographic lenses entirely, so no sequence of clicks can produce ward x age or ward x gender.",
     "Raw responses, comments, Google Sheet data, Apps Script source, credentials, and submitted values must not be committed, logged, or placed in docs.",
     "An empty poll must render as empty. Never seed, example or placeholder results, and never render a chart of zeros that would read as data.",
     "Published results must state that respondents are self-selected visitors and that the sample is not representative, and must say the poll is not a survey and not a vote.",

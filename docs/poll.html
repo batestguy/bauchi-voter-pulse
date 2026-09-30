@@ -289,6 +289,32 @@ a{color:inherit}
 .poll-table tbody td{color:var(--navy);font-variant-numeric:tabular-nums}
 .poll-table tr.is-suppressed td,.poll-table tr.is-suppressed th{color:var(--muted)}
 .poll-table-empty{color:var(--muted);font-style:italic}
+.poll-table td.is-share-withheld{color:var(--muted)}
+/* The scope block is the control surface for every figure on the page, so it is styled as
+   a panel rather than a loose row of dropdowns: the reader should be able to see, at a
+   glance, which population the numbers underneath belong to. */
+.poll-scope{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:20px 22px;box-shadow:var(--shadow);margin:0 0 22px}
+.poll-scope-now{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.poll-scope-kicker{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.poll-scope-now b{font-family:Georgia,serif;font-size:1.15rem;font-weight:400;color:var(--navy)}
+.poll-scope-count{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.poll-control{display:grid;gap:6px;min-width:190px;flex:1 1 190px}
+.poll-control label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.poll-control select{font-family:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white);color:var(--ink);width:100%}
+.poll-control select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.poll-control select:disabled{background:rgba(11,38,60,.04);color:var(--muted);cursor:not-allowed}
+.poll-lock{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.6;color:var(--ink);background:rgba(176,141,36,.1);border-left:3px solid var(--gold)}
+.poll-lock[hidden]{display:none}
+.poll-two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.poll-two .poll-chart{margin:0}
+.poll-share-note{margin:16px 0 0;padding:12px 14px;font-size:11px;line-height:1.6;color:var(--muted);background:rgba(11,38,60,.04);border-left:3px solid var(--navy)}
+.poll-share-note[hidden]{display:none}
+.poll-coverage{margin:0 0 22px}
+.poll-coverage h3{font-family:Georgia,serif;font-size:1.15rem;font-weight:400;color:var(--navy);margin:0 0 14px}
+.poll-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.poll-stat{background:var(--white);padding:16px 18px;display:grid;gap:4px}
+.poll-stat b{font-family:Georgia,serif;font-size:1.6rem;font-weight:400;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1}
+.poll-stat span{font-size:11px;line-height:1.45;color:var(--muted)}
 .request-status,.request-confirmation{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.5}
 .request-status{background:#ecebe4;border-left:3px solid #7b8589;color:#46545a}
 .request-status.is-error{background:#fff0eb;border-left-color:#9a351f;color:#7a2818}
@@ -339,7 +365,7 @@ a{color:inherit}
 @keyframes rise{to{opacity:1;transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 @media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
-@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}.poll-form{padding:18px}.poll-grid{grid-template-columns:1fr}.poll-bar{grid-template-columns:1fr;gap:5px}.poll-bar-track{height:12px}.poll-chart{padding:18px}.poll-controls select{min-width:0;width:100%}}
+@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}.poll-form{padding:18px}.poll-grid{grid-template-columns:1fr}.poll-bar{grid-template-columns:1fr;gap:5px}.poll-bar-track{height:12px}.poll-chart{padding:18px}.poll-controls select{min-width:0;width:100%}.poll-two{grid-template-columns:1fr;gap:18px}.poll-stats{grid-template-columns:1fr 1fr}.poll-scope{padding:16px}.poll-scope-count{margin-left:0;flex-basis:100%}}
 @media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-map-layout{grid-template-columns:1fr;gap:22px}.lga-map-column{position:static}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
 @media (max-width:760px){.shell{width:min(100% - 28px,1240px)}.hero{min-height:auto;padding-top:112px;padding-bottom:54px}.hero-grid,.intro-grid,.governance-grid{grid-template-columns:1fr}.hero h1{font-size:clamp(3.2rem,16vw,5.5rem)}.portrait-wrap{min-height:390px;margin-top:20px}.portrait-wrap::before{width:280px;height:280px;right:4%}.portrait-wrap::after{width:320px;height:400px;right:1%}.portrait{max-height:420px}.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}.stat:nth-child(2){border-right:0}.section{padding:70px 0}.section-head{display:block}.section-head p{margin-top:18px}.progress-path{grid-template-columns:1fr;padding:16px}.path-step{min-height:0;padding:14px 16px 24px}.path-step:not(:last-child)::after{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}.arrow-head{padding:15px 16px}.arrow-path{display:block;padding:14px}.path-node{margin-bottom:10px;padding:16px}.path-arrow{padding:0;height:24px;transform:rotate(90deg)}.lga-detail{display:block}.lga-detail .detail-label{display:block;margin-bottom:12px}.governor-card img{height:340px}.agenda-grid{grid-template-columns:1fr 1fr}.source-list{grid-template-columns:1fr}.footer-inner{display:block}.deerflow{display:inline-block;margin-top:20px}}
 /* --- shared multi-page shell ------------------------------------------- */
@@ -408,8 +434,8 @@ a{color:inherit}
 <section class="section poll-section" id="poll" aria-labelledby="poll-title">
   <div class="shell">
     <div class="section-head">
-      <div><div class="eyebrow"><span data-en="One question" data-ha="Ƙa tambaya daya">One question</span></div><h2 id="poll-title"><span data-en="Which sector should APM prioritise first?" data-ha="Wane sector APM ya fi fahimta da farko?">Which sector should APM prioritise first?</span></h2></div>
-      <p><span data-en="Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied." data-ha="Zaɓi sector daya. Shi kawai abin da wannan hawsar tana ƙirgita. Akwai ƙananan sharhi da ke tare da ita, ba tambaya ta biyu ba, kuma ba a taƙaita shi ba.">Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied.</span></p>
+      <div><div class="eyebrow"><span data-en="One question" data-ha="Ƙa tambaya daya">One question</span></div><h2 id="poll-title"><span data-en="Which sector should APM prioritise first?" data-ha="Wane sector APM ya fi gabanawa da farko?">Which sector should APM prioritise first?</span></h2></div>
+      <p><span data-en="Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied." data-ha="Zaɓi sector daya. Shi kawai abin da wannan hawsar tana ƙirgita. ƙoƙin sharhi da ke kasa yana tare da ita, ba tambaya ta biyu ba, kuma ba a taƙaita shi ba.">Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied.</span></p>
     </div>
     <form class="poll-form" id="public-poll-form" method="post" action="about:blank" onsubmit="return false" data-poll-form data-poll-endpoint="" data-poll-configured="false" aria-describedby="poll-config-status poll-comment-note poll-identity-note">
       <p class="poll-config-status" id="poll-config-status" data-poll-config-status data-en="The poll is not connected yet, so nothing is sent from this build. No vote is being recorded." data-ha="Ba a haɗa hawsar ba tukuna, don haka ba a tura komai daga wannan gina. Ba a yin amsa ba.">The poll is not connected yet, so nothing is sent from this build. No vote is being recorded.</p>
@@ -435,7 +461,7 @@ a{color:inherit}
           <option value="" data-en="Choose your LGA first" data-ha="Zaɓi LGA da kake da farko" selected>Choose your LGA first</option>
           <option value="RA-001" data-poll-ra-lga="Alkaleri">Alkaleri</option><option value="RA-002" data-poll-ra-lga="Alkaleri">Pali</option><option value="RA-003" data-poll-ra-lga="Alkaleri">Gar</option><option value="RA-004" data-poll-ra-lga="Alkaleri">Gwaram</option><option value="RA-005" data-poll-ra-lga="Alkaleri">Maimadi</option><option value="RA-006" data-poll-ra-lga="Alkaleri">Dan Kungibar</option><option value="RA-007" data-poll-ra-lga="Alkaleri">Birin/Gigara/Yankari</option><option value="RA-008" data-poll-ra-lga="Alkaleri">Yuli/Lim</option><option value="RA-009" data-poll-ra-lga="Alkaleri">Futuk</option><option value="RA-010" data-poll-ra-lga="Alkaleri">Yalo</option><option value="RA-011" data-poll-ra-lga="Alkaleri">Gwana/Mansur</option><option value="RA-012" data-poll-ra-lga="Bauchi">Majidadi A</option><option value="RA-013" data-poll-ra-lga="Bauchi">Majidadi B</option><option value="RA-014" data-poll-ra-lga="Bauchi">Makama/Sarki Baki</option><option value="RA-015" data-poll-ra-lga="Bauchi">Zungur/Liman Katagum</option><option value="RA-016" data-poll-ra-lga="Bauchi">Mun/Munsal</option><option value="RA-017" data-poll-ra-lga="Bauchi">Dandango/Yamrat</option><option value="RA-018" data-poll-ra-lga="Bauchi">Birshi/Miri</option><option value="RA-019" data-poll-ra-lga="Bauchi">Kundum/Durum</option><option value="RA-020" data-poll-ra-lga="Bauchi">Kangyare/Turwun</option><option value="RA-021" data-poll-ra-lga="Bauchi">Galambi/Gwaskwaram</option><option value="RA-022" data-poll-ra-lga="Bauchi">Dan’Iya Hardo</option><option value="RA-023" data-poll-ra-lga="Bauchi">Dawaki</option><option value="RA-024" data-poll-ra-lga="Bogoro">Bogoro A</option><option value="RA-025" data-poll-ra-lga="Bogoro">Bogoro B</option><option value="RA-026" data-poll-ra-lga="Bogoro">Bogoro C</option><option value="RA-027" data-poll-ra-lga="Bogoro">Bogoro D</option><option value="RA-028" data-poll-ra-lga="Bogoro">Boi A</option><option value="RA-029" data-poll-ra-lga="Bogoro">Boi B</option><option value="RA-030" data-poll-ra-lga="Bogoro">Boi C</option><option value="RA-031" data-poll-ra-lga="Bogoro">Lusa A</option><option value="RA-032" data-poll-ra-lga="Bogoro">Lusa B</option><option value="RA-033" data-poll-ra-lga="Bogoro">Lusa C</option><option value="RA-034" data-poll-ra-lga="Dambam">Garuza</option><option value="RA-035" data-poll-ra-lga="Dambam">Gurbana</option><option value="RA-036" data-poll-ra-lga="Dambam">Dambam</option><option value="RA-037" data-poll-ra-lga="Dambam">Yanda</option><option value="RA-038" data-poll-ra-lga="Dambam">Yame</option><option value="RA-039" data-poll-ra-lga="Dambam">Dagauda</option><option value="RA-040" data-poll-ra-lga="Dambam">Gargawa</option><option value="RA-041" data-poll-ra-lga="Dambam">Zaura</option><option value="RA-042" data-poll-ra-lga="Dambam">Jalam Central</option><option value="RA-043" data-poll-ra-lga="Dambam">Jalam East</option><option value="RA-044" data-poll-ra-lga="Darazo">Darajo</option><option value="RA-045" data-poll-ra-lga="Darazo">Tauya</option><option value="RA-046" data-poll-ra-lga="Darazo">Gabarin</option><option value="RA-047" data-poll-ra-lga="Darazo">Konkiyal</option><option value="RA-048" data-poll-ra-lga="Darazo">Lago</option><option value="RA-049" data-poll-ra-lga="Darazo">Sade</option><option value="RA-050" data-poll-ra-lga="Darazo">Lanzai</option><option value="RA-051" data-poll-ra-lga="Darazo">Yautare</option><option value="RA-052" data-poll-ra-lga="Darazo">Gabciyari</option><option value="RA-053" data-poll-ra-lga="Darazo">Wahu</option><option value="RA-054" data-poll-ra-lga="Darazo">Papa</option><option value="RA-055" data-poll-ra-lga="Dass">Bagel/Bajar</option><option value="RA-056" data-poll-ra-lga="Dass">Bundot</option><option value="RA-057" data-poll-ra-lga="Dass">Bununu Central</option><option value="RA-058" data-poll-ra-lga="Dass">Bununu South</option><option value="RA-059" data-poll-ra-lga="Dass">Baraza</option><option value="RA-060" data-poll-ra-lga="Dass">Dott</option><option value="RA-061" data-poll-ra-lga="Dass">Durr</option><option value="RA-062" data-poll-ra-lga="Dass">Polchi</option><option value="RA-063" data-poll-ra-lga="Dass">Wandi</option><option value="RA-064" data-poll-ra-lga="Dass">Zumbul/Lukshi</option><option value="RA-065" data-poll-ra-lga="Gamawa">Gamawa</option><option value="RA-066" data-poll-ra-lga="Gamawa">Kafin Romi</option><option value="RA-067" data-poll-ra-lga="Gamawa">Gololo</option><option value="RA-068" data-poll-ra-lga="Gamawa">Kubdiya</option><option value="RA-069" data-poll-ra-lga="Gamawa">Alagarno/Jadori</option><option value="RA-070" data-poll-ra-lga="Gamawa">Tumbi</option><option value="RA-071" data-poll-ra-lga="Gamawa">Udubo</option><option value="RA-072" data-poll-ra-lga="Gamawa">Tarmasuwa</option><option value="RA-073" data-poll-ra-lga="Gamawa">Raga</option><option value="RA-074" data-poll-ra-lga="Gamawa">Gadiya</option><option value="RA-075" data-poll-ra-lga="Gamawa">Zindi</option><option value="RA-076" data-poll-ra-lga="Ganjuwa">Ganjuwa</option><option value="RA-077" data-poll-ra-lga="Ganjuwa">Gungura</option><option value="RA-078" data-poll-ra-lga="Ganjuwa">Kafin Madaki</option><option value="RA-079" data-poll-ra-lga="Ganjuwa">Kariya</option><option value="RA-080" data-poll-ra-lga="Ganjuwa">Kubi East</option><option value="RA-081" data-poll-ra-lga="Ganjuwa">Kubi West</option><option value="RA-082" data-poll-ra-lga="Ganjuwa">Miya East</option><option value="RA-083" data-poll-ra-lga="Ganjuwa">Miya West</option><option value="RA-084" data-poll-ra-lga="Ganjuwa">Nasarawa North</option><option value="RA-085" data-poll-ra-lga="Ganjuwa">Nasarawa South</option><option value="RA-086" data-poll-ra-lga="Ganjuwa">Yali</option><option value="RA-087" data-poll-ra-lga="Giade">Chinkani</option><option value="RA-088" data-poll-ra-lga="Giade">Sabon Sara</option><option value="RA-089" data-poll-ra-lga="Giade">Doguwa Central</option><option value="RA-090" data-poll-ra-lga="Giade">Doguwa South</option><option value="RA-091" data-poll-ra-lga="Giade">Giade</option><option value="RA-092" data-poll-ra-lga="Giade">Isawa</option><option value="RA-093" data-poll-ra-lga="Giade">Uzum A</option><option value="RA-094" data-poll-ra-lga="Giade">Uzum B</option><option value="RA-095" data-poll-ra-lga="Giade">Zabi</option><option value="RA-096" data-poll-ra-lga="Giade">Zirami</option><option value="RA-097" data-poll-ra-lga="Itas-Gadau">Itas</option><option value="RA-098" data-poll-ra-lga="Itas-Gadau">Mashema</option><option value="RA-099" data-poll-ra-lga="Itas-Gadau">Gwarai</option><option value="RA-100" data-poll-ra-lga="Itas-Gadau">Abdallawa/Magarya</option><option value="RA-101" data-poll-ra-lga="Itas-Gadau">Buzawa</option><option value="RA-102" data-poll-ra-lga="Itas-Gadau">Bilkicheri</option><option value="RA-103" data-poll-ra-lga="Itas-Gadau">Bambal</option><option value="RA-104" data-poll-ra-lga="Itas-Gadau">Gadau</option><option value="RA-105" data-poll-ra-lga="Itas-Gadau">Kashuri</option><option value="RA-106" data-poll-ra-lga="Itas-Gadau">Zubuki</option><option value="RA-107" data-poll-ra-lga="Jamaare">Jama’are A</option><option value="RA-108" data-poll-ra-lga="Jamaare">Jama’are B</option><option value="RA-109" data-poll-ra-lga="Jamaare">Jama’are C</option><option value="RA-110" data-poll-ra-lga="Jamaare">Jama’are D</option><option value="RA-111" data-poll-ra-lga="Jamaare">Dogon Jeji A</option><option value="RA-112" data-poll-ra-lga="Jamaare">Dogon Jeji B</option><option value="RA-113" data-poll-ra-lga="Jamaare">Dogon Jeji C</option><option value="RA-114" data-poll-ra-lga="Jamaare">Hanafari</option><option value="RA-115" data-poll-ra-lga="Jamaare">Galdimari</option><option value="RA-116" data-poll-ra-lga="Jamaare">Jurara</option><option value="RA-117" data-poll-ra-lga="Katagum">Bulkachuwa/Dagaro</option><option value="RA-118" data-poll-ra-lga="Katagum">Buskuri</option><option value="RA-119" data-poll-ra-lga="Katagum">Chinade</option><option value="RA-120" data-poll-ra-lga="Katagum">Gambaki/Bidir</option><option value="RA-121" data-poll-ra-lga="Katagum">Madachi/Gangai</option><option value="RA-122" data-poll-ra-lga="Katagum">Madangala</option><option value="RA-123" data-poll-ra-lga="Katagum">Madara</option><option value="RA-124" data-poll-ra-lga="Katagum">Nasarawa Bakin Kasuwa</option><option value="RA-125" data-poll-ra-lga="Katagum">Ragwam/Magonshi</option><option value="RA-126" data-poll-ra-lga="Katagum">Tsakwa Kofar Gabas/Kofar Kuka</option><option value="RA-127" data-poll-ra-lga="Katagum">Yayu</option><option value="RA-128" data-poll-ra-lga="Kirfi">Badara</option><option value="RA-129" data-poll-ra-lga="Kirfi">Bara</option><option value="RA-130" data-poll-ra-lga="Kirfi">Beni A</option><option value="RA-131" data-poll-ra-lga="Kirfi">Beni B</option><option value="RA-132" data-poll-ra-lga="Kirfi">Dewu Central</option><option value="RA-133" data-poll-ra-lga="Kirfi">Dewu East</option><option value="RA-134" data-poll-ra-lga="Kirfi">Kirfi</option><option value="RA-135" data-poll-ra-lga="Kirfi">Shango</option><option value="RA-136" data-poll-ra-lga="Kirfi">Tubule</option><option value="RA-137" data-poll-ra-lga="Kirfi">Wanka</option><option value="RA-138" data-poll-ra-lga="Misau">Zadawa</option><option value="RA-139" data-poll-ra-lga="Misau">Beti</option><option value="RA-140" data-poll-ra-lga="Misau">Jarkasa</option><option value="RA-141" data-poll-ra-lga="Misau">Kukadi/Gundari</option><option value="RA-142" data-poll-ra-lga="Misau">Ajilin/Gugulin</option><option value="RA-143" data-poll-ra-lga="Misau">Tofu</option><option value="RA-144" data-poll-ra-lga="Misau">Hardawa</option><option value="RA-145" data-poll-ra-lga="Misau">Sarma/Akuyam</option><option value="RA-146" data-poll-ra-lga="Misau">Sirko</option><option value="RA-147" data-poll-ra-lga="Misau">Gwaram</option><option value="RA-148" data-poll-ra-lga="Ningi">Ningi</option><option value="RA-149" data-poll-ra-lga="Ningi">Dingis</option><option value="RA-150" data-poll-ra-lga="Ningi">Nasaru</option><option value="RA-151" data-poll-ra-lga="Ningi">Jangu</option><option value="RA-152" data-poll-ra-lga="Ningi">Balma</option><option value="RA-153" data-poll-ra-lga="Ningi">Kudu/Yamma</option><option value="RA-154" data-poll-ra-lga="Ningi">Tiffi/Guda</option><option value="RA-155" data-poll-ra-lga="Ningi">Burra/Kyata</option><option value="RA-156" data-poll-ra-lga="Ningi">Sama</option><option value="RA-157" data-poll-ra-lga="Ningi">Bashe</option><option value="RA-158" data-poll-ra-lga="Ningi">Kurmi</option><option value="RA-159" data-poll-ra-lga="Shira">Andubun</option><option value="RA-160" data-poll-ra-lga="Shira">Sambuwal</option><option value="RA-161" data-poll-ra-lga="Shira">Bukul/Bangire</option><option value="RA-162" data-poll-ra-lga="Shira">Disina</option><option value="RA-163" data-poll-ra-lga="Shira">Faggo</option><option value="RA-164" data-poll-ra-lga="Shira">Beli/Gagidaba</option><option value="RA-165" data-poll-ra-lga="Shira">Kilbori</option><option value="RA-166" data-poll-ra-lga="Shira">Shira</option><option value="RA-167" data-poll-ra-lga="Shira">Tsafi</option><option value="RA-168" data-poll-ra-lga="Shira">Tumfafi</option><option value="RA-169" data-poll-ra-lga="Shira">Zubo</option><option value="RA-170" data-poll-ra-lga="Tafawa-Balewa">Kardam A</option><option value="RA-171" data-poll-ra-lga="Tafawa-Balewa">Kardam B</option><option value="RA-172" data-poll-ra-lga="Tafawa-Balewa">Lere North</option><option value="RA-173" data-poll-ra-lga="Tafawa-Balewa">Lere South</option><option value="RA-174" data-poll-ra-lga="Tafawa-Balewa">Tapshin</option><option value="RA-175" data-poll-ra-lga="Tafawa-Balewa">Wai</option><option value="RA-176" data-poll-ra-lga="Tafawa-Balewa">Ball</option><option value="RA-177" data-poll-ra-lga="Tafawa-Balewa">Bula</option><option value="RA-178" data-poll-ra-lga="Tafawa-Balewa">Dajin</option><option value="RA-179" data-poll-ra-lga="Tafawa-Balewa">Dull</option><option value="RA-180" data-poll-ra-lga="Tafawa-Balewa">Bununu</option><option value="RA-181" data-poll-ra-lga="Toro">Toro/Tulai</option><option value="RA-182" data-poll-ra-lga="Toro">Tilden Fulani</option><option value="RA-183" data-poll-ra-lga="Toro">Ribina</option><option value="RA-184" data-poll-ra-lga="Toro">Mara/Palama</option><option value="RA-185" data-poll-ra-lga="Toro">Rauta/Geji</option><option value="RA-186" data-poll-ra-lga="Toro">Jama’a/Zaranda</option><option value="RA-187" data-poll-ra-lga="Toro">Lame</option><option value="RA-188" data-poll-ra-lga="Toro">Wonu</option><option value="RA-189" data-poll-ra-lga="Toro">Zalau/Rishi</option><option value="RA-190" data-poll-ra-lga="Toro">Tama</option><option value="RA-191" data-poll-ra-lga="Toro">Rahama</option><option value="RA-192" data-poll-ra-lga="Warji">Baima North/West</option><option value="RA-193" data-poll-ra-lga="Warji">Baima South/East</option><option value="RA-194" data-poll-ra-lga="Warji">Dagu East</option><option value="RA-195" data-poll-ra-lga="Warji">Dagu West</option><option value="RA-196" data-poll-ra-lga="Warji">Gabanga</option><option value="RA-197" data-poll-ra-lga="Warji">Katanga</option><option value="RA-198" data-poll-ra-lga="Warji">Ranga</option><option value="RA-199" data-poll-ra-lga="Warji">Tiyin</option><option value="RA-200" data-poll-ra-lga="Warji">Tudun Wada East</option><option value="RA-201" data-poll-ra-lga="Warji">Tudun Wada West</option><option value="RA-202" data-poll-ra-lga="Zaki">Bursali</option><option value="RA-203" data-poll-ra-lga="Zaki">Katagum</option><option value="RA-204" data-poll-ra-lga="Zaki">Tashena/Gadai</option><option value="RA-205" data-poll-ra-lga="Zaki">Makawa</option><option value="RA-206" data-poll-ra-lga="Zaki">Sakwa</option><option value="RA-207" data-poll-ra-lga="Zaki">Gumai</option><option value="RA-208" data-poll-ra-lga="Zaki">Murmur North</option><option value="RA-209" data-poll-ra-lga="Zaki">Murmur South</option><option value="RA-210" data-poll-ra-lga="Zaki">Alangawari/Kafin/Larabawa</option><option value="RA-211" data-poll-ra-lga="Zaki">Maiwa</option><option value="RA-212" data-poll-ra-lga="Zaki">Mainako</option>
         </select>
-        <p class="poll-note" data-en="Leave this blank if you would rather not say. Choosing it makes the result more useful for your area, but areas with very few answers are never published." data-ha="Ka bar shi babu komai idan kana son ka faɓa ba. Zaɓi zai sa sakamako ya fi amfani ga yankin ka, amma wurare da ke da amsa kaɗan ba a wallafa su ba.">Leave this blank if you would rather not say.</p>
+        <p class="poll-note" data-en="Leave this blank if you would rather not say. Choosing it makes the result more useful for your area, but areas with very few answers are never published." data-ha="Ka bar shi babu komai idan kana son ka faɗi ba. Zaɓi zai sa sakamako ya fi amfani ga yankin ka, amma wurare da ke da amsa kaɗan ba a wallafa su ba.">Leave this blank if you would rather not say.</p>
       </div>
       <fieldset class="poll-demographics">
         <legend><span data-en="Optional · helps show who is answering" data-ha="Zaɓi · tana nuna ko wa yake amsa">Optional · helps show who is answering</span></legend>
@@ -443,37 +469,37 @@ a{color:inherit}
           <div class="poll-field">
             <label for="poll-age-band"><span data-en="Age group" data-ha="Shekaru">Age group</span></label>
             <select id="poll-age-band" name="age_band">
-              <option value="" data-en="Prefer not to say" data-ha="Na fi zai faɗa ba" selected>Prefer not to say</option>
+              <option value="" data-en="Prefer not to say" data-ha="Na fi na faɗi ba" selected>Prefer not to say</option>
               <option value="age_18_25" data-en="18–25" data-ha="Shekaru 18–25">18–25</option><option value="age_26_35" data-en="26–35" data-ha="Shekaru 26–35">26–35</option><option value="age_36_45" data-en="36–45" data-ha="Shekaru 36–45">36–45</option><option value="age_46_55" data-en="46–55" data-ha="Shekaru 46–55">46–55</option><option value="age_56_65" data-en="56–65" data-ha="Shekaru 56–65">56–65</option><option value="age_66_plus" data-en="66 and over" data-ha="Shekaru 66 da sama">66 and over</option>
             </select>
           </div>
           <div class="poll-field">
             <label for="poll-gender"><span data-en="Gender" data-ha="Jinsi">Gender</span></label>
             <select id="poll-gender" name="gender">
-              <option value="" data-en="Prefer not to say" data-ha="Na fi zai faɗa ba" selected>Prefer not to say</option>
+              <option value="" data-en="Prefer not to say" data-ha="Na fi na faɗi ba" selected>Prefer not to say</option>
               <option value="woman" data-en="Woman" data-ha="Mace">Woman</option><option value="man" data-en="Man" data-ha="Miji">Man</option>
             </select>
           </div>
         </div>
-        <p class="poll-note" data-en="We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions." data-ha="Muna tambaya mukulli, ba shekaru kuma ba suna ba, waya, imel ko adireshi. Za ka iya tsayar da duk tambayoyin.">We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions.</p>
+        <p class="poll-note" data-en="We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions." data-ha="Muna tambaya ƙungiya, ba shekaru kuma daidai ba, kuma ba suna, waya, imel ko adireshi ba. Za ka iya tsayawa duk tambayoyin ba tare da su ba.">We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions.</p>
       </fieldset>
       <div class="poll-field">
         <label for="poll-comment"><span data-en="Comment (optional, not counted)" data-ha="Sharhi (zaɓi, ba a taƙaita ba)">Comment (optional, not counted)</span></label>
         <textarea id="poll-comment" name="comment" rows="3" maxlength="300" aria-describedby="poll-comment-note"></textarea>
-        <p class="poll-note" id="poll-comment-note" data-en="This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail." data-ha="Wannan sharhi yana tare da amsar kuma ba a taƙaita ko wallafa shi ba. Ka faɗa don shigar da suna, l waya, adireshi ko wani bayan da ke gano mutum.">This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail.</p>
+        <p class="poll-note" id="poll-comment-note" data-en="This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail." data-ha="Wannan sharhi yana tare da amsar kuma ba a taƙaita ko wallafa shi ba. Ka yi hankali ka guji shigar da suna, l waya, adireshi ko wani bayan da ke gano mutum.">This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail.</p>
       </div>
       <div class="poll-field poll-honeypot" aria-hidden="true"><label for="poll-website" data-en="Website" data-ha="Yanayin gari">Website</label><input id="poll-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
       <div class="poll-consent">
         <input id="poll-consent" name="consent" type="checkbox" required>
         <label for="poll-consent"><span data-en="I consent to this vote being recorded and counted. No name or contact detail is collected." data-ha="Na amince da a lissafa wannan amsar. Ba a tara suna ko bayan hulɗe ba.">I consent to this vote being recorded and counted. No name or contact detail is collected.</span> <span class="poll-required" aria-hidden="true">*</span></label>
       </div>
-      <p class="poll-note" id="poll-identity-note" data-en="No name, phone, email, address or voter ID is requested. Any reference shown after you vote is a generated response tracking reference, not a voter ID." data-ha="Ba a nemi suna, l waya, imel, adireshi ko ID na zabb'ar masu zayyawa ba. Kowane maƙai da za a nuna bayan amsa yana nufin bin amsa kawai, ba ID na zabb'ar masu zayyawa ba.">No name, phone, email, address or voter ID is requested.</p>
+      <p class="poll-note" id="poll-identity-note" data-en="No name, phone, email, address or voter ID is requested. Any reference shown after you vote is a generated response tracking reference, not a voter ID." data-ha="Ba a nemi suna, l waya, imel, adireshi ko ID na zabb'ar masu zayyawa ba. Kowane ID da za a nuna bayan amsa yana nufin bin amsa kawai, ba ID na zabb'ar masu zayyawa ba.">No name, phone, email, address or voter ID is requested.</p>
       <button class="btn poll-submit" type="submit" data-poll-submit disabled><span data-en="Cast vote" data-ha="Yi amsa">Cast vote</span></button>
       <p class="poll-status" data-poll-status role="status" aria-live="polite" aria-atomic="true" data-en="Voting is currently unavailable. Please check the status above." data-ha="Ba a samu damar yin amsa yanzu. Duba matsayi a sama." data-unavailable-en="Voting is currently unavailable. Please check the status above." data-unavailable-ha="Ba a samu damar yin amsa yanzu. Duba matsayi a sama." data-submitting-en="Sending your vote." data-submitting-ha="Ana aika amsar." data-error-en="We could not send your vote. Please try again later." data-error-ha="Ba mu iya aika amsar. Ka sake gwada daga baya.">Voting is currently unavailable. Please check the status above.</p>
-      <div class="poll-confirmation" data-poll-confirmation role="status" aria-live="polite" aria-atomic="true" hidden data-en="Vote received. This reference tracks your response only and is not a voter ID." data-ha="An karɓi amsa. Wannan maƙai yana bin amsar kawai, ba ID na zabb'ar masu zayyawa ba.">Vote received.</div>
+      <div class="poll-confirmation" data-poll-confirmation role="status" aria-live="polite" aria-atomic="true" hidden data-en="Vote received. This reference tracks your response only and is not a voter ID." data-ha="An karɓi amsa. Wannan ID yana bin amsar kawai, ba ID na zabb'ar masu zayyawa ba.">Vote received.</div>
     </form>
   </div>
-</section><section class="section poll-results" id="poll-results" aria-labelledby="poll-results-title"><div class="shell"><div class="section-head"><div><div class="eyebrow"><span data-en="What people have said" data-ha="Abin da mutane suka faɗa">What people have said</span></div><h2 id="poll-results-title"><span data-en="Sector priorities so far." data-ha="Gabanawa na sectors har yanzu.">Sector priorities so far.</span></h2></div><p><span data-en="These are self-selected visitors, not a representative sample. It is not a survey and not a vote, and it does not measure how many people in Bauchi hold this view." data-ha="Wannan mutane da suka zaɓi da kansa su amsa, ba su cikin saminci da ke wakilai ba. Ba aiki ta hawa ba, ba zabi ba, kuma ba ta aunawa yawanin mutane a Bauchi da wannan ra&#x27;ayi ba.">These are self-selected visitors, not a representative sample. It is not a survey and not a vote, and it does not measure how many people in Bauchi hold this view.</span></p></div><div class="poll-chart"><p class="poll-empty" data-en="No responses have been recorded yet. Once the poll is connected, results will appear here." data-ha="Bai sami amsa ba tukuna. Idan aka haɗa hawsar, za a nuna sakamako a nan.">No responses have been recorded yet. Once the poll is connected, results will appear here.</p></div></div></section>
+</section><section class="section poll-results" id="poll-results" aria-labelledby="poll-results-title"><div class="shell"><div class="section-head"><div><div class="eyebrow"><span data-en="What people have said" data-ha="Abin da mutane suka faɗa">What people have said</span></div><h2 id="poll-results-title"><span data-en="Sector priorities so far." data-ha="Gabanawa na sectors har yanzu.">Sector priorities so far.</span></h2></div><p><span data-en="These are self-selected visitors, not a representative sample. It is not a survey and not a vote, and it does not measure how many people in Bauchi hold this view." data-ha="Wannan mutane da suka zaɓi da kansa su amsa, ba su cikin saminci da ke wakilai ba. Ba wani bincike ba, ba zabi ba, kuma ba ta aunawa yawanin mutane a Bauchi da wannan ra&#x27;ayi ba.">These are self-selected visitors, not a representative sample. It is not a survey and not a vote, and it does not measure how many people in Bauchi hold this view.</span></p></div><div class="poll-chart"><p class="poll-empty" data-en="No responses have been recorded yet. Once the poll is connected, results will appear here." data-ha="Bai sami amsa ba tukuna. Idan aka haɗa hawsar, za a nuna sakamako a nan.">No responses have been recorded yet. Once the poll is connected, results will appear here.</p></div></div></section>
 <section class="section requests-section" id="requests" aria-labelledby="requests-title">
   <div class="shell">
     <div class="section-head">
@@ -536,22 +562,23 @@ a{color:inherit}
       <aside class="request-aside" aria-label="Request guidance">
         <div><span>01</span><h3><span data-en="Describe the problem" data-ha="Bayyana matsala">Describe the problem</span></h3><p><span data-en="Give the location and what is needed. One request keeps the issue clear for follow-up." data-ha="Yi bayyana wuri da abin da ake buƙata. Buƙatar daya tana sa batun ya kasance mai sauƙi idan a biyo shi.">Give the location and what is needed. One request keeps the issue clear for follow-up.</span></p></div>
         <div><span>02</span><h3><span data-en="Keep personal details optional" data-ha="Sanya bayanan sirri zaɓi">Keep personal details optional</span></h3><p><span data-en="Add contact information only if you want a response. It will be sent only to the configured request service." data-ha="Ƙara bayan tuntu kawai idan kana son amsa. Za a tura shi kawai ga sabis na buƙatar da aka saita.">Add contact information only if you want a response. It will be sent only to the configured request service.</span></p></div>
-        <div><span>03</span><h3><span data-en="Use the tracking reference" data-ha="Yi amfani da maƙai bin">Use the tracking reference</span></h3><p><span data-en="A confirmation reference helps follow up only after the request service accepts a request. It is not a voter ID." data-ha="Maƙai bin ya taimaka ne kawai bayan sabis ɗin buƙatar ya karɓi buƙatar. Ba ID na zabb&#x27;ar masu zayyawa ba.">A confirmation reference helps follow up only after the request service accepts a request. It is not a voter ID.</span></p></div>
+        <div><span>03</span><h3><span data-en="Use the tracking reference" data-ha="Yi amfani da ID na bin">Use the tracking reference</span></h3><p><span data-en="A confirmation reference helps follow up only after the request service accepts a request. It is not a voter ID." data-ha="Maƙai bin ya taimaka ne kawai bayan sabis ɗin buƙatar ya karɓi buƙatar. Ba ID na zabb&#x27;ar masu zayyawa ba.">A confirmation reference helps follow up only after the request service accepts a request. It is not a voter ID.</span></p></div>
       </aside>
     </div>
   </div>
-</section><section class="section" id="how"><div class="shell"><div class="section-head"><div><div class="eyebrow"><span data-en="Before you send" data-ha="Kafin ka aika">Before you send</span></div><h2><span data-en="What happens to this form." data-ha="Abin da zai faru da wannan fom.">What happens to this form.</span></h2></div><p><span data-en="The poll and the request form below are both not connected to a public endpoint yet, so nothing is sent from this build." data-ha="Hawsar da fom na buƙatar da ke ƙasa duk ba a haɗa su da wata adireshin da za a iya amfani ba tukuna, don haka ba a tura komai daga wannan gina.">The poll and the request form below are both not connected to a public endpoint yet, so nothing is sent from this build.</span></p></div><div class="note-box"><span data-en="The poll asks for no name, phone number, email, address, exact age or voter ID. It records one sector choice, the area you live in, optional age group and gender, and an optional comment, and the comment is never counted. Areas and groups with very few answers are never published. The request form below is separate and can ask for contact details if you choose to give them. Any confirmation reference on either form is a generated tracking reference, not a voter ID." data-ha="Hawsar ba ta nemi suna, l waya, imel, adireshi, shekaru kuma ko ID na zabb&#x27;ar masu zayyawa ba. Tana yin rikodin zaɓi na sector daya, wurin da kake na iya, shekaru da jinsi da za ka zaɓi, da sharhi na zaɓi, kuma ba a taƙaita sharhi ba. Wurare da mukulli da ke da amsa kaɗan ba a wallafa su ba. Fom na buƙatar da ke ƙasa shi dabewa ne, yana iya nemi bayanan hulɗe idan ka zaɓi su bayar. Kowane maƙai na tabbaci a koɗa cikin suna maƙai bin ne, ba ID na zabb&#x27;ar masu zayyawa ba.">The poll asks for no name, phone number, email, address, exact age or voter ID. It records one sector choice, the area you live in, optional age group and gender, and an optional comment, and the comment is never counted. Areas and groups with very few answers are never published. The request form below is separate and can ask for contact details if you choose to give them. Any confirmation reference on either form is a generated tracking reference, not a voter ID.</span></div></div></section></main>
-<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p><span data-en="Public-source campaign intelligence. Built" data-ha="Basirar gaggawa daga bayanan al&#x27;umma. An gina a">Public-source campaign intelligence. Built</span> 29 Sep 2026 · 07:32 UTC. <span data-en="Public information and campaign materials are labelled separately; this page is not private polling." data-ha="Bayanan al&#x27;umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra&#x27;yu na ɓoye ba.">Public information and campaign materials are labelled separately; this page is not private polling.</span></p></div><div class="sponsor"><div class="sponsor-photo"><img src="assets/brand/abdulkadir-ahmad-hammayo.png" alt="Portrait of Abdulkadir Ahmad (Hammayo)" data-alt-en="Portrait of Abdulkadir Ahmad (Hammayo)" data-alt-ha="Hotun na Abdulkadir Ahmad (Hammayo)" width="58" height="58" loading="lazy" decoding="async"></div><div class="sponsor-body"><span class="sponsor-label"><span data-en="Contributor" data-ha="Mai ba da daɗi">Contributor</span></span><span class="sponsor-name"><span data-en="Abdulkadir Ahmad (Hammayo)" data-ha="Abdulkadir Ahmad (Hammayo)">Abdulkadir Ahmad (Hammayo)</span></span><span class="sponsor-contribution"><span data-en="Role:" data-ha="Darasi:">Role:</span> <b><span data-en="A dedicated member of his campaign team." data-ha="Memba mai ɗaukar hankali na hukumar sa.">A dedicated member of his campaign team.</span></b></span></div></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" data-en="Created By Deerflow" data-ha="An ƙirƙira Deerflow">Created By Deerflow</a></div></footer>
+</section><section class="section" id="how"><div class="shell"><div class="section-head"><div><div class="eyebrow"><span data-en="Before you send" data-ha="Kafin ka aika">Before you send</span></div><h2><span data-en="What happens to this form." data-ha="Abin da zai faru da wannan fom.">What happens to this form.</span></h2></div><p><span data-en="The poll and the request form below are both not connected to a public endpoint yet, so nothing is sent from this build." data-ha="Hawsar da fom na buƙatar da ke ƙasa duk ba a haɗa su da wata adireshin da za a iya amfani ba tukuna, don haka ba a tura komai daga wannan gina.">The poll and the request form below are both not connected to a public endpoint yet, so nothing is sent from this build.</span></p></div><div class="note-box"><span data-en="The poll asks for no name, phone number, email, address, exact age or voter ID. It records one sector choice, the area you live in, optional age group and gender, and an optional comment, and the comment is never counted. Areas and groups with very few answers are never published. The request form below is separate and can ask for contact details if you choose to give them. Any confirmation reference on either form is a generated tracking reference, not a voter ID." data-ha="Hawsar ba ta nemi suna, l waya, imel, adireshi, shekaru kuma daidai ko ID na zabb&#x27;ar masu zayyawa ba. Tana yin rikodin zaɓi na sector daya, wurin da kake, shekaru da jinsi da za ka zaɓi, da sharhi na zaɓi, kuma ba a taƙaita sharhi ba. Wurare da mukulli da ke da amsa kaɗan ba a wallafa su ba. Fom na buƙatar da ke ƙasa shi dabewa ne, yana iya nemi bayanan hulɗe idan ka zaɓi su bayar. Kowane ID na tabbaci a koɗa cikin sunu ID na bin ne, ba ID na zabb&#x27;ar masu zayyawa ba.">The poll asks for no name, phone number, email, address, exact age or voter ID. It records one sector choice, the area you live in, optional age group and gender, and an optional comment, and the comment is never counted. Areas and groups with very few answers are never published. The request form below is separate and can ask for contact details if you choose to give them. Any confirmation reference on either form is a generated tracking reference, not a voter ID.</span></div></div></section></main>
+<footer class="site-footer"><div class="shell footer-inner"><div><strong>APM Bauchi Progress &amp; Delivery</strong><p><span data-en="Public-source campaign intelligence. Built" data-ha="Basirar gaggawa daga bayanan al&#x27;umma. An gina a">Public-source campaign intelligence. Built</span> 30 Sep 2026 · 02:20 UTC. <span data-en="Public information and campaign materials are labelled separately; this page is not private polling." data-ha="Bayanan al&#x27;umma da kayan gaggawa an bambanta su; wannan shafi ba a ɗauke ra&#x27;yu na ɓoye ba.">Public information and campaign materials are labelled separately; this page is not private polling.</span></p></div><div class="sponsor"><div class="sponsor-photo"><img src="assets/brand/abdulkadir-ahmad-hammayo.png" alt="Portrait of Abdulkadir Ahmad (Hammayo)" data-alt-en="Portrait of Abdulkadir Ahmad (Hammayo)" data-alt-ha="Hotun na Abdulkadir Ahmad (Hammayo)" width="58" height="58" loading="lazy" decoding="async"></div><div class="sponsor-body"><span class="sponsor-label"><span data-en="Contributor" data-ha="Mai ba da daɗi">Contributor</span></span><span class="sponsor-name"><span data-en="Abdulkadir Ahmad (Hammayo)" data-ha="Abdulkadir Ahmad (Hammayo)">Abdulkadir Ahmad (Hammayo)</span></span><span class="sponsor-contribution"><span data-en="Role:" data-ha="Darasi:">Role:</span> <b><span data-en="A dedicated member of his campaign team." data-ha="Memba mai ɗaukar hankali na hukumar sa.">A dedicated member of his campaign team.</span></b></span></div></div><a class="deerflow" href="https://deerflow.tech" target="_blank" rel="noopener noreferrer" data-en="Created By Deerflow" data-ha="An ƙirƙira Deerflow">Created By Deerflow</a></div></footer>
 <script>
 const root=document.documentElement;
 let currentLanguage='en';
 let selectedLga='';
 let renderFeatured=()=>{};
+let renderPollHook=()=>{};
 const renderLgaDetail=()=>{const titleEl=document.getElementById('selected-lga');if(!titleEl)return;const hintEl=document.getElementById('selected-hint');const rowsEl=document.getElementById('selected-rows');const evidenceEl=document.getElementById('selected-evidence');const promiseEl=document.getElementById('selected-promise');const resultEl=document.getElementById('selected-result');if(!evidenceEl||!promiseEl||!resultEl)return;if(!selectedLga){if(hintEl)hintEl.hidden=false;if(rowsEl)rowsEl.hidden=true;titleEl.textContent='';evidenceEl.textContent='';promiseEl.textContent='';resultEl.textContent='';return;}const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const hausa=currentLanguage==='ha';titleEl.textContent=selectedLga;evidenceEl.textContent=(hausa?btn.dataset.summaryHa:btn.dataset.summary)||'—';promiseEl.textContent=(hausa?btn.dataset.promiseHa:btn.dataset.promise)||'—';resultEl.textContent=(hausa?btn.dataset.resultHa:btn.dataset.result)||'—';if(hintEl)hintEl.hidden=true;if(rowsEl)rowsEl.hidden=false;};
 const LANGUAGE_KEY='apm-lang';
 const readStoredLanguage=()=>{try{const stored=window.localStorage.getItem(LANGUAGE_KEY);return stored==='ha'||stored==='en'?stored:null;}catch(error){return null;}};
 const storeLanguage=(lang)=>{try{window.localStorage.setItem(LANGUAGE_KEY,lang);}catch(error){/* blocked storage: the toggle still works for this page */}};
-const setLanguage=(lang,persist=true)=>{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;});document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',lang==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});document.querySelectorAll('[data-lang]').forEach(btn=>{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);};
+const setLanguage=(lang,persist=true)=>{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;});document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',lang==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});document.querySelectorAll('[data-lang]').forEach(btn=>{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});renderLgaDetail();renderFeatured();renderPollHook();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. ID na bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);};
 document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',currentLanguage==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});
 document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
 const storedLanguage=readStoredLanguage();if(storedLanguage)setLanguage(storedLanguage,false);
@@ -561,66 +588,201 @@ const pollDataEl=document.querySelector('[data-poll-snapshot]');
 const pollSnapshot=(()=>{try{return pollDataEl?JSON.parse(pollDataEl.textContent):null;}catch(error){return null;}})();
 const POLL_SECTOR_LABELS={"water": ["Water", "Ruwan sha"], "electricity": ["Electricity", "Wuta"], "roads": ["Roads", "Dabarar kai"], "healthcare": ["Healthcare", "Kafi lafiya"], "education": ["Education", "Ilimi"], "jobs_agriculture": ["Jobs and agriculture", "Aiki da dama"], "security": ["Security", "Tsaro"], "housing_environment": ["Housing and environment", "Gidaje da yanayi"], "other": ["Other", "Wani"]};
 const POLL_LGA_ORDER=["Alkaleri", "Bauchi", "Bogoro", "Dambam", "Darazo", "Dass", "Gamawa", "Ganjuwa", "Giade", "Itas-Gadau", "Jamaare", "Katagum", "Kirfi", "Misau", "Ningi", "Shira", "Tafawa-Balewa", "Toro", "Warji", "Zaki"];
+const POLL_AGE_LABELS={"age_18_25": ["18–25", "Shekaru 18–25"], "age_26_35": ["26–35", "Shekaru 26–35"], "age_36_45": ["36–45", "Shekaru 36–45"], "age_46_55": ["46–55", "Shekaru 46–55"], "age_56_65": ["56–65", "Shekaru 56–65"], "age_66_plus": ["66 and over", "Shekaru 66 da sama"]};
+const POLL_GENDER_LABELS={"woman": ["Woman", "Mace"], "man": ["Man", "Miji"]};
+const POLL_WARD_LABELS={"RA-001": "Alkaleri", "RA-002": "Pali", "RA-003": "Gar", "RA-004": "Gwaram", "RA-005": "Maimadi", "RA-006": "Dan Kungibar", "RA-007": "Birin/Gigara/Yankari", "RA-008": "Yuli/Lim", "RA-009": "Futuk", "RA-010": "Yalo", "RA-011": "Gwana/Mansur", "RA-012": "Majidadi A", "RA-013": "Majidadi B", "RA-014": "Makama/Sarki Baki", "RA-015": "Zungur/Liman Katagum", "RA-016": "Mun/Munsal", "RA-017": "Dandango/Yamrat", "RA-018": "Birshi/Miri", "RA-019": "Kundum/Durum", "RA-020": "Kangyare/Turwun", "RA-021": "Galambi/Gwaskwaram", "RA-022": "Dan’Iya Hardo", "RA-023": "Dawaki", "RA-024": "Bogoro A", "RA-025": "Bogoro B", "RA-026": "Bogoro C", "RA-027": "Bogoro D", "RA-028": "Boi A", "RA-029": "Boi B", "RA-030": "Boi C", "RA-031": "Lusa A", "RA-032": "Lusa B", "RA-033": "Lusa C", "RA-034": "Garuza", "RA-035": "Gurbana", "RA-036": "Dambam", "RA-037": "Yanda", "RA-038": "Yame", "RA-039": "Dagauda", "RA-040": "Gargawa", "RA-041": "Zaura", "RA-042": "Jalam Central", "RA-043": "Jalam East", "RA-044": "Darajo", "RA-045": "Tauya", "RA-046": "Gabarin", "RA-047": "Konkiyal", "RA-048": "Lago", "RA-049": "Sade", "RA-050": "Lanzai", "RA-051": "Yautare", "RA-052": "Gabciyari", "RA-053": "Wahu", "RA-054": "Papa", "RA-055": "Bagel/Bajar", "RA-056": "Bundot", "RA-057": "Bununu Central", "RA-058": "Bununu South", "RA-059": "Baraza", "RA-060": "Dott", "RA-061": "Durr", "RA-062": "Polchi", "RA-063": "Wandi", "RA-064": "Zumbul/Lukshi", "RA-065": "Gamawa", "RA-066": "Kafin Romi", "RA-067": "Gololo", "RA-068": "Kubdiya", "RA-069": "Alagarno/Jadori", "RA-070": "Tumbi", "RA-071": "Udubo", "RA-072": "Tarmasuwa", "RA-073": "Raga", "RA-074": "Gadiya", "RA-075": "Zindi", "RA-076": "Ganjuwa", "RA-077": "Gungura", "RA-078": "Kafin Madaki", "RA-079": "Kariya", "RA-080": "Kubi East", "RA-081": "Kubi West", "RA-082": "Miya East", "RA-083": "Miya West", "RA-084": "Nasarawa North", "RA-085": "Nasarawa South", "RA-086": "Yali", "RA-087": "Chinkani", "RA-088": "Sabon Sara", "RA-089": "Doguwa Central", "RA-090": "Doguwa South", "RA-091": "Giade", "RA-092": "Isawa", "RA-093": "Uzum A", "RA-094": "Uzum B", "RA-095": "Zabi", "RA-096": "Zirami", "RA-097": "Itas", "RA-098": "Mashema", "RA-099": "Gwarai", "RA-100": "Abdallawa/Magarya", "RA-101": "Buzawa", "RA-102": "Bilkicheri", "RA-103": "Bambal", "RA-104": "Gadau", "RA-105": "Kashuri", "RA-106": "Zubuki", "RA-107": "Jama’are A", "RA-108": "Jama’are B", "RA-109": "Jama’are C", "RA-110": "Jama’are D", "RA-111": "Dogon Jeji A", "RA-112": "Dogon Jeji B", "RA-113": "Dogon Jeji C", "RA-114": "Hanafari", "RA-115": "Galdimari", "RA-116": "Jurara", "RA-117": "Bulkachuwa/Dagaro", "RA-118": "Buskuri", "RA-119": "Chinade", "RA-120": "Gambaki/Bidir", "RA-121": "Madachi/Gangai", "RA-122": "Madangala", "RA-123": "Madara", "RA-124": "Nasarawa Bakin Kasuwa", "RA-125": "Ragwam/Magonshi", "RA-126": "Tsakwa Kofar Gabas/Kofar Kuka", "RA-127": "Yayu", "RA-128": "Badara", "RA-129": "Bara", "RA-130": "Beni A", "RA-131": "Beni B", "RA-132": "Dewu Central", "RA-133": "Dewu East", "RA-134": "Kirfi", "RA-135": "Shango", "RA-136": "Tubule", "RA-137": "Wanka", "RA-138": "Zadawa", "RA-139": "Beti", "RA-140": "Jarkasa", "RA-141": "Kukadi/Gundari", "RA-142": "Ajilin/Gugulin", "RA-143": "Tofu", "RA-144": "Hardawa", "RA-145": "Sarma/Akuyam", "RA-146": "Sirko", "RA-147": "Gwaram", "RA-148": "Ningi", "RA-149": "Dingis", "RA-150": "Nasaru", "RA-151": "Jangu", "RA-152": "Balma", "RA-153": "Kudu/Yamma", "RA-154": "Tiffi/Guda", "RA-155": "Burra/Kyata", "RA-156": "Sama", "RA-157": "Bashe", "RA-158": "Kurmi", "RA-159": "Andubun", "RA-160": "Sambuwal", "RA-161": "Bukul/Bangire", "RA-162": "Disina", "RA-163": "Faggo", "RA-164": "Beli/Gagidaba", "RA-165": "Kilbori", "RA-166": "Shira", "RA-167": "Tsafi", "RA-168": "Tumfafi", "RA-169": "Zubo", "RA-170": "Kardam A", "RA-171": "Kardam B", "RA-172": "Lere North", "RA-173": "Lere South", "RA-174": "Tapshin", "RA-175": "Wai", "RA-176": "Ball", "RA-177": "Bula", "RA-178": "Dajin", "RA-179": "Dull", "RA-180": "Bununu", "RA-181": "Toro/Tulai", "RA-182": "Tilden Fulani", "RA-183": "Ribina", "RA-184": "Mara/Palama", "RA-185": "Rauta/Geji", "RA-186": "Jama’a/Zaranda", "RA-187": "Lame", "RA-188": "Wonu", "RA-189": "Zalau/Rishi", "RA-190": "Tama", "RA-191": "Rahama", "RA-192": "Baima North/West", "RA-193": "Baima South/East", "RA-194": "Dagu East", "RA-195": "Dagu West", "RA-196": "Gabanga", "RA-197": "Katanga", "RA-198": "Ranga", "RA-199": "Tiyin", "RA-200": "Tudun Wada East", "RA-201": "Tudun Wada West", "RA-202": "Bursali", "RA-203": "Katagum", "RA-204": "Tashena/Gadai", "RA-205": "Makawa", "RA-206": "Sakwa", "RA-207": "Gumai", "RA-208": "Murmur North", "RA-209": "Murmur South", "RA-210": "Alangawari/Kafin/Larabawa", "RA-211": "Maiwa", "RA-212": "Mainako"};
 const pollT=(lang,en,ha)=>lang==='ha'?(ha||en):en;
 
-const renderPollSectorChart=()=>{
+// The scope is three controls, and one of them is deliberately impossible to combine with
+// another. Age band and gender are ONE mutually-exclusive lens rather than two filters,
+// and selecting a registration area switches the lens off entirely. That is not a
+// simplification. `src/poll/aggregate.py` refuses to build any cross carrying both a
+// registration area and a demographic, so two independent filters plus a ward dropdown
+// would be three clicks away from publishing ward x gender x sector. One lens, disabled
+// at ward level, means no sequence of clicks can reach the refused cross -- the UI cannot
+// offer a combination the snapshot does not contain.
+const pollState={lga:'',ward:'',lens:''};
+const pollLensKind=key=>key.charAt(0)==='g'?'gender':'age';
+const pollLensValue=key=>key.slice(2);
+const pollLensLabel=key=>{
+  if(!key)return pollT(currentLanguage,'Everyone','Kowa');
+  const table=pollLensKind(key)==='gender'?POLL_GENDER_LABELS:POLL_AGE_LABELS;
+  const meta=table[pollLensValue(key)];
+  return meta?pollT(currentLanguage,meta[0],meta[1]):pollLensValue(key);
+};
+
+// Resolve the current scope to the one map that holds it, plus the denominator for the
+// share column. Returns `total:null` when the group itself is below the suppression
+// floor, which is different from a scope that has publishable cells.
+// Resolve the current scope to the one map that holds it.
+//
+// `total` is the size of the selected group, and it is deliberately allowed to be in three
+// states, because they mean different things to a reader and collapsing them would either
+// hide a real group or invent one:
+//
+//   a number   -- the group's size is published, and the share is exact.
+//   a string   -- a lower bound: some cells were withheld, so the visible counts sum to
+//                 less than the true total. A percentage would understate the group, so
+//                 none is printed.
+//   null      -- the group itself is below the suppression floor. There is nothing to show.
+const pollResolveScope=()=>{
+  const snap=pollSnapshot;
+  const totalOf=(tree,key)=>{
+    const value=((tree||{})[key]);
+    return value===undefined?null:value;
+  };
+  if(pollState.ward){
+    return {
+      rows:(snap.by_ward_sector||{})[pollState.ward]||null,
+      total:totalOf(snap.by_ward,pollState.ward),
+      mapName:'by_ward_sector'
+    };
+  }
+  if(pollState.lens){
+    const kind=pollLensKind(pollState.lens)==='gender'?'gender':'age';
+    const value=pollLensValue(pollState.lens);
+    if(pollState.lga){
+      // An LGA x demographic scope has a published marginal to divide by.
+      const perLga=kind==='gender'
+        ?(snap.by_lga_gender_sector||{})
+        :(snap.by_lga_age_band_sector||{});
+      const margin=kind==='gender'?(snap.by_lga_gender||{}):(snap.by_lga_age_band||{});
+      return {
+        rows:(((perLga[pollState.lga]||{})[value])||null),
+        total:totalOf((margin[pollState.lga]||{}),value),
+        mapName:'by_lga_'+kind+'_sector'
+      };
+    }
+    // Statewide x demographic has NO published marginal: the group is the whole state, so
+    // the only denominator available is the sum of its own cells. That sum is exact only
+    // while nothing has been withheld.
+    const wide=kind==='gender'?(snap.by_gender_sector||{}):(snap.by_age_band_sector||{});
+    const rows=wide[value]||null;
+    const visible=rows?Object.values(rows):[];
+    const allPublishable=visible.length>0&&visible.every(cell=>typeof cell==='number');
+    return {
+      rows:rows,
+      total:allPublishable?visible.reduce((sum,cell)=>sum+cell,0):null,
+      lowerBound:allPublishable?null:(rows?visible.reduce((sum,cell)=>sum+(cell||0),0):null),
+      mapName:'by_'+kind+'_sector'
+    };
+  }
+  if(pollState.lga){
+    return {
+      rows:(snap.by_lga_sector||{})[pollState.lga]||null,
+      total:totalOf(snap.by_lga,pollState.lga),
+      mapName:'by_lga_sector'
+    };
+  }
+  return {rows:snap.by_sector||null,total:snap.total_responses,mapName:'by_sector'};
+};
+
+// A share is printed only when it is exact. If any cell in the scope was suppressed, the
+// true denominator is larger than the sum of the cells we are allowed to show, so a
+// percentage computed from the visible cells would understate the group and quietly
+// invent precision. In that case the count is shown and the share is a dash, with the
+// reason stated on the page.
+const pollShareIsExact=scope=>{
+  if(!scope.rows)return false;
+  if(scope.lowerBound)return false;
+  if(typeof scope.total!=='number')return false;
+  const values=Object.values(scope.rows);
+  if(!values.length)return false;
+  return values.every(value=>typeof value==='number');
+};
+
+const pollScopeLabel=()=>{
+  const parts=[];
+  parts.push(pollState.lga?pollState.lga:pollT(currentLanguage,'All of Bauchi State','Duk Bauchi'));
+  if(pollState.ward){
+    const name=POLL_WARD_LABELS[pollState.ward];
+    parts.push(name?name+' ('+pollState.ward+')':pollState.ward);
+  }
+  if(pollState.lens)parts.push(pollLensLabel(pollState.lens));
+  return parts.join(' · ');
+};
+
+const pollRenderScopeSummary=()=>{
+  const el=document.querySelector('[data-poll-scope-summary]');
+  if(!el)return;
+  const scope=pollResolveScope();
+  el.textContent=pollScopeLabel();
+  const totalEl=document.querySelector('[data-poll-scope-total]');
+  if(totalEl){
+    // Three states, three messages. "Too few to show" and "at least N" are very
+    // different facts: one says the group is protected, the other says the group is real
+    // and larger than the numbers beneath it. Collapsing them would either hide a
+    // substantial group or imply one that does not exist.
+    if(typeof scope.total==='number'){
+      totalEl.textContent=scope.total+' '+pollT(currentLanguage,'answers','amsa');
+    }else if(scope.lowerBound){
+      totalEl.textContent=pollT(currentLanguage,'at least ','aƙalla ')+scope.lowerBound
+        +' '+pollT(currentLanguage,'answers','amsa');
+    }else{
+      totalEl.textContent=pollT(currentLanguage,
+        'answers in this group: too few to show',
+        'amsa a wannan ƙungiya: amsa kaɗan');
+    }
+  }
+};
+
+const pollRenderSectorChart=()=>{
   const target=document.querySelector('[data-poll-sector-chart]');
   if(!target||!pollSnapshot)return;
-  const lga=pollFilter.value;
-  const source=lga?(pollSnapshot.by_lga_sector||{})[lga]:pollSnapshot.by_sector;
-  const baseTotal=lga?null:pollSnapshot.total_responses;
+  const scope=pollResolveScope();
+  const exact=pollShareIsExact(scope);
   target.innerHTML='';
+  const source=scope.rows;
   const rows=Object.keys(source||{}).map(key=>({key:key,count:source[key]}));
   rows.sort((a,b)=>{
     const av=a.count===null?-1:a.count;
     const bv=b.count===null?-1:b.count;
     return bv-av||a.key.localeCompare(b.key);
   });
-  if(!rows.length){target.innerHTML='<li class="poll-bar-empty"></li>';return;}
+  if(!rows.length){
+    const li=document.createElement('li');
+    li.className='poll-bar-empty';
+    li.textContent=pollT(currentLanguage,
+      'No publishable figures for this group yet. The people who answered here were too few to report without identifying them.',
+      'Babu adadin da za a wallafa don wannan ƙungiya tukuna. Mutanen da amsa a nan sun kaɗan sosai don a wallafa su ba tare da gane su ba.');
+    target.appendChild(li);
+    return;
+  }
   const max=Math.max(...rows.map(r=>r.count===null?0:r.count),1);
+  const cap=100-pollSnapshot.percentage_floor;
   rows.forEach(row=>{
     const li=document.createElement('li');
     li.className='poll-bar';
+    const label=document.createElement('span');
+    label.className='poll-bar-label';
+    const meta=POLL_SECTOR_LABELS[row.key]||[row.key,row.key];
+    label.textContent=pollT(currentLanguage,meta[0],meta[1]);
+    const track=document.createElement('span');
+    track.className='poll-bar-track';
+    const fill=document.createElement('span');
+    const value=document.createElement('span');
+    value.className='poll-bar-value';
     if(row.count===null){
-      const label=document.createElement('span');
-      label.className='poll-bar-label';
-      const meta=POLL_SECTOR_LABELS[row.key]||[row.key,row.key];
-      label.textContent=pollT(currentLanguage,meta[0],meta[1]);
-      const track=document.createElement('span');
-      track.className='poll-bar-track';
-      const fill=document.createElement('span');
       fill.className='poll-bar-fill is-suppressed';
-      track.appendChild(fill);
-      const value=document.createElement('span');
-      value.className='poll-bar-value is-suppressed';
+      value.classList.add('is-suppressed');
       value.textContent=pollT(currentLanguage,'too few to show','amsa kaɗan');
-      li.appendChild(label);li.appendChild(track);li.appendChild(value);
     }else{
-      const pct=Math.max((row.count/max)*100,1.5);
-      const label=document.createElement('span');
-      label.className='poll-bar-label';
-      const meta=POLL_SECTOR_LABELS[row.key]||[row.key,row.key];
-      label.textContent=pollT(currentLanguage,meta[0],meta[1]);
-      const track=document.createElement('span');
-      track.className='poll-bar-track';
-      const fill=document.createElement('span');
       fill.className='poll-bar-fill';
-      fill.style.width=pct.toFixed(1)+'%';
-      track.appendChild(fill);
-      const value=document.createElement('span');
-      value.className='poll-bar-value';
+      fill.style.width=Math.max((row.count/max)*100,1.5).toFixed(1)+'%';
       let shareText='';
-      if(baseTotal){
-        const cap=100-pollSnapshot.percentage_floor;
-        const share=baseTotal?Math.min((row.count/baseTotal)*100,cap):0;
-        shareText=' '+Math.round(share)+'%';
+      if(exact){
+        shareText=' '+Math.round(Math.min((row.count/scope.total)*100,cap))+'%';
       }
       value.textContent=row.count+shareText;
-      li.appendChild(label);li.appendChild(track);li.appendChild(value);
     }
+    track.appendChild(fill);
+    li.appendChild(label);
+    li.appendChild(track);
+    li.appendChild(value);
     target.appendChild(li);
   });
 };
+
 
 const renderPollLgaChart=()=>{
   const target=document.querySelector('[data-poll-lga-chart]');
@@ -653,11 +815,11 @@ const renderPollTable=()=>{
   const table=document.querySelector('[data-poll-table]');
   if(!table||!pollSnapshot)return;
   const body=table.querySelector('tbody');
-  const lga=pollFilter.value;
-  const source=lga?(pollSnapshot.by_lga_sector||{})[lga]:pollSnapshot.by_sector;
-  const total=lga?(pollSnapshot.by_lga||{})[lga]:pollSnapshot.total_responses;
-  const scopeTotal=(total===null||total===undefined)?null:total;
+  const scope=pollResolveScope();
+  const exact=pollShareIsExact(scope);
+  const cap=100-pollSnapshot.percentage_floor;
   body.innerHTML='';
+  const source=scope.rows;
   const rows=Object.keys(source||{}).map(key=>({key:key,count:source[key]}));
   rows.sort((a,b)=>{
     const av=a.count===null?-1:a.count;
@@ -673,7 +835,6 @@ const renderPollTable=()=>{
     tr.appendChild(td);body.appendChild(tr);
     return;
   }
-  const cap=100-pollSnapshot.percentage_floor;
   rows.forEach(row=>{
     const tr=document.createElement('tr');
     const meta=POLL_SECTOR_LABELS[row.key]||[row.key,row.key];
@@ -682,29 +843,129 @@ const renderPollTable=()=>{
     th.textContent=pollT(currentLanguage,meta[0],meta[1]);
     const c1=document.createElement('td');
     const c2=document.createElement('td');
-    if(row.count===null||!scopeTotal){
-      c1.textContent='\u2014';
-      c2.textContent='\u2014';
+    if(row.count===null){
+      c1.textContent='—';
+      c2.textContent='—';
       tr.className='is-suppressed';
+    }else if(!exact){
+      // The cell itself clears the floor, but a sibling in the same group did not, so the
+      // denominator is unknown. Showing the count is honest; showing a share is not.
+      c1.textContent=row.count;
+      c2.textContent='—';
+      c2.className='is-share-withheld';
     }else{
       c1.textContent=row.count;
-      c2.textContent=Math.round(Math.min((row.count/scopeTotal)*100,cap))+'%';
+      c2.textContent=Math.round(Math.min((row.count/scope.total)*100,cap))+'%';
     }
     tr.appendChild(th);tr.appendChild(c1);tr.appendChild(c2);
     body.appendChild(tr);
   });
 };
 
-const renderPoll=()=>{renderPollSectorChart();renderPollLgaChart();renderPollTable();};
-let pollFilter={value:''};
-const pollFilterInit=()=>{
-  const el=document.querySelector('[data-poll-filter]');
-  if(!el)return null;
-  pollFilter=el;
-  el.addEventListener('change',renderPoll);
-  return el;
+// The share column needs a reason attached, or a reader counts the dashes and concludes
+// the data is broken rather than protected.
+const pollRenderShareNote=()=>{
+  const el=document.querySelector('[data-poll-share-note]');
+  if(!el)return;
+  const scope=pollResolveScope();
+  const exact=pollShareIsExact(scope);
+  el.hidden=exact||!scope.rows||!Object.keys(scope.rows).length;
 };
-if(pollFilterInit())renderPoll();
+
+const pollSyncWardOptions=()=>{
+  const select=document.querySelector('[data-poll-ward-filter]');
+  if(!select)return;
+  const previous=pollState.ward;
+  const available=pollState.lga?Object.keys((pollSnapshot.by_lga_ward||{})[pollState.lga]||{}):[];
+  if(!available.includes(previous))pollState.ward='';
+  select.innerHTML='';
+  const all=document.createElement('option');
+  all.value='';
+  all.textContent=pollT(currentLanguage,
+    pollState.lga?'No specific area':'Choose an LGA first',
+    pollState.lga?'Babatar wuri':'Zaɓi LGA da farko');
+  select.appendChild(all);
+  available.forEach(code=>{
+    const option=document.createElement('option');
+    option.value=code;
+    const name=POLL_WARD_LABELS[code];
+    option.textContent=name?name+' ('+code+')':code;
+    select.appendChild(option);
+  });
+  select.value=pollState.ward;
+  select.disabled=!pollState.lga;
+};
+
+const pollSyncLensGroupLabels=()=>{
+  // `setLanguage` rewrites `textContent`, never the `label` attribute, so <optgroup>
+  // headers need their own pass -- and their bilingual pair must NOT be carried as
+  // data-en/data-ha, or that same pass would delete the options nested inside them.
+  document.querySelectorAll('[data-poll-optgroup]').forEach(group=>{
+    const en=group.getAttribute('data-poll-label-en');
+    const ha=group.getAttribute('data-poll-label-ha');
+    if(!en)return;
+    group.setAttribute('label',currentLanguage==='ha'&&ha?ha:en);
+  });
+};
+
+const pollSyncLensAvailability=()=>{
+  const select=document.querySelector('[data-poll-lens-filter]');
+  if(!select)return;
+  // A registration area and a demographic must never appear in the same figure. When a
+  // ward is chosen the lens is reset to "everyone" and disabled, so the refused cross is
+  // unreachable rather than merely discouraged.
+  const blocked=Boolean(pollState.ward);
+  if(blocked)pollState.lens='';
+  select.disabled=blocked;
+  select.value=pollState.lens;
+  const note=document.querySelector('[data-poll-lens-lock]');
+  if(note)note.hidden=!blocked;
+};
+
+// Declared after the two sync helpers and called from every render, including the one
+// setLanguage triggers. That is what keeps the rebuilt area options in the active
+// language: the options are created in JavaScript, so no `data-en` attribute exists for
+// the core language switcher to rewrite.
+const renderPoll=()=>{
+  pollSyncWardOptions();
+  pollSyncLensAvailability();
+  pollSyncLensGroupLabels();
+  pollRenderScopeSummary();
+  pollRenderSectorChart();
+  renderPollLgaChart();
+  renderPollTable();
+  pollRenderShareNote();
+};
+
+const pollControlsInit=()=>{
+  const lgaSelect=document.querySelector('[data-poll-filter]');
+  const wardSelect=document.querySelector('[data-poll-ward-filter]');
+  const lensSelect=document.querySelector('[data-poll-lens-filter]');
+  if(!lgaSelect||!lgaSelect.dataset)return false;
+  lgaSelect.addEventListener('change',()=>{
+    pollState.lga=lgaSelect.value;
+    pollState.ward='';
+    renderPoll();
+  });
+  if(wardSelect){
+    wardSelect.addEventListener('change',()=>{
+      pollState.ward=wardSelect.value;
+      renderPoll();
+    });
+  }
+  if(lensSelect){
+    lensSelect.addEventListener('change',()=>{
+      pollState.lens=lensSelect.value;
+      renderPoll();
+    });
+  }
+  return true;
+};
+if(pollControlsInit())renderPoll();
+// The chart labels are built in the active language, so a language switch has to rebuild
+// them. SCRIPT_CORE seeds `renderPollHook` as a no-op and calls it from setLanguage, which
+// is the same contract `renderFeatured` already uses.
+renderPollHook=renderPoll;
 
 const publicPollForm=document.querySelector('[data-poll-form]');
 if(publicPollForm){
@@ -756,7 +1017,7 @@ if(publicPollForm){
   applyPollBilingualValidity();
   publicPollForm.setAttribute('aria-disabled',String(!pollEndpointReady));
   if(!pollEndpointReady){
-    const notConnected=currentLanguage==='ha'?'Ba a saita wata maƙai da ake amfani da ita a wannan gina ba. Ba a yin amsa ba.':'No usable poll endpoint is configured in this build. No vote is being recorded.';
+    const notConnected=currentLanguage==='ha'?'Ba a saita wata adireshi da ake amfani da ita a wannan gina ba. Ba a yin amsa ba.':'No usable poll endpoint is configured in this build. No vote is being recorded.';
     pollConfigStatus.textContent=notConnected;
     pollConfigStatus.dataset.en=notConnected;
     pollConfigStatus.dataset.ha=notConnected;
@@ -798,7 +1059,7 @@ if(publicPollForm){
       const trackingId=typeof data.response_id==='string'?data.response_id.trim().toUpperCase():'';
       if(!POLL_RESPONSE_ID.test(trackingId))throw new Error('poll_endpoint_contract_violation');
       pollConfirmation.dataset.trackingId=trackingId;
-      pollConfirmation.textContent=(currentLanguage==='ha'?'An karɓi amsa. Maƙai bin: ':'Vote received. Tracking reference: ')+trackingId+'.';
+      pollConfirmation.textContent=(currentLanguage==='ha'?'An karɓi amsa. ID na bin: ':'Vote received. Tracking reference: ')+trackingId+'.';
       pollConfirmation.hidden=false;
       publicPollForm.reset();
       updatePollWards();
@@ -871,9 +1132,9 @@ if(publicRequestForm){
   requestLga.addEventListener('change',updateRequestRas);
   updateRequestRas();
   if(!requestEndpointReady){
-    requestConfigStatus.textContent=currentLanguage==='ha'?'Ba a saita wata maƙai da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.':'No usable request endpoint is configured in this build. No request is being sent.';
+    requestConfigStatus.textContent=currentLanguage==='ha'?'Ba a saita wata adireshi da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.':'No usable request endpoint is configured in this build. No request is being sent.';
     requestConfigStatus.dataset.en='No usable request endpoint is configured in this build. No request is being sent.';
-    requestConfigStatus.dataset.ha='Ba a saita wata maƙai da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.';
+    requestConfigStatus.dataset.ha='Ba a saita wata adireshi da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.';
     requestSubmit.addEventListener('click',event=>{event.preventDefault();showRequestStatus('unavailable');});
   }
   publicRequestForm.addEventListener('submit',async event=>{
@@ -903,7 +1164,7 @@ if(publicRequestForm){
        if(!trackingId)throw new Error('invalid_request_confirmation');
        requestStatus.hidden=true;
        requestConfirmation.dataset.trackingId=trackingId;
-       requestConfirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+trackingId+'.';
+       requestConfirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. ID na bin: ':'Request received. Tracking reference: ')+trackingId+'.';
        requestConfirmation.hidden=false;
       publicRequestForm.reset();
       updateRequestRas();

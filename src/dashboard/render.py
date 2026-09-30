@@ -568,7 +568,7 @@ def featured_achievement_carousel(rows, achievement_rows, asset_rows, sources):
             f'''<li class="featured-slide" data-featured-slide data-featured-id="{esc(row["featured_id"])}" data-lga-scope="{esc(scope)}" data-featured-lga-scope="{esc(scope)}"><figure class="featured-media"><img src="assets/brand/{esc(image_path)}" alt="{esc(alt_en)}" data-alt-en="{esc(alt_en)}" data-alt-ha="{esc(alt_ha)}" loading="lazy" decoding="async">{image_context_note}<figcaption>{localized(caption_en, caption_ha)}</figcaption></figure><div class="featured-slide-copy"><div class="featured-slide-meta"><span class="featured-sector">{localized(sector_en, sector_ha)}</span><span class="featured-scope-badge" data-lga-names="{esc(lga_scope_label)}">{localized(scope_en, scope_ha)}{lga_scope_detail}</span></div><h3>{localized(heading_en, heading_ha)}</h3><p class="featured-caption">{localized(caption_en, caption_ha)}</p><div class="featured-source">{source_link(row["source_id"], sources, "Featured source", "Sauro da ayyuka")}{image_source_link}</div></div></li>'''
         )
     slide_html = "".join(slides)
-    return f'''<section class="featured-section" id="featured" data-featured-state="ready" aria-labelledby="featured-title"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Featured achievements", "Ayyuka da aka zaɓa")}</div><h2 id="featured-title">{copy("Five approved, source-backed records, with their scope kept clear.", "Bayanai guda da aka amince, tare da nuna iyakin su.") }</h2></div><p>{copy("Each slide keeps the approved caption, source and LGA scope visible. Some source images are context images rather than verified project close-ups; the image note identifies those cases. Statewide evidence is not relabelled as a single-LGA record.", "Kowane mafada yana nuna caption da aka amince da sauro da iyakin LGA. Wasu hotunan ba kwakaiyo aiki ba ne; note na hotun yana nuna wanda ake. Ba a canza bayanan jihada zuwa LGA daya.") }</p></div><div class="featured-carousel" data-featured-carousel tabindex="0" role="region" aria-roledescription="carousel" aria-labelledby="featured-title"><div class="featured-toolbar"><div class="featured-scope-filters" role="group" aria-label="Featured achievement scope filters"><button type="button" class="featured-scope-filter active" data-featured-scope-filter="all" aria-pressed="true" {attr("All scopes", "Dufin firin")}>All scopes</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="lga" aria-pressed="false" {attr("LGA", "LGA")}>LGA</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="multi_lga" aria-pressed="false" {attr("Multiple LGAs", "LGA daya da yawa")}>Multiple LGAs</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="statewide" aria-pressed="false" {attr("Statewide", "Jihada")}>Statewide</button></div><div class="featured-controls"><button type="button" class="featured-control" data-featured-prev aria-label="Previous featured achievement" {attr("Previous", "Baya")}>← <span {attr("Previous", "Baya")}>Previous</span></button><span class="featured-status" data-featured-status aria-live="polite" aria-atomic="true">1 / 5</span><button type="button" class="featured-control" data-featured-next aria-label="Next featured achievement" {attr("Next", "Na gaba")}><span {attr("Next", "Na gaba")}>Next</span> →</button></div></div><ol id="featured-slides" class="featured-slides">{slide_html}</ol></div></div></section>'''
+    return f'''<section class="featured-section" id="featured" data-featured-state="ready" aria-labelledby="featured-title"><div class="shell"><div class="section-head"><div><div class="eyebrow">{copy("Featured achievements", "Ayyuka da aka zaɓa")}</div><h2 id="featured-title">{copy("Five approved, source-backed records, with their scope kept clear.", "Bayanai guda da aka amince, tare da nuna iyakin su.") }</h2></div><p>{copy("Each slide keeps the approved caption, source and LGA scope visible. Some source images are context images rather than verified project close-ups; the image note identifies those cases. Statewide evidence is not relabelled as a single-LGA record.", "Kowane mafada yana nuna caption da aka amince da sauro da iyakin LGA. Wasu hotunan ba kwakaiyo aiki ba ne; note na hotun yana nuna wanda ake. Ba a canza bayanan jihada zuwa LGA daya.") }</p></div><div class="featured-carousel" data-featured-carousel tabindex="0" role="region" aria-roledescription="carousel" aria-labelledby="featured-title"><div class="featured-toolbar"><div class="featured-scope-filters" role="group" aria-label="Featured achievement scope filters"><button type="button" class="featured-scope-filter active" data-featured-scope-filter="all" aria-pressed="true" {attr("All scopes", "Dufin firin")}>All scopes</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="lga" aria-pressed="false" {attr("LGA", "LGA")}>LGA</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="multi_lga" aria-pressed="false" {attr("Multiple LGAs", "LGA daya da yawa")}>Multiple LGAs</button><button type="button" class="featured-scope-filter" data-featured-scope-filter="statewide" aria-pressed="false" {attr("Statewide", "Jihada")}>Statewide</button></div><div class="featured-controls"><button type="button" class="featured-control" data-featured-prev aria-label="Previous featured achievement">← <span {attr("Previous", "Baya")}>Previous</span></button><span class="featured-status" data-featured-status aria-live="polite" aria-atomic="true">1 / 5</span><button type="button" class="featured-control" data-featured-next aria-label="Next featured achievement"><span {attr("Next", "Na gaba")}>Next</span> →</button></div></div><ol id="featured-slides" class="featured-slides">{slide_html}</ol></div></div></section>'''
 
 
 FEATURED_SCRIPT = r'''
@@ -682,9 +682,9 @@ if(publicRequestForm){
   requestLga.addEventListener('change',updateRequestRas);
   updateRequestRas();
   if(!requestEndpointReady){
-    requestConfigStatus.textContent=currentLanguage==='ha'?'Ba a saita wata maƙai da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.':'No usable request endpoint is configured in this build. No request is being sent.';
+    requestConfigStatus.textContent=currentLanguage==='ha'?'Ba a saita wata adireshi da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.':'No usable request endpoint is configured in this build. No request is being sent.';
     requestConfigStatus.dataset.en='No usable request endpoint is configured in this build. No request is being sent.';
-    requestConfigStatus.dataset.ha='Ba a saita wata maƙai da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.';
+    requestConfigStatus.dataset.ha='Ba a saita wata adireshi da ake amfani da ita a wannan gina ba. Ba a tura buƙatar.';
     requestSubmit.addEventListener('click',event=>{event.preventDefault();showRequestStatus('unavailable');});
   }
   publicRequestForm.addEventListener('submit',async event=>{
@@ -714,7 +714,7 @@ if(publicRequestForm){
        if(!trackingId)throw new Error('invalid_request_confirmation');
        requestStatus.hidden=true;
        requestConfirmation.dataset.trackingId=trackingId;
-       requestConfirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+trackingId+'.';
+       requestConfirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. ID na bin: ':'Request received. Tracking reference: ')+trackingId+'.';
        requestConfirmation.hidden=false;
       publicRequestForm.reset();
       updateRequestRas();
@@ -733,66 +733,201 @@ const pollDataEl=document.querySelector('[data-poll-snapshot]');
 const pollSnapshot=(()=>{try{return pollDataEl?JSON.parse(pollDataEl.textContent):null;}catch(error){return null;}})();
 const POLL_SECTOR_LABELS=__POLL_SECTOR_LABEL_JSON__;
 const POLL_LGA_ORDER=__POLL_LGA_ORDER_JSON__;
+const POLL_AGE_LABELS=__POLL_AGE_LABEL_JSON__;
+const POLL_GENDER_LABELS=__POLL_GENDER_LABEL_JSON__;
+const POLL_WARD_LABELS=__POLL_WARD_LABEL_JSON__;
 const pollT=(lang,en,ha)=>lang==='ha'?(ha||en):en;
 
-const renderPollSectorChart=()=>{
+// The scope is three controls, and one of them is deliberately impossible to combine with
+// another. Age band and gender are ONE mutually-exclusive lens rather than two filters,
+// and selecting a registration area switches the lens off entirely. That is not a
+// simplification. `src/poll/aggregate.py` refuses to build any cross carrying both a
+// registration area and a demographic, so two independent filters plus a ward dropdown
+// would be three clicks away from publishing ward x gender x sector. One lens, disabled
+// at ward level, means no sequence of clicks can reach the refused cross -- the UI cannot
+// offer a combination the snapshot does not contain.
+const pollState={lga:'',ward:'',lens:''};
+const pollLensKind=key=>key.charAt(0)==='g'?'gender':'age';
+const pollLensValue=key=>key.slice(2);
+const pollLensLabel=key=>{
+  if(!key)return pollT(currentLanguage,'Everyone','Kowa');
+  const table=pollLensKind(key)==='gender'?POLL_GENDER_LABELS:POLL_AGE_LABELS;
+  const meta=table[pollLensValue(key)];
+  return meta?pollT(currentLanguage,meta[0],meta[1]):pollLensValue(key);
+};
+
+// Resolve the current scope to the one map that holds it, plus the denominator for the
+// share column. Returns `total:null` when the group itself is below the suppression
+// floor, which is different from a scope that has publishable cells.
+// Resolve the current scope to the one map that holds it.
+//
+// `total` is the size of the selected group, and it is deliberately allowed to be in three
+// states, because they mean different things to a reader and collapsing them would either
+// hide a real group or invent one:
+//
+//   a number   -- the group's size is published, and the share is exact.
+//   a string   -- a lower bound: some cells were withheld, so the visible counts sum to
+//                 less than the true total. A percentage would understate the group, so
+//                 none is printed.
+//   null      -- the group itself is below the suppression floor. There is nothing to show.
+const pollResolveScope=()=>{
+  const snap=pollSnapshot;
+  const totalOf=(tree,key)=>{
+    const value=((tree||{})[key]);
+    return value===undefined?null:value;
+  };
+  if(pollState.ward){
+    return {
+      rows:(snap.by_ward_sector||{})[pollState.ward]||null,
+      total:totalOf(snap.by_ward,pollState.ward),
+      mapName:'by_ward_sector'
+    };
+  }
+  if(pollState.lens){
+    const kind=pollLensKind(pollState.lens)==='gender'?'gender':'age';
+    const value=pollLensValue(pollState.lens);
+    if(pollState.lga){
+      // An LGA x demographic scope has a published marginal to divide by.
+      const perLga=kind==='gender'
+        ?(snap.by_lga_gender_sector||{})
+        :(snap.by_lga_age_band_sector||{});
+      const margin=kind==='gender'?(snap.by_lga_gender||{}):(snap.by_lga_age_band||{});
+      return {
+        rows:(((perLga[pollState.lga]||{})[value])||null),
+        total:totalOf((margin[pollState.lga]||{}),value),
+        mapName:'by_lga_'+kind+'_sector'
+      };
+    }
+    // Statewide x demographic has NO published marginal: the group is the whole state, so
+    // the only denominator available is the sum of its own cells. That sum is exact only
+    // while nothing has been withheld.
+    const wide=kind==='gender'?(snap.by_gender_sector||{}):(snap.by_age_band_sector||{});
+    const rows=wide[value]||null;
+    const visible=rows?Object.values(rows):[];
+    const allPublishable=visible.length>0&&visible.every(cell=>typeof cell==='number');
+    return {
+      rows:rows,
+      total:allPublishable?visible.reduce((sum,cell)=>sum+cell,0):null,
+      lowerBound:allPublishable?null:(rows?visible.reduce((sum,cell)=>sum+(cell||0),0):null),
+      mapName:'by_'+kind+'_sector'
+    };
+  }
+  if(pollState.lga){
+    return {
+      rows:(snap.by_lga_sector||{})[pollState.lga]||null,
+      total:totalOf(snap.by_lga,pollState.lga),
+      mapName:'by_lga_sector'
+    };
+  }
+  return {rows:snap.by_sector||null,total:snap.total_responses,mapName:'by_sector'};
+};
+
+// A share is printed only when it is exact. If any cell in the scope was suppressed, the
+// true denominator is larger than the sum of the cells we are allowed to show, so a
+// percentage computed from the visible cells would understate the group and quietly
+// invent precision. In that case the count is shown and the share is a dash, with the
+// reason stated on the page.
+const pollShareIsExact=scope=>{
+  if(!scope.rows)return false;
+  if(scope.lowerBound)return false;
+  if(typeof scope.total!=='number')return false;
+  const values=Object.values(scope.rows);
+  if(!values.length)return false;
+  return values.every(value=>typeof value==='number');
+};
+
+const pollScopeLabel=()=>{
+  const parts=[];
+  parts.push(pollState.lga?pollState.lga:pollT(currentLanguage,'All of Bauchi State','Duk Bauchi'));
+  if(pollState.ward){
+    const name=POLL_WARD_LABELS[pollState.ward];
+    parts.push(name?name+' ('+pollState.ward+')':pollState.ward);
+  }
+  if(pollState.lens)parts.push(pollLensLabel(pollState.lens));
+  return parts.join(' · ');
+};
+
+const pollRenderScopeSummary=()=>{
+  const el=document.querySelector('[data-poll-scope-summary]');
+  if(!el)return;
+  const scope=pollResolveScope();
+  el.textContent=pollScopeLabel();
+  const totalEl=document.querySelector('[data-poll-scope-total]');
+  if(totalEl){
+    // Three states, three messages. "Too few to show" and "at least N" are very
+    // different facts: one says the group is protected, the other says the group is real
+    // and larger than the numbers beneath it. Collapsing them would either hide a
+    // substantial group or imply one that does not exist.
+    if(typeof scope.total==='number'){
+      totalEl.textContent=scope.total+' '+pollT(currentLanguage,'answers','amsa');
+    }else if(scope.lowerBound){
+      totalEl.textContent=pollT(currentLanguage,'at least ','aƙalla ')+scope.lowerBound
+        +' '+pollT(currentLanguage,'answers','amsa');
+    }else{
+      totalEl.textContent=pollT(currentLanguage,
+        'answers in this group: too few to show',
+        'amsa a wannan ƙungiya: amsa kaɗan');
+    }
+  }
+};
+
+const pollRenderSectorChart=()=>{
   const target=document.querySelector('[data-poll-sector-chart]');
   if(!target||!pollSnapshot)return;
-  const lga=pollFilter.value;
-  const source=lga?(pollSnapshot.by_lga_sector||{})[lga]:pollSnapshot.by_sector;
-  const baseTotal=lga?null:pollSnapshot.total_responses;
+  const scope=pollResolveScope();
+  const exact=pollShareIsExact(scope);
   target.innerHTML='';
+  const source=scope.rows;
   const rows=Object.keys(source||{}).map(key=>({key:key,count:source[key]}));
   rows.sort((a,b)=>{
     const av=a.count===null?-1:a.count;
     const bv=b.count===null?-1:b.count;
     return bv-av||a.key.localeCompare(b.key);
   });
-  if(!rows.length){target.innerHTML='<li class="poll-bar-empty"></li>';return;}
+  if(!rows.length){
+    const li=document.createElement('li');
+    li.className='poll-bar-empty';
+    li.textContent=pollT(currentLanguage,
+      'No publishable figures for this group yet. The people who answered here were too few to report without identifying them.',
+      'Babu adadin da za a wallafa don wannan ƙungiya tukuna. Mutanen da amsa a nan sun kaɗan sosai don a wallafa su ba tare da gane su ba.');
+    target.appendChild(li);
+    return;
+  }
   const max=Math.max(...rows.map(r=>r.count===null?0:r.count),1);
+  const cap=100-pollSnapshot.percentage_floor;
   rows.forEach(row=>{
     const li=document.createElement('li');
     li.className='poll-bar';
+    const label=document.createElement('span');
+    label.className='poll-bar-label';
+    const meta=POLL_SECTOR_LABELS[row.key]||[row.key,row.key];
+    label.textContent=pollT(currentLanguage,meta[0],meta[1]);
+    const track=document.createElement('span');
+    track.className='poll-bar-track';
+    const fill=document.createElement('span');
+    const value=document.createElement('span');
+    value.className='poll-bar-value';
     if(row.count===null){
-      const label=document.createElement('span');
-      label.className='poll-bar-label';
-      const meta=POLL_SECTOR_LABELS[row.key]||[row.key,row.key];
-      label.textContent=pollT(currentLanguage,meta[0],meta[1]);
-      const track=document.createElement('span');
-      track.className='poll-bar-track';
-      const fill=document.createElement('span');
       fill.className='poll-bar-fill is-suppressed';
-      track.appendChild(fill);
-      const value=document.createElement('span');
-      value.className='poll-bar-value is-suppressed';
+      value.classList.add('is-suppressed');
       value.textContent=pollT(currentLanguage,'too few to show','amsa kaɗan');
-      li.appendChild(label);li.appendChild(track);li.appendChild(value);
     }else{
-      const pct=Math.max((row.count/max)*100,1.5);
-      const label=document.createElement('span');
-      label.className='poll-bar-label';
-      const meta=POLL_SECTOR_LABELS[row.key]||[row.key,row.key];
-      label.textContent=pollT(currentLanguage,meta[0],meta[1]);
-      const track=document.createElement('span');
-      track.className='poll-bar-track';
-      const fill=document.createElement('span');
       fill.className='poll-bar-fill';
-      fill.style.width=pct.toFixed(1)+'%';
-      track.appendChild(fill);
-      const value=document.createElement('span');
-      value.className='poll-bar-value';
+      fill.style.width=Math.max((row.count/max)*100,1.5).toFixed(1)+'%';
       let shareText='';
-      if(baseTotal){
-        const cap=100-pollSnapshot.percentage_floor;
-        const share=baseTotal?Math.min((row.count/baseTotal)*100,cap):0;
-        shareText=' '+Math.round(share)+'%';
+      if(exact){
+        shareText=' '+Math.round(Math.min((row.count/scope.total)*100,cap))+'%';
       }
       value.textContent=row.count+shareText;
-      li.appendChild(label);li.appendChild(track);li.appendChild(value);
     }
+    track.appendChild(fill);
+    li.appendChild(label);
+    li.appendChild(track);
+    li.appendChild(value);
     target.appendChild(li);
   });
 };
+
 
 const renderPollLgaChart=()=>{
   const target=document.querySelector('[data-poll-lga-chart]');
@@ -825,11 +960,11 @@ const renderPollTable=()=>{
   const table=document.querySelector('[data-poll-table]');
   if(!table||!pollSnapshot)return;
   const body=table.querySelector('tbody');
-  const lga=pollFilter.value;
-  const source=lga?(pollSnapshot.by_lga_sector||{})[lga]:pollSnapshot.by_sector;
-  const total=lga?(pollSnapshot.by_lga||{})[lga]:pollSnapshot.total_responses;
-  const scopeTotal=(total===null||total===undefined)?null:total;
+  const scope=pollResolveScope();
+  const exact=pollShareIsExact(scope);
+  const cap=100-pollSnapshot.percentage_floor;
   body.innerHTML='';
+  const source=scope.rows;
   const rows=Object.keys(source||{}).map(key=>({key:key,count:source[key]}));
   rows.sort((a,b)=>{
     const av=a.count===null?-1:a.count;
@@ -845,7 +980,6 @@ const renderPollTable=()=>{
     tr.appendChild(td);body.appendChild(tr);
     return;
   }
-  const cap=100-pollSnapshot.percentage_floor;
   rows.forEach(row=>{
     const tr=document.createElement('tr');
     const meta=POLL_SECTOR_LABELS[row.key]||[row.key,row.key];
@@ -854,29 +988,129 @@ const renderPollTable=()=>{
     th.textContent=pollT(currentLanguage,meta[0],meta[1]);
     const c1=document.createElement('td');
     const c2=document.createElement('td');
-    if(row.count===null||!scopeTotal){
-      c1.textContent='\u2014';
-      c2.textContent='\u2014';
+    if(row.count===null){
+      c1.textContent='—';
+      c2.textContent='—';
       tr.className='is-suppressed';
+    }else if(!exact){
+      // The cell itself clears the floor, but a sibling in the same group did not, so the
+      // denominator is unknown. Showing the count is honest; showing a share is not.
+      c1.textContent=row.count;
+      c2.textContent='—';
+      c2.className='is-share-withheld';
     }else{
       c1.textContent=row.count;
-      c2.textContent=Math.round(Math.min((row.count/scopeTotal)*100,cap))+'%';
+      c2.textContent=Math.round(Math.min((row.count/scope.total)*100,cap))+'%';
     }
     tr.appendChild(th);tr.appendChild(c1);tr.appendChild(c2);
     body.appendChild(tr);
   });
 };
 
-const renderPoll=()=>{renderPollSectorChart();renderPollLgaChart();renderPollTable();};
-let pollFilter={value:''};
-const pollFilterInit=()=>{
-  const el=document.querySelector('[data-poll-filter]');
-  if(!el)return null;
-  pollFilter=el;
-  el.addEventListener('change',renderPoll);
-  return el;
+// The share column needs a reason attached, or a reader counts the dashes and concludes
+// the data is broken rather than protected.
+const pollRenderShareNote=()=>{
+  const el=document.querySelector('[data-poll-share-note]');
+  if(!el)return;
+  const scope=pollResolveScope();
+  const exact=pollShareIsExact(scope);
+  el.hidden=exact||!scope.rows||!Object.keys(scope.rows).length;
 };
-if(pollFilterInit())renderPoll();
+
+const pollSyncWardOptions=()=>{
+  const select=document.querySelector('[data-poll-ward-filter]');
+  if(!select)return;
+  const previous=pollState.ward;
+  const available=pollState.lga?Object.keys((pollSnapshot.by_lga_ward||{})[pollState.lga]||{}):[];
+  if(!available.includes(previous))pollState.ward='';
+  select.innerHTML='';
+  const all=document.createElement('option');
+  all.value='';
+  all.textContent=pollT(currentLanguage,
+    pollState.lga?'No specific area':'Choose an LGA first',
+    pollState.lga?'Babatar wuri':'Zaɓi LGA da farko');
+  select.appendChild(all);
+  available.forEach(code=>{
+    const option=document.createElement('option');
+    option.value=code;
+    const name=POLL_WARD_LABELS[code];
+    option.textContent=name?name+' ('+code+')':code;
+    select.appendChild(option);
+  });
+  select.value=pollState.ward;
+  select.disabled=!pollState.lga;
+};
+
+const pollSyncLensGroupLabels=()=>{
+  // `setLanguage` rewrites `textContent`, never the `label` attribute, so <optgroup>
+  // headers need their own pass -- and their bilingual pair must NOT be carried as
+  // data-en/data-ha, or that same pass would delete the options nested inside them.
+  document.querySelectorAll('[data-poll-optgroup]').forEach(group=>{
+    const en=group.getAttribute('data-poll-label-en');
+    const ha=group.getAttribute('data-poll-label-ha');
+    if(!en)return;
+    group.setAttribute('label',currentLanguage==='ha'&&ha?ha:en);
+  });
+};
+
+const pollSyncLensAvailability=()=>{
+  const select=document.querySelector('[data-poll-lens-filter]');
+  if(!select)return;
+  // A registration area and a demographic must never appear in the same figure. When a
+  // ward is chosen the lens is reset to "everyone" and disabled, so the refused cross is
+  // unreachable rather than merely discouraged.
+  const blocked=Boolean(pollState.ward);
+  if(blocked)pollState.lens='';
+  select.disabled=blocked;
+  select.value=pollState.lens;
+  const note=document.querySelector('[data-poll-lens-lock]');
+  if(note)note.hidden=!blocked;
+};
+
+// Declared after the two sync helpers and called from every render, including the one
+// setLanguage triggers. That is what keeps the rebuilt area options in the active
+// language: the options are created in JavaScript, so no `data-en` attribute exists for
+// the core language switcher to rewrite.
+const renderPoll=()=>{
+  pollSyncWardOptions();
+  pollSyncLensAvailability();
+  pollSyncLensGroupLabels();
+  pollRenderScopeSummary();
+  pollRenderSectorChart();
+  renderPollLgaChart();
+  renderPollTable();
+  pollRenderShareNote();
+};
+
+const pollControlsInit=()=>{
+  const lgaSelect=document.querySelector('[data-poll-filter]');
+  const wardSelect=document.querySelector('[data-poll-ward-filter]');
+  const lensSelect=document.querySelector('[data-poll-lens-filter]');
+  if(!lgaSelect||!lgaSelect.dataset)return false;
+  lgaSelect.addEventListener('change',()=>{
+    pollState.lga=lgaSelect.value;
+    pollState.ward='';
+    renderPoll();
+  });
+  if(wardSelect){
+    wardSelect.addEventListener('change',()=>{
+      pollState.ward=wardSelect.value;
+      renderPoll();
+    });
+  }
+  if(lensSelect){
+    lensSelect.addEventListener('change',()=>{
+      pollState.lens=lensSelect.value;
+      renderPoll();
+    });
+  }
+  return true;
+};
+if(pollControlsInit())renderPoll();
+// The chart labels are built in the active language, so a language switch has to rebuild
+// them. SCRIPT_CORE seeds `renderPollHook` as a no-op and calls it from setLanguage, which
+// is the same contract `renderFeatured` already uses.
+renderPollHook=renderPoll;
 
 const publicPollForm=document.querySelector('[data-poll-form]');
 if(publicPollForm){
@@ -928,7 +1162,7 @@ if(publicPollForm){
   applyPollBilingualValidity();
   publicPollForm.setAttribute('aria-disabled',String(!pollEndpointReady));
   if(!pollEndpointReady){
-    const notConnected=currentLanguage==='ha'?'Ba a saita wata maƙai da ake amfani da ita a wannan gina ba. Ba a yin amsa ba.':'No usable poll endpoint is configured in this build. No vote is being recorded.';
+    const notConnected=currentLanguage==='ha'?'Ba a saita wata adireshi da ake amfani da ita a wannan gina ba. Ba a yin amsa ba.':'No usable poll endpoint is configured in this build. No vote is being recorded.';
     pollConfigStatus.textContent=notConnected;
     pollConfigStatus.dataset.en=notConnected;
     pollConfigStatus.dataset.ha=notConnected;
@@ -970,7 +1204,7 @@ if(publicPollForm){
       const trackingId=typeof data.response_id==='string'?data.response_id.trim().toUpperCase():'';
       if(!POLL_RESPONSE_ID.test(trackingId))throw new Error('poll_endpoint_contract_violation');
       pollConfirmation.dataset.trackingId=trackingId;
-      pollConfirmation.textContent=(currentLanguage==='ha'?'An karɓi amsa. Maƙai bin: ':'Vote received. Tracking reference: ')+trackingId+'.';
+      pollConfirmation.textContent=(currentLanguage==='ha'?'An karɓi amsa. ID na bin: ':'Vote received. Tracking reference: ')+trackingId+'.';
       pollConfirmation.hidden=false;
       publicPollForm.reset();
       updatePollWards();
@@ -986,20 +1220,42 @@ if(publicPollForm){
 '''
 
 
-def poll_script():
+def poll_ward_labels(ward_rows):
+    """Registration-area code -> display name, for the results filter.
+
+    The snapshot is keyed by code because that is all the endpoint stores. Showing the
+    area's own name is what lets someone recognise their area; the code alone ("RA-001")
+    means nothing to the person who lives there.
+    """
+    labels = {}
+    for row in ward_rows or []:
+        code = (row.get("ward_code") or "").strip()
+        name = (row.get("ra_name_display") or "").strip()
+        if code and name:
+            labels[code] = name
+    return labels
+
+
+def poll_script(ward_rows=None):
     """The poll's inline script, with the label and LGA tables injected.
 
     The sector labels are emitted from the same REQUEST_CATEGORIES the form uses, so the
     chart legend and the `<select>` options cannot drift apart, and a language switch
-    translates both from one source.
+    translates both from one source. The age and gender tables come from the same tuples
+    that build the form's own options, for the same reason.
     """
-    labels = {
-        key: [en, ha] for key, en, ha in REQUEST_CATEGORIES
-    }
+    labels = {key: [en, ha] for key, en, ha in REQUEST_CATEGORIES}
+    age_labels = {key: [en, ha] for key, en, ha in POLL_AGE_BANDS}
+    gender_labels = {key: [en, ha] for key, en, ha in POLL_GENDER_OPTIONS}
     return (
         POLL_SCRIPT
         .replace("__POLL_SECTOR_LABEL_JSON__", json.dumps(labels, ensure_ascii=False))
         .replace("__POLL_LGA_ORDER_JSON__", json.dumps(list(LGAS), ensure_ascii=False))
+        .replace("__POLL_AGE_LABEL_JSON__", json.dumps(age_labels, ensure_ascii=False))
+        .replace("__POLL_GENDER_LABEL_JSON__", json.dumps(gender_labels, ensure_ascii=False))
+        .replace(
+            "__POLL_WARD_LABEL_JSON__",
+            json.dumps(poll_ward_labels(ward_rows), ensure_ascii=False))
     )
 
 
@@ -1187,7 +1443,7 @@ def lga_map_svg(paths, lga_rows):
     return (
         f'<svg class="lga-map" viewBox="{esc(paths["viewbox"])}" role="group" '
         f'{aria("Map of the 20 Bauchi local government areas. Indicative operational boundaries, not official. Select an area to load its evidence.",
-               "Taswirar LGA 20 na Bauchi. Makiyawa masu aiki ne, ba makiyawa na gwaji ba. Zaɓi wani area don duba bayaninsa.")}>'
+               "Taswirar LGA 20 na Bauchi. Kanƙoƙin da a nuna shi ne, ba tsarin gwaji ba. Zaɓi wani wurin don duba bayaninsa.")}>'
         f'<g class="lga-shapes">{"".join(shapes)}</g>'
         f'<g class="lga-map-labels" aria-hidden="true">{"".join(labels)}</g>'
         "</svg>"
@@ -1226,7 +1482,7 @@ def lga_map_figure(paths, lga_rows, sources):
         + lga_map_svg(paths, lga_rows)
         + '<figcaption class="lga-map-credit">'
         + copy("Indicative operational boundaries, not gazetted. Simplified for display.",
-               "Makiyawa masu aiki ne, ba a tabbatar da su da dokof a cikin dokofa ba. An sauƙaƙe don nunawa.")
+               "Kanƙoƙin da a nuna shi ne, ba a tsara shi da dokofa ba. An sauƙaƙe shi don nunawa.")
         + f'<span class="lga-map-caveat-text" {attr(paths["caveat"], paths["caveat_ha"])}>'
         + esc(paths["caveat"])
         + "</span>"
@@ -1295,7 +1551,7 @@ def request_form_section(ward_rows):
         "Submission is unavailable in this local preview because no Apps Script endpoint is configured. No request is being sent."
     )
     configured_status_ha = (
-        "An kunna maƙai don buƙatar. Samun da zarfin ya dogara da sabis da karɓi."
+        "An kunna adireshi don buƙatar. Samun da zarfin ya dogara da sabis da karɓi."
         if endpoint_configured else
         "Ba a samu buƙatar a wannan haskawa na gari ba saboda babu wata adireshin Apps Script da aka saita. A ba a tura buƙatar."
     )
@@ -1368,7 +1624,7 @@ def request_form_section(ward_rows):
       <aside class="request-aside" aria-label="Request guidance">
         <div><span>01</span><h3>{copy("Describe the problem", "Bayyana matsala")}</h3><p>{copy("Give the location and what is needed. One request keeps the issue clear for follow-up.", "Yi bayyana wuri da abin da ake buƙata. Buƙatar daya tana sa batun ya kasance mai sauƙi idan a biyo shi.")}</p></div>
         <div><span>02</span><h3>{copy("Keep personal details optional", "Sanya bayanan sirri zaɓi")}</h3><p>{copy("Add contact information only if you want a response. It will be sent only to the configured request service.", "Ƙara bayan tuntu kawai idan kana son amsa. Za a tura shi kawai ga sabis na buƙatar da aka saita.")}</p></div>
-        <div><span>03</span><h3>{copy("Use the tracking reference", "Yi amfani da maƙai bin")}</h3><p>{copy("A confirmation reference helps follow up only after the request service accepts a request. It is not a voter ID.", "Maƙai bin ya taimaka ne kawai bayan sabis ɗin buƙatar ya karɓi buƙatar. Ba ID na zabb'ar masu zayyawa ba.")}</p></div>
+        <div><span>03</span><h3>{copy("Use the tracking reference", "Yi amfani da ID na bin")}</h3><p>{copy("A confirmation reference helps follow up only after the request service accepts a request. It is not a voter ID.", "Maƙai bin ya taimaka ne kawai bayan sabis ɗin buƙatar ya karɓi buƙatar. Ba ID na zabb'ar masu zayyawa ba.")}</p></div>
       </aside>
     </div>
   </div>
@@ -1465,7 +1721,7 @@ def poll_dashboard(snapshot):
                 "survey and not a vote, and it does not measure how many people in Bauchi hold "
                 "this view.",
                 "Wannan mutane da suka zaɓi da kansa su amsa, ba su cikin saminci da ke wakilai ba. "
-                "Ba aiki ta hawa ba, ba zabi ba, kuma ba ta aunawa yawanin mutane a Bauchi da wannan "
+                "Ba wani bincike ba, ba zabi ba, kuma ba ta aunawa yawanin mutane a Bauchi da wannan "
                 "ra'ayi ba.") + '</p></div>'
             f'<div class="poll-chart">{body}</div></div></section>'
         )
@@ -1493,28 +1749,113 @@ def poll_dashboard(snapshot):
     lga_options = "".join(
         f'<option value="{esc(lga)}">{esc(lga)}</option>' for lga in LGAS
     )
+    suppressed_count = int(snapshot.get("suppressed_cell_count", 0))
     meta = (
         f'<p class="poll-total"><b data-en="{total} responses" data-ha="{total} amsa">'
         f'{total} responses</b>'
         f'<span data-en="{threshold} or fewer answers are never shown" '
-        f'data-ha="{threshold} ko kuma kaɗan ba a nuna shi ba">{threshold} or fewer answers are never shown</span></p>'
+        f'data-ha="{threshold} ko ƙasa da haka ba a nuna amsawa ba">{threshold} or fewer answers are never shown</span></p>'
     )
+    suppressed_note = (
+        f'<p class="poll-suppressed" data-en="{suppressed_count} '
+        f'figures are withheld because they come from too few answers." '
+        f'data-ha="An sanya {suppressed_count} lambobi tare ba '
+        f'akaiti saboda sun fito daga amsa kaɗan.">'
+        f'{suppressed_count} figures are withheld because they come from too few answers.</p>'
+    )
+
+    # Who actually answered, as a coverage strip. A demographic filter is only as useful
+    # as the number of people behind it, and a filter that silently matches three people is
+    # worse than no filter at all. These four counts are the honest context for that.
+    coverage = "".join(
+        f'<div class="poll-stat"><b>{int(snapshot.get(key) or 0)}</b>'
+        f'<span data-en="{esc(en)}" data-ha="{esc(ha)}">{esc(en)}</span></div>'
+        for key, en, ha in (
+            ("with_area_responses", "gave an LGA", "sun bada LGA"),
+            ("with_ward_responses", "gave a registration area", "sun bada wurin ƙaura zaye"),
+            ("with_age_band", "gave an age group", "sun bada shekaru"),
+            ("with_gender", "gave a gender", "sun bada jinsi"),
+        )
+    )
+
+    gender_options = "".join(
+        f'<option value="g:{esc(key)}" data-en="{esc(en)}" data-ha="{esc(ha)}">{esc(en)}</option>'
+        for key, en, ha in POLL_GENDER_OPTIONS
+    )
+    age_options = "".join(
+        f'<option value="a:{esc(key)}" data-en="{esc(en)}" data-ha="{esc(ha)}">{esc(en)}</option>'
+        for key, en, ha in POLL_AGE_BANDS
+    )
+
+    share_note_en = (
+        "No percentage is shown for this group, because some of its answers are withheld "
+        "and the total they would be a share of is not known. The counts are exact."
+    )
+    share_note_ha = (
+        "Ba a nuna ƙoƙe ba don wannan ƙungiya, domin wasu daga amsanta an sanya su kuma ba a "
+        "san jimillarsu ba. Adadin daidai ne."
+    )
+    lock_en = (
+        "Age group and gender are switched off for a registration area. That pairing is "
+        "never published, because a small area plus an age group is enough to identify "
+        "individual people."
+    )
+    lock_ha = (
+        "An shekaru da jinsi an kashe su don wurin ƙaura zaye. Wannan tarewa ba a wallafa "
+        "ta ba, domin wuri karami tare da shekaru yana iya gane mutane."
+    )
+
     controls = (
-        '<div class="poll-controls"><label for="poll-lga-filter" '
-        + attr("Filter by LGA", "Zaɓi ta LGA") + ">"
-        + "Filter by LGA</label><select id=\"poll-lga-filter\" data-poll-filter>"
+        '<div class="poll-scope">'
+        '<div class="poll-scope-now">'
+        f'<span class="poll-scope-kicker" {attr("Showing", "Ana nuna")}>Showing</span>'
+        # These two nodes are rewritten by textContent on every render, so they carry the
+        # bilingual attributes directly rather than through `copy()`, which would nest a
+        # <span> the first language switch would then wipe along with its own text.
+        f'<b data-poll-scope-summary {attr("All of Bauchi State", "Duk Bauchi")}>'
+        'All of Bauchi State</b>'
+        f'<span class="poll-scope-count" data-poll-scope-total {attr("answers", "amsa")}>'
+        f'{total} answers</span>'
+        '</div>'
+        '<div class="poll-controls">'
+        '<div class="poll-control"><label for="poll-lga-filter" '
+        + attr("LGA", "LGA") + ">LGA</label>"
+        '<select id="poll-lga-filter" data-poll-filter>'
         '<option value="" ' + attr("All of Bauchi State", "Duk Bauchi") + ">"
         "All of Bauchi State</option>"
         + lga_options
         + "</select></div>"
-    )
-    suppressed_note = (
-        f'<p class="poll-suppressed" data-en="{int(snapshot.get("suppressed_cell_count", 0))} '
-        f'figures are withheld because they come from too few answers." '
-        f'data-ha="An sanya {int(snapshot.get("suppressed_cell_count", 0))} lambobi tare ba '
-        f'akaiti saboda sun fito daga amsa kaɗan.">'
-        f'{int(snapshot.get("suppressed_cell_count", 0))} figures are withheld because they come '
-        f'from too few answers.</p>'
+        '<div class="poll-control"><label for="poll-ward-filter" '
+        + attr("Registration area", "Wurin ƙaura zaye") + ">Registration area</label>"
+        '<select id="poll-ward-filter" data-poll-ward-filter disabled>'
+        f'<option value="" {attr("Choose an LGA first", "Zaɓi LGA da farko")}>'
+        'Choose an LGA first</option>'
+        "</select></div>"
+        '<div class="poll-control"><label for="poll-lens-filter" '
+        + attr("Group", "ƙungiya") + ">Group</label>"
+        '<select id="poll-lens-filter" data-poll-lens-filter>'
+        f'<option value="" {attr("Everyone", "Kowa")}>Everyone</option>'
+        # An <optgroup>'s visible text is its `label` ATTRIBUTE, so it needs its own
+        # translator. The pair is carried as `data-poll-label-en`/`-ha`, deliberately NOT as
+        # `data-en`/`data-ha`: `setLanguage` rewrites `textContent` for every
+        # `[data-en][data-ha]` element, and on an element that owns children that DELETES
+        # them. Using `attr()` here silently emptied the dropdown's options on the first
+        # language switch -- the same failure the map suffered. `pollSyncLensGroupLabels`
+        # writes the attribute from the untranslated-safe names.
+        '<optgroup data-poll-optgroup="gender" data-poll-label-en="Gender" '
+        'data-poll-label-ha="Jinsi" label="Gender">'
+        f'{gender_options}</optgroup>'
+        '<optgroup data-poll-optgroup="age" data-poll-label-en="Age group" '
+        'data-poll-label-ha="Shekaru" label="Age group">'
+        f'{age_options}</optgroup>'
+        "</select></div></div>"
+        # Both notes below are written with `attr()` and their own English text rather than
+        # with `copy()`. `copy()` emits a child <span>, and `setLanguage` rewrites the
+        # textContent of every [data-en][data-ha] element -- so a copy() wrapper inside a
+        # node that JavaScript also writes to would be emptied on the first language
+        # switch, leaving the reader with a visible but empty box and no explanation.
+        f'<p class="poll-lock" data-poll-lens-lock hidden {attr(lock_en, lock_ha)}>'
+        f'{esc(lock_en)}</p></div>'
     )
 
     return (
@@ -1528,35 +1869,45 @@ def poll_dashboard(snapshot):
             "survey and not a vote, and it does not measure how many people in Bauchi hold "
             "this view.",
             "Wannan mutane da suka zaɓi da kansa su amsa, ba su cikin saminci da ke wakilai ba. "
-            "Ba wannan aiki na bincike ba, ba zabi ba, kuma ba ta aunawa yawanin mutane a Bauchi "
+            "Ba wani bincike ba, ba zabi ba, kuma ba ta aunawa yawanin mutane a Bauchi "
             "da wannan ra'ayi ba.") + '</p></div>'
-        f'{meta}{controls}'
-        f'<div class="poll-chart poll-chart-sector"><h3 data-en="Which sector comes first" '
-        f'data-ha="Wane sector ya farko">Which sector comes first</h3>'
-        f'<ol class="poll-bars" data-poll-sector-chart></ol></div>'
-        f'<div class="poll-chart poll-chart-lga"><h3 data-en="Responses by LGA" '
-        f'data-ha="Amsa ta LGA">Responses by LGA</h3>'
-        f'<ol class="poll-bars" data-poll-lga-chart></ol></div>'
+        f'{meta}{suppressed_note}{controls}'
+        '<div class="poll-chart poll-chart-sector">'
+        '<h3 data-en="Which sector this group put first" '
+        'data-ha="Wane sector wannan ƙungiya ya farko">Which sector this group put first</h3>'
+        '<ol class="poll-bars" data-poll-sector-chart></ol>'
+        '<p class="poll-share-note" data-poll-share-note hidden '
+        + attr(share_note_en, share_note_ha) + f">{esc(share_note_en)}</p></div>"
+        '<div class="poll-two">'
+        '<div class="poll-chart poll-chart-lga"><h3 data-en="Responses by LGA" '
+        'data-ha="Amsa ta LGA">Responses by LGA</h3>'
+        '<ol class="poll-bars" data-poll-lga-chart></ol></div>'
         '<div class="poll-chart poll-chart-table"><h3 data-en="Exact counts" '
         'data-ha="Adadin daidai">Exact counts</h3>'
         '<div class="poll-table-wrap"><table class="poll-table" data-poll-table>'
-        f'<caption class="poll-table-cap" data-en="Counts for the selected area. '
-        f'"An ɗauke amsa daidai. A dash means too few answers to publish." '
-        f'"Adadin da aka zaɓi. Gashin yana nuna an ɗauke shi saboda amsa kaɗan.">'
-        'Counts for the selected area. A dash means too few answers to publish.</caption>'
+        '<caption class="poll-table-cap" data-en="Counts for the selected group. '
+        'A dash means too few answers to publish." '
+        'data-ha="Adadin da aka zaɓi a cikin ƙungiya. Alamar gada (—) tana nuna cewa amsa kaɗan ce don a wallafa.">'
+        'Counts for the selected group. A dash means too few answers to publish.</caption>'
         '<thead><tr><th scope="col" data-en="Sector" data-ha="Sector">Sector</th>'
         '<th scope="col" data-en="Responses" data-ha="Amsa">Responses</th>'
         '<th scope="col" data-en="Share" data-ha="Raba">Share</th></tr></thead>'
-        '<tbody></tbody></table></div></div>'
-        f'{suppressed_note}'
+        '<tbody></tbody></table></div></div></div>'
+        '<div class="poll-coverage"><h3 data-en="Who answered" '
+        'data-ha="Wa suka amsa">Who answered</h3>'
+        f'<div class="poll-stats">{coverage}</div></div>'
         f'<script type="application/json" data-poll-snapshot>{payload}</script>'
         '<div class="note-box">' + copy(
             "Areas with few answers are shown as a dash rather than a number, because a "
             "count of one or two would be a count of identifiable people. Age and gender are "
-            "only ever shown as groups, and never broken down below LGA.",
+            "only ever shown as groups, never below LGA level, and never combined with a "
+            "registration area. Age group and gender are alternative views of the same poll, "
+            "not filters to be stacked: pick one.",
             "Wurare da ke da amsa kaɗan suna nuna cibiya maimakon lamba, domin adadin daya ko biyu "
             "zai kasance adadin mutane da za a iya gane su. Shekaru da jinsi suna nuna ne kawai a "
-            "cikar hankali, kuma ba a taƙa su a karkashin LGA ba.")
+            "cikar hankali, ba a taƙa su a karkashin LGA ba, kuma ba a taƙa su tare da wurin aura "
+            "zaye ba. Shekaru da jinsi sibi ne guda daya na wannan hawsar, ba filturi da za a "
+            "sami a kafa su ba: zaɓi daya.")
         + '</div></div></section>'
     )
 
@@ -1606,7 +1957,7 @@ def poll_section(ward_rows):
         "The poll is not connected yet, so nothing is sent from this build. No vote is being recorded."
     )
     status_ha = (
-        "An kunna maƙai don hawsar. Samun da zarfin ya dogara da sabis da karɓi."
+        "An kunna adireshi don hawsar. Samun da zarfin ya dogara da sabis da karɓi."
         if endpoint_configured else
         "Ba a haɗa hawsar ba tukuna, don haka ba a tura komai daga wannan gina. Ba a yin amsa ba."
     )
@@ -1615,8 +1966,8 @@ def poll_section(ward_rows):
 <section class="section poll-section" id="poll" aria-labelledby="poll-title">
   <div class="shell">
     <div class="section-head">
-      <div><div class="eyebrow">{copy("One question", "Ƙa tambaya daya")}</div><h2 id="poll-title">{copy("Which sector should APM prioritise first?", "Wane sector APM ya fi fahimta da farko?")}</h2></div>
-      <p>{copy("Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied.", "Zaɓi sector daya. Shi kawai abin da wannan hawsar tana ƙirgita. Akwai ƙananan sharhi da ke tare da ita, ba tambaya ta biyu ba, kuma ba a taƙaita shi ba.")}</p>
+      <div><div class="eyebrow">{copy("One question", "Ƙa tambaya daya")}</div><h2 id="poll-title">{copy("Which sector should APM prioritise first?", "Wane sector APM ya fi gabanawa da farko?")}</h2></div>
+      <p>{copy("Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied.", "Zaɓi sector daya. Shi kawai abin da wannan hawsar tana ƙirgita. ƙoƙin sharhi da ke kasa yana tare da ita, ba tambaya ta biyu ba, kuma ba a taƙaita shi ba.")}</p>
     </div>
     <form class="poll-form" id="public-poll-form" method="post" action="about:blank" onsubmit="return false" data-poll-form data-poll-endpoint="{esc(POLL_ENDPOINT)}" data-poll-configured="{str(endpoint_configured).lower()}" aria-describedby="poll-config-status poll-comment-note poll-identity-note">
       <p class="poll-config-status" id="poll-config-status" data-poll-config-status data-en="{esc(status_en)}" data-ha="{esc(status_ha)}">{esc(status_en)}</p>
@@ -1642,7 +1993,7 @@ def poll_section(ward_rows):
           <option value="" {attr("Choose your LGA first", "Zaɓi LGA da kake da farko")} selected>Choose your LGA first</option>
           {ra_options}
         </select>
-        <p class="poll-note" data-en="Leave this blank if you would rather not say. Choosing it makes the result more useful for your area, but areas with very few answers are never published." data-ha="Ka bar shi babu komai idan kana son ka faɓa ba. Zaɓi zai sa sakamako ya fi amfani ga yankin ka, amma wurare da ke da amsa kaɗan ba a wallafa su ba.">Leave this blank if you would rather not say.</p>
+        <p class="poll-note" data-en="Leave this blank if you would rather not say. Choosing it makes the result more useful for your area, but areas with very few answers are never published." data-ha="Ka bar shi babu komai idan kana son ka faɗi ba. Zaɓi zai sa sakamako ya fi amfani ga yankin ka, amma wurare da ke da amsa kaɗan ba a wallafa su ba.">Leave this blank if you would rather not say.</p>
       </div>
       <fieldset class="poll-demographics">
         <legend>{copy("Optional · helps show who is answering", "Zaɓi · tana nuna ko wa yake amsa")}</legend>
@@ -1650,34 +2001,34 @@ def poll_section(ward_rows):
           <div class="poll-field">
             <label for="poll-age-band">{copy("Age group", "Shekaru")}</label>
             <select id="poll-age-band" name="age_band">
-              <option value="" {attr("Prefer not to say", "Na fi zai faɗa ba")} selected>Prefer not to say</option>
+              <option value="" {attr("Prefer not to say", "Na fi na faɗi ba")} selected>Prefer not to say</option>
               {age_options}
             </select>
           </div>
           <div class="poll-field">
             <label for="poll-gender">{copy("Gender", "Jinsi")}</label>
             <select id="poll-gender" name="gender">
-              <option value="" {attr("Prefer not to say", "Na fi zai faɗa ba")} selected>Prefer not to say</option>
+              <option value="" {attr("Prefer not to say", "Na fi na faɗi ba")} selected>Prefer not to say</option>
               {gender_options}
             </select>
           </div>
         </div>
-        <p class="poll-note" data-en="We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions." data-ha="Muna tambaya mukulli, ba shekaru kuma ba suna ba, waya, imel ko adireshi. Za ka iya tsayar da duk tambayoyin.">We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions.</p>
+        <p class="poll-note" data-en="We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions." data-ha="Muna tambaya ƙungiya, ba shekaru kuma daidai ba, kuma ba suna, waya, imel ko adireshi ba. Za ka iya tsayawa duk tambayoyin ba tare da su ba.">We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions.</p>
       </fieldset>
       <div class="poll-field">
         <label for="poll-comment">{copy("Comment (optional, not counted)", "Sharhi (zaɓi, ba a taƙaita ba)")}</label>
         <textarea id="poll-comment" name="comment" rows="3" maxlength="{max_comment}" aria-describedby="poll-comment-note"></textarea>
-        <p class="poll-note" id="poll-comment-note" data-en="This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail." data-ha="Wannan sharhi yana tare da amsar kuma ba a taƙaita ko wallafa shi ba. Ka faɗa don shigar da suna, l waya, adireshi ko wani bayan da ke gano mutum.">This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail.</p>
+        <p class="poll-note" id="poll-comment-note" data-en="This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail." data-ha="Wannan sharhi yana tare da amsar kuma ba a taƙaita ko wallafa shi ba. Ka yi hankali ka guji shigar da suna, l waya, adireshi ko wani bayan da ke gano mutum.">This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail.</p>
       </div>
       <div class="poll-field poll-honeypot" aria-hidden="true"><label for="poll-website" data-en="Website" data-ha="Yanayin gari">Website</label><input id="poll-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
       <div class="poll-consent">
         <input id="poll-consent" name="consent" type="checkbox" required>
         <label for="poll-consent">{copy("I consent to this vote being recorded and counted. No name or contact detail is collected.", "Na amince da a lissafa wannan amsar. Ba a tara suna ko bayan hulɗe ba.")} <span class="poll-required" aria-hidden="true">*</span></label>
       </div>
-      <p class="poll-note" id="poll-identity-note" data-en="No name, phone, email, address or voter ID is requested. Any reference shown after you vote is a generated response tracking reference, not a voter ID." data-ha="Ba a nemi suna, l waya, imel, adireshi ko ID na zabb'ar masu zayyawa ba. Kowane maƙai da za a nuna bayan amsa yana nufin bin amsa kawai, ba ID na zabb'ar masu zayyawa ba.">No name, phone, email, address or voter ID is requested.</p>
+      <p class="poll-note" id="poll-identity-note" data-en="No name, phone, email, address or voter ID is requested. Any reference shown after you vote is a generated response tracking reference, not a voter ID." data-ha="Ba a nemi suna, l waya, imel, adireshi ko ID na zabb'ar masu zayyawa ba. Kowane ID da za a nuna bayan amsa yana nufin bin amsa kawai, ba ID na zabb'ar masu zayyawa ba.">No name, phone, email, address or voter ID is requested.</p>
       <button class="btn poll-submit" type="submit" data-poll-submit {'disabled' if not endpoint_configured else ''}><span data-en="Cast vote" data-ha="Yi amsa">Cast vote</span></button>
       <p class="poll-status" data-poll-status role="status" aria-live="polite" aria-atomic="true" data-en="Voting is currently unavailable. Please check the status above." data-ha="Ba a samu damar yin amsa yanzu. Duba matsayi a sama." data-unavailable-en="Voting is currently unavailable. Please check the status above." data-unavailable-ha="Ba a samu damar yin amsa yanzu. Duba matsayi a sama." data-submitting-en="Sending your vote." data-submitting-ha="Ana aika amsar." data-error-en="We could not send your vote. Please try again later." data-error-ha="Ba mu iya aika amsar. Ka sake gwada daga baya.">Voting is currently unavailable. Please check the status above.</p>
-      <div class="poll-confirmation" data-poll-confirmation role="status" aria-live="polite" aria-atomic="true" hidden data-en="Vote received. This reference tracks your response only and is not a voter ID." data-ha="An karɓi amsa. Wannan maƙai yana bin amsar kawai, ba ID na zabb'ar masu zayyawa ba.">Vote received.</div>
+      <div class="poll-confirmation" data-poll-confirmation role="status" aria-live="polite" aria-atomic="true" hidden data-en="Vote received. This reference tracks your response only and is not a voter ID." data-ha="An karɓi amsa. Wannan ID yana bin amsar kawai, ba ID na zabb'ar masu zayyawa ba.">Vote received.</div>
     </form>
   </div>
 </section>'''
@@ -1972,6 +2323,32 @@ a{color:inherit}
 .poll-table tbody td{color:var(--navy);font-variant-numeric:tabular-nums}
 .poll-table tr.is-suppressed td,.poll-table tr.is-suppressed th{color:var(--muted)}
 .poll-table-empty{color:var(--muted);font-style:italic}
+.poll-table td.is-share-withheld{color:var(--muted)}
+/* The scope block is the control surface for every figure on the page, so it is styled as
+   a panel rather than a loose row of dropdowns: the reader should be able to see, at a
+   glance, which population the numbers underneath belong to. */
+.poll-scope{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:20px 22px;box-shadow:var(--shadow);margin:0 0 22px}
+.poll-scope-now{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.poll-scope-kicker{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.poll-scope-now b{font-family:Georgia,serif;font-size:1.15rem;font-weight:400;color:var(--navy)}
+.poll-scope-count{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.poll-control{display:grid;gap:6px;min-width:190px;flex:1 1 190px}
+.poll-control label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.poll-control select{font-family:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white);color:var(--ink);width:100%}
+.poll-control select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.poll-control select:disabled{background:rgba(11,38,60,.04);color:var(--muted);cursor:not-allowed}
+.poll-lock{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.6;color:var(--ink);background:rgba(176,141,36,.1);border-left:3px solid var(--gold)}
+.poll-lock[hidden]{display:none}
+.poll-two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.poll-two .poll-chart{margin:0}
+.poll-share-note{margin:16px 0 0;padding:12px 14px;font-size:11px;line-height:1.6;color:var(--muted);background:rgba(11,38,60,.04);border-left:3px solid var(--navy)}
+.poll-share-note[hidden]{display:none}
+.poll-coverage{margin:0 0 22px}
+.poll-coverage h3{font-family:Georgia,serif;font-size:1.15rem;font-weight:400;color:var(--navy);margin:0 0 14px}
+.poll-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.poll-stat{background:var(--white);padding:16px 18px;display:grid;gap:4px}
+.poll-stat b{font-family:Georgia,serif;font-size:1.6rem;font-weight:400;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1}
+.poll-stat span{font-size:11px;line-height:1.45;color:var(--muted)}
 .request-status,.request-confirmation{margin:16px 0 0;padding:12px 14px;font-size:12px;line-height:1.5}
 .request-status{background:#ecebe4;border-left:3px solid #7b8589;color:#46545a}
 .request-status.is-error{background:#fff0eb;border-left-color:#9a351f;color:#7a2818}
@@ -2022,7 +2399,7 @@ a{color:inherit}
 @keyframes rise{to{opacity:1;transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 @media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
-@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}.poll-form{padding:18px}.poll-grid{grid-template-columns:1fr}.poll-bar{grid-template-columns:1fr;gap:5px}.poll-bar-track{height:12px}.poll-chart{padding:18px}.poll-controls select{min-width:0;width:100%}}
+@media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}.poll-form{padding:18px}.poll-grid{grid-template-columns:1fr}.poll-bar{grid-template-columns:1fr;gap:5px}.poll-bar-track{height:12px}.poll-chart{padding:18px}.poll-controls select{min-width:0;width:100%}.poll-two{grid-template-columns:1fr;gap:18px}.poll-stats{grid-template-columns:1fr 1fr}.poll-scope{padding:16px}.poll-scope-count{margin-left:0;flex-basis:100%}}
 @media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-map-layout{grid-template-columns:1fr;gap:22px}.lga-map-column{position:static}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
 @media (max-width:760px){.shell{width:min(100% - 28px,1240px)}.hero{min-height:auto;padding-top:112px;padding-bottom:54px}.hero-grid,.intro-grid,.governance-grid{grid-template-columns:1fr}.hero h1{font-size:clamp(3.2rem,16vw,5.5rem)}.portrait-wrap{min-height:390px;margin-top:20px}.portrait-wrap::before{width:280px;height:280px;right:4%}.portrait-wrap::after{width:320px;height:400px;right:1%}.portrait{max-height:420px}.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:18px 15px;border-bottom:1px solid rgba(11,38,60,.18)}.stat:nth-child(2){border-right:0}.section{padding:70px 0}.section-head{display:block}.section-head p{margin-top:18px}.progress-path{grid-template-columns:1fr;padding:16px}.path-step{min-height:0;padding:14px 16px 24px}.path-step:not(:last-child)::after{content:"↓";right:auto;left:18px;top:auto;bottom:-14px}.arrow-head{padding:15px 16px}.arrow-path{display:block;padding:14px}.path-node{margin-bottom:10px;padding:16px}.path-arrow{padding:0;height:24px;transform:rotate(90deg)}.lga-detail{display:block}.lga-detail .detail-label{display:block;margin-bottom:12px}.governor-card img{height:340px}.agenda-grid{grid-template-columns:1fr 1fr}.source-list{grid-template-columns:1fr}.footer-inner{display:block}.deerflow{display:inline-block;margin-top:20px}}"""
 
@@ -2087,19 +2464,20 @@ SHELL_CSS = """
 }
 """
 
-# Core script. Ships on EVERY page. renderFeatured is seeded as a no-op so the
-# carousel script can override it by assignment; setLanguage calls both hooks on
-# every page, and a ReferenceError here would kill the language toggle.
+# Core script. Ships on EVERY page. renderFeatured and renderPollHook are seeded as
+# no-ops so the page scripts can override them by assignment; setLanguage calls all three
+# hooks on every page, and a ReferenceError here would kill the language toggle.
 SCRIPT_CORE = r"""
 const root=document.documentElement;
 let currentLanguage='en';
 let selectedLga='';
 let renderFeatured=()=>{};
+let renderPollHook=()=>{};
 const renderLgaDetail=()=>{const titleEl=document.getElementById('selected-lga');if(!titleEl)return;const hintEl=document.getElementById('selected-hint');const rowsEl=document.getElementById('selected-rows');const evidenceEl=document.getElementById('selected-evidence');const promiseEl=document.getElementById('selected-promise');const resultEl=document.getElementById('selected-result');if(!evidenceEl||!promiseEl||!resultEl)return;if(!selectedLga){if(hintEl)hintEl.hidden=false;if(rowsEl)rowsEl.hidden=true;titleEl.textContent='';evidenceEl.textContent='';promiseEl.textContent='';resultEl.textContent='';return;}const btn=document.querySelector('[data-lga="'+selectedLga+'"]');if(!btn)return;const hausa=currentLanguage==='ha';titleEl.textContent=selectedLga;evidenceEl.textContent=(hausa?btn.dataset.summaryHa:btn.dataset.summary)||'—';promiseEl.textContent=(hausa?btn.dataset.promiseHa:btn.dataset.promise)||'—';resultEl.textContent=(hausa?btn.dataset.resultHa:btn.dataset.result)||'—';if(hintEl)hintEl.hidden=true;if(rowsEl)rowsEl.hidden=false;};
 const LANGUAGE_KEY='apm-lang';
 const readStoredLanguage=()=>{try{const stored=window.localStorage.getItem(LANGUAGE_KEY);return stored==='ha'||stored==='en'?stored:null;}catch(error){return null;}};
 const storeLanguage=(lang)=>{try{window.localStorage.setItem(LANGUAGE_KEY,lang);}catch(error){/* blocked storage: the toggle still works for this page */}};
-const setLanguage=(lang,persist=true)=>{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;});document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',lang==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});document.querySelectorAll('[data-lang]').forEach(btn=>{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});renderLgaDetail();renderFeatured();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. Maƙai bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);};
+const setLanguage=(lang,persist=true)=>{currentLanguage=lang;root.lang=lang;document.querySelectorAll('[data-en][data-ha]').forEach(el=>{if(el.matches('[data-request-confirmation]')&&el.dataset.trackingId)return;el.textContent=el.dataset[lang]||el.dataset.en});document.querySelectorAll('img[data-alt-en][data-alt-ha]').forEach(el=>{el.alt=el.dataset[lang==='ha'?'altHa':'altEn']||el.alt;});document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',lang==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});document.querySelectorAll('[data-lang]').forEach(btn=>{const active=btn.dataset.lang===lang;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});renderLgaDetail();renderFeatured();renderPollHook();const confirmation=document.querySelector('[data-request-confirmation]');if(confirmation&&confirmation.dataset.trackingId&&!confirmation.hidden)confirmation.textContent=(currentLanguage==='ha'?'An karɓi buƙatar. ID na bin: ':'Request received. Tracking reference: ')+confirmation.dataset.trackingId+'.';if(persist)storeLanguage(lang);};
 document.querySelectorAll('[data-aria-label-en][data-aria-label-ha]').forEach(el=>{el.setAttribute('aria-label',currentLanguage==='ha'?el.dataset.ariaLabelHa:el.dataset.ariaLabelEn)});
 document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>setLanguage(btn.dataset.lang)));
 const storedLanguage=readStoredLanguage();if(storedLanguage)setLanguage(storedLanguage,false);
@@ -2449,12 +2827,12 @@ def body_poll(ctx):
             "very few answers are never published. The request form below is separate and can "
             "ask for contact details if you choose to give them. Any confirmation reference on "
             "either form is a generated tracking reference, not a voter ID.",
-            "Hawsar ba ta nemi suna, l waya, imel, adireshi, shekaru kuma ko ID na zabb'ar masu "
-            "zayyawa ba. Tana yin rikodin zaɓi na sector daya, wurin da kake na iya, shekaru da "
+            "Hawsar ba ta nemi suna, l waya, imel, adireshi, shekaru kuma daidai ko ID na zabb'ar masu "
+            "zayyawa ba. Tana yin rikodin zaɓi na sector daya, wurin da kake, shekaru da "
             "jinsi da za ka zaɓi, da sharhi na zaɓi, kuma ba a taƙaita sharhi ba. Wurare da "
             "mukulli da ke da amsa kaɗan ba a wallafa su ba. Fom na buƙatar da ke ƙasa shi dabewa "
-            "ne, yana iya nemi bayanan hulɗe idan ka zaɓi su bayar. Kowane maƙai na tabbaci a "
-            "koɗa cikin suna maƙai bin ne, ba ID na zabb'ar masu zayyawa ba.")
+            "ne, yana iya nemi bayanan hulɗe idan ka zaɓi su bayar. Kowane ID na tabbaci a "
+            "koɗa cikin sunu ID na bin ne, ba ID na zabb'ar masu zayyawa ba.")
         + '</div></div></section>')
     return (header + page_hero("Speak to us", "Yi magana da mu",
                       "One question, and one way to ask for something.", "Ƙa tambaya daya, da hanya daya ka nemi abin da kake buƙata.",
@@ -2609,15 +2987,18 @@ def load_context():
     }
 
 
+# Page scripts take the render context. The poll's script needs the registration-area
+# names so a reader recognises their own area rather than seeing a bare code, and those
+# rows are loaded by `load_context`, not at import time.
 PAGE_SCRIPTS = {
-    "index": lambda: SCRIPT_INDEX,
-    "achievements": lambda: FEATURED_SCRIPT,
+    "index": lambda ctx: SCRIPT_INDEX,
+    "achievements": lambda ctx: FEATURED_SCRIPT,
     # poll.html carries both intake forms, so it needs both scripts. A duplicate `const`
     # across two script blocks is still a single parse unit in the browser, so the
     # blocks are concatenated into one inline <script> and their top-level names are
     # kept distinct.
-    "poll": lambda: poll_script() + "\n" + REQUEST_SCRIPT,
-    "atlas": lambda: ATLAS_SCRIPT,
+    "poll": lambda ctx: poll_script(ctx["ward_rows"]) + "\n" + REQUEST_SCRIPT,
+    "atlas": lambda ctx: ATLAS_SCRIPT,
 }
 
 
@@ -2628,7 +3009,7 @@ def render():
 
     written = []
     for slug, (builder, title, description) in PAGE_BUILDERS.items():
-        scripts = PAGE_SCRIPTS.get(slug, lambda: "")()
+        scripts = PAGE_SCRIPTS.get(slug, lambda ctx: "")(ctx)
         html_doc = document(
             slug=slug,
             title=title,

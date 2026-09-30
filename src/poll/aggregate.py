@@ -17,10 +17,17 @@ people:
    this registration area" is *one person's registration area*. The threshold has a hard
    lower bound of 2 -- see ``validate_small_count_threshold``.
 
-3. **Demographics are never published below LGA level.** Age band and gender breakdowns
+3. **A demographic is never published below LGA level.** Age band and gender breakdowns
    are computed statewide and per-LGA, never per registration area. Crossing a demographic
    with 212 registration areas would suppress almost everything anyway, and it would
    suppress it in a way that still leaks the shape of a small community.
+
+   Note what this does and does not forbid. ``ward x sector`` is an *area* cross and is
+   published, because it is the same shape as ``lga x sector`` one level down. ``lga x
+   gender x sector`` and ``lga x age x sector`` are published, because LGA is the floor.
+   What is refused is ``ward x gender``, ``ward x age`` and any three-way combination
+   containing a registration area and a demographic. That single prohibition is the whole
+   of the rule, and it is what keeps the ward-level view honest.
 
 4. **An empty poll renders as empty, never as zeros.** With no responses the snapshot
    carries ``total_responses: 0`` and the page renders "no responses yet" rather than a
@@ -61,14 +68,33 @@ PUBLIC_SNAPSHOT_FIELDS = (
     "by_sector",
     "by_lga",
     "by_lga_sector",
+    "by_ward",
+    "by_ward_sector",
     "by_lga_ward",
     "by_lga_age_band",
     "by_lga_gender",
-    "by_ward",
+    "by_lga_age_band_sector",
+    "by_lga_gender_sector",
+    "by_age_band_sector",
+    "by_gender_sector",
     "percentage_floor",
     "small_count_threshold",
     "suppressed_cell_count",
     "generated_at",
+)
+
+# The combinations this module refuses to build. Kept as data rather than as prose so a
+# test can assert against the list itself, and so adding a cross later means changing
+# this tuple deliberately instead of by accident.
+#
+# A forbidden cross is any key that carries BOTH a registration area and a demographic.
+# Area x sector is fine, lga x demographic x sector is fine, ward x sector is fine.
+# ward x gender is not, and neither is anything built on top of it.
+FORBIDDEN_CROSSINGS = (
+    "ward_x_age_band",
+    "ward_x_gender",
+    "ward_x_sector_x_age_band",
+    "ward_x_sector_x_gender",
 )
 
 _SECTOR_LOOKUP = {sector.casefold(): sector for sector in ALLOWED_SECTORS}
@@ -177,6 +203,38 @@ def suppress(
     return out, suppressed
 
 
+def suppress_nested(tree: Any, threshold: int) -> tuple[Any, int]:
+    """Recursively apply :func:`suppress`'s rule to every count leaf under ``tree``.
+
+    The deepest map the snapshot publishes is three levels (``lga -> gender -> sector``),
+    so the walk is recursive rather than fixed at one level: a cross added tomorrow gets
+    the same floor applied to it by construction, instead of needing this function to be
+    rewritten and re-reviewed first.
+
+    The leaf rule is identical to :func:`suppress` and is asserted against it in the test
+    suite, because a second implementation of a privacy floor is exactly the kind of thing
+    that drifts. A cell of zero is published, never suppressed.
+
+    A suppressed leaf stays a present key holding ``None``. That is deliberate and load
+    bearing. Dropping the key would make "this group answered, but too few to publish"
+    indistinguishable from "this group never existed", and those are different facts: the
+    first is a privacy floor, the second is a gap in collection.
+    """
+    if isinstance(tree, Mapping):
+        out: dict[Any, Any] = {}
+        suppressed = 0
+        for key, value in tree.items():
+            child, n = suppress_nested(value, threshold)
+            out[key] = child
+            suppressed += n
+        return out, suppressed
+    if isinstance(tree, int) and not isinstance(tree, bool):
+        if tree and tree < threshold:
+            return None, 1
+        return tree, 0
+    raise TypeError("suppress_nested_reached_a_non_count_leaf")
+
+
 def tally_poll_responses(
     responses: Iterable[Mapping[str, Any]],
     period_start: str | datetime | None = None,
@@ -257,8 +315,52 @@ def tally_poll_responses(
     lga_age = Counter((row[1], row[3]) for row in selected if row[3])
     lga_gender = Counter((row[1], row[4]) for row in selected if row[4])
 
+    # A registration area crossed with a sector is an *area* cross, the same shape as
+    # `lga_sector` one level down, and it is what makes the ward-level view useful. It
+    # stops at area: no demographic is added on top of it, anywhere below.
+    ward_sector = Counter((row[2], row[0]) for row in selected if row[2])
+
+    # LGA is the floor for a demographic. These two crosses answer "what does this age
+    # group want prioritised in this LGA", which is the planning question, and they are
+    # the finest grain a demographic is ever published at.
+    lga_age_sector = Counter((row[1], row[3], row[0]) for row in selected if row[3])
+    lga_gender_sector = Counter(
+        (row[1], row[4], row[0]) for row in selected if row[4]
+    )
+
+    # The same two crosses statewide. They are the demographic view most likely to hold a
+    # publishable figure, because a statewide cell is 20 times larger than an LGA one, and
+    # dropping them would leave the demographic lens with nothing to show until a single
+    # LGA collected enough answers to clear the floor on its own.
+    age_sector = Counter((row[3], row[0]) for row in selected if row[3])
+    gender_sector = Counter((row[4], row[0]) for row in selected if row[4])
+
     sorted_lgas = sorted(lga_counts, key=str.casefold)
     sorted_sectors = sorted(sector_counts)
+
+    def nest_by_demographic(source):
+        """Group a (lga, demographic, sector) counter into lga -> demographic -> sector."""
+        out: dict[str, dict[str, dict[str, int]]] = {}
+        for (lga, demographic, sector), count in source.items():
+            out.setdefault(lga, {}).setdefault(demographic, {})[sector] = count
+        for groups in out.values():
+            for demographic, sectors in list(groups.items()):
+                groups[demographic] = {s: sectors[s] for s in sorted(sectors)}
+        return out
+
+    def nest_by_ward(source):
+        """Group a (ward, sector) counter into ward -> sector, sectors in sorted order."""
+        out: dict[str, dict[str, int]] = {}
+        for (ward, sector), count in source.items():
+            out.setdefault(ward, {})[sector] = count
+        return {ward: {s: sectors[s] for s in sorted(sectors)} for ward, sectors in out.items()}
+
+    def nest_flat(source):
+        """Group a (demographic, sector) counter into demographic -> sector."""
+        out: dict[str, dict[str, int]] = {}
+        for (demographic, sector), count in source.items():
+            out.setdefault(demographic, {})[sector] = count
+        return {d: {s: rows[s] for s in sorted(rows)} for d, rows in out.items()}
 
     return {
         "reporting_period_start": (
@@ -290,6 +392,11 @@ def tally_poll_responses(
             for l in sorted_lgas
             if any(lg == l for lg, _ in lga_gender)
         },
+        "by_ward_sector": nest_by_ward(ward_sector),
+        "by_lga_age_band_sector": nest_by_demographic(lga_age_sector),
+        "by_lga_gender_sector": nest_by_demographic(lga_gender_sector),
+        "by_age_band_sector": nest_flat(age_sector),
+        "by_gender_sector": nest_flat(gender_sector),
         "with_area_responses": sum(1 for row in selected if row[1]),
         "with_ward_responses": sum(1 for row in selected if row[2]),
         "with_age_band": sum(1 for row in selected if row[3]),
@@ -353,6 +460,26 @@ def build_public_snapshot(
         suppressed_total += n
         by_lga_gender[lga] = row
 
+    # The three crosses the dashboard actually reads. Each is suppressed cell by cell at
+    # exactly the same floor as every other map, so adding a dimension to the UI cannot
+    # quietly lower the privacy bar -- a ward-level or gender-level cell is exactly as
+    # protected as a statewide one.
+    by_ward_sector, n = suppress_nested(tally["by_ward_sector"], threshold)
+    suppressed_total += n
+
+    by_lga_age_band_sector, n = suppress_nested(tally["by_lga_age_band_sector"], threshold)
+    suppressed_total += n
+
+    by_lga_gender_sector, n = suppress_nested(
+        tally["by_lga_gender_sector"], threshold)
+    suppressed_total += n
+
+    by_age_band_sector, n = suppress_nested(tally["by_age_band_sector"], threshold)
+    suppressed_total += n
+
+    by_gender_sector, n = suppress_nested(tally["by_gender_sector"], threshold)
+    suppressed_total += n
+
     generated = (
         _parse_timestamp(generated_at, "generated_at")
         if generated_at is not None
@@ -374,6 +501,11 @@ def build_public_snapshot(
         "by_lga_ward": by_lga_ward,
         "by_lga_age_band": by_lga_age_band,
         "by_lga_gender": by_lga_gender,
+        "by_ward_sector": by_ward_sector,
+        "by_lga_age_band_sector": by_lga_age_band_sector,
+        "by_lga_gender_sector": by_lga_gender_sector,
+        "by_age_band_sector": by_age_band_sector,
+        "by_gender_sector": by_gender_sector,
         "percentage_floor": tally["percentage_floor"],
         "small_count_threshold": threshold,
         "suppressed_cell_count": suppressed_total,
@@ -409,10 +541,12 @@ __all__ = [
     "BAUCHI_LGAS",
     "DEFAULT_PERCENTAGE_FLOOR",
     "DEFAULT_SMALL_COUNT_THRESHOLD",
+    "FORBIDDEN_CROSSINGS",
     "GENDER_OPTIONS",
     "PUBLIC_SNAPSHOT_FIELDS",
     "build_public_snapshot",
     "share_of_total",
     "suppress",
+    "suppress_nested",
     "tally_poll_responses",
 ]

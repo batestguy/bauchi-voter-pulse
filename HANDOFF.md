@@ -1,9 +1,9 @@
 # APM Bauchi Progress & Delivery — Project Handoff
 
-**Handoff date:** 29 September 2026
+**Handoff date:** 30 September 2026
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main`
-**Current release:** S4 (`82eb16a`) plus the contributor credit and S5 on `main`, 29 September 2026. S4 and the credit published on the ordinary Pages deploy-on-push. The weekly cron, previously never successful, is now green (run `36524274151`, which committed `a5d9b43`).
+**Current release:** S5 plus the interactive poll dashboard and the Hausa review of 30 September 2026, on `main`. The dashboard and the Hausa corrections are **committed but not pushed**; see "What is not deployed" below.
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
 **Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
 
@@ -12,18 +12,71 @@
 > *regeneration* safety net.
 >
 > **S5, the opinion poll, is built and ships disabled.** `POLL_ENDPOINT` is `""`, the vote
-> button renders `disabled`, and no code path in `POLL_SCRIPT` can send. `poll.html` carries
-> the poll, its public dashboard (two charts, an LGA dropdown, a suppressed count
-> table) and the request form. **259 tests pass.**
+> button renders `disabled`, and no code path in `POLL_SCRIPT` can send.
 >
-> **The weekly cron now completes successfully** — run `36524274151`, green, which committed
-> `a5d9b43`. It had never succeeded before; see §20 traps 3 and 4.
+> ### New on 30 September 2026: the poll dashboard can now be explored by area and group
+>
+> `poll.html` carries **three scope controls** — LGA, registration area, and one
+> mutually-exclusive Group lens (Woman, Man, or an age band) — over one sector chart and
+> one exact-counts table. The tally gained five crosses to make this possible:
+> `by_ward_sector`, `by_lga_gender_sector`, `by_lga_age_band_sector`, `by_gender_sector`,
+> `by_age_band_sector`. **275 tests pass** (1 skip: Playwright).
+>
+> **Two rules make it safe, and both are enforced:**
+> - A registration area and a demographic are **never** published in the same figure. The
+>   Group control is disabled and cleared the moment an area is chosen, so the refused
+>   cross is unreachable rather than merely discouraged. See `AGENTS.md` and
+>   `aggregate.FORBIDDEN_CROSSINGS`.
+> - A **share is printed only when it is exact.** If any cell in the scope was suppressed
+>   the denominator is unknown, so the count still shows and the share becomes a dash with
+>   the reason on the page. Group size has three states: *N answers* / *at least N answers*
+>   / *too few to show*.
+>
+> **What the arithmetic actually permits**, measured on a 1,129-response local fixture:
+>
+> | View | Publishable | Withheld |
+> |---|---|---|
+> | Gender × sector, statewide | **18 / 18** | 0 |
+> | Ward × sector | 63 | 44 |
+> | LGA × gender × sector | 93 | 50 |
+> | LGA × age × sector | **48** | **297** |
+>
+> Statewide gender is the view that will carry signal. Age × LGA × sector mostly will not,
+> because 6 bands × 8 sectors is 48 cells per LGA and most clear a floor of 5 only in
+> high-volume LGAs. That is the floor working, not a bug.
+>
+> ### The Hausa review of 30 September 2026
+>
+> An **independent AI agent** reviewed the Hausa strings. It found **20 defects**, all
+> corrected. The most serious was a **privacy warning that had inverted** — "do not include
+> your name, phone number, address…" had lost its negation and read as an instruction to
+> include them. Also: "never an exact age" had become "never an age"; the map's licensing
+> caveat said *colours* where it meant *boundaries*; `Gwaji` (test) was the Group filter's
+> label; `maƙai` (straw) stood in for "endpoint" at 10 sites. Full record, including the
+> ~11 strings deliberately **left alone** as merely questionable, is
+> **`docs/HAUSA_REVIEW.md`**.
+>
+> **This does not close the native-speaker gate.** An AI reviewed AI-drafted Hausa, so every
+> correction is a candidate. A native speaker must still confirm them and the disclosure
+> stays.
+>
+> ### What is NOT deployed, and why
+>
+> - **The poll is still not connected.** It needs a private Google Sheet, a bound Apps Script
+>   deployment, and its deployment ID. Those belong to the owner — see `docs/POLL_SETUP.md`
+>   §1–4. Setting a guessed URL would make the build *look* connected while silently
+>   discarding every vote, so it was deliberately left `""`.
+> - **No snapshot exists**, so the page renders the honest empty state. Connecting the poll
+>   does not publish results; a separate owner-controlled job must build
+>   `data/delivery/poll_snapshot.json` (see `POLL_SETUP.md` §5, field list now corrected).
+> - **The dashboard is committed but not pushed.** The handoff's standing instruction is
+>   that pushing was authorised once, on 26 September 2026, and is not a standing
+>   authorisation. Push was not run this session.
 >
 > **Owner gates:** the `services3.arcgis.com` robots exemption (§21) was ratified on
 > 29 September 2026, and 69 AI-drafted Hausa strings were reviewed and accepted as written
-> the same day. The disclosure stays, because those strings are still AI-drafted rather than
-> native-speaker translated. **S5 added 66 unreviewed Hausa strings (total 129).**
-> Connecting the poll is an owner action; see `docs/POLL_SETUP.md`.
+> the same day. **S5 added 66, and the 30 September dashboard added more.** All are
+> AI-drafted; the disclosure stays.
 
 ---
 
@@ -37,11 +90,11 @@ records what actually happened and why the plan's seam fix had to be abandoned �
 
 ```bash
 cd D:\APMdeliverable
-python -m unittest discover -s tests -q     # expect 259 OK (1 skip)
+python -m unittest discover -s tests -q     # expect 275 OK (1 skip)
 python src/dashboard/render.py              # expect six page sizes
 ```
 
-If the test count is not 259, something has regressed. Investigate before proceeding.
+If the test count is not 275, something has regressed. Investigate before proceeding.
 
 **3. Do not touch the preserved local work.** It must still be untracked or modified:
 
@@ -57,13 +110,17 @@ Never `git reset`, `git clean`, permanent `git stash`, or stage these.
 **4. S4's owner gates are closed.** The `services3.arcgis.com` robots exemption (§21) was
 ratified by the owner on 29 September 2026, and the AI-drafted Hausa strings were reviewed
 and accepted as written the same day. Both are no longer open questions; the Hausa
-disclosure stays because the strings are still not native-speaker translated. **S5's 24
-new Hausa strings are still unreviewed.**
+disclosure stays because the strings are still not native-speaker translated. **S5's and the
+30 September dashboard's new Hausa strings are still unreviewed**, and the independent AI
+pass of 30 September corrected 20 of them without closing the gate — see `docs/HAUSA_REVIEW.md`.
 
 **5. S5 is built and ships disabled. Next task: connect the poll (owner) or start S6.**
-`docs/POLL_SETUP.md` is the full Sheets + Apps Script guide. The sharpest open owner
-question is the **retention period for the comment column** — a 300-char free-text field
-held indefinitely is not anonymous in any meaningful sense.
+`docs/POLL_SETUP.md` is the full Sheets + Apps Script guide. **Connecting it is not an agent
+task**: it needs a private Sheet, a bound Apps Script deployment, and the deployment ID,
+all of which belong to the owner. The one-line change in §4 is the last step, not the first.
+The sharpest open owner question is the **retention period for the comment column** — a
+300-char free-text field held indefinitely is not anonymous in any meaningful sense.
+**Also: a native Hausa speaker must review the corrected strings before connection.**
 
 **6. If you only have time for one thing:**
 
@@ -1546,26 +1603,49 @@ genuine 75% majority is untouched; a small minority is never inflated.
   `test_the_poll_script_never_defines_a_name_the_request_script_defines` asserts the two
   declaration sets are disjoint.
 
-### Four Hausa strings are known-wrong and must be fixed before connection
+### Hausa review of 30 September 2026 — 20 defects found and corrected, gate still open
 
-Found by **reading** the strings, not by any structural test — the automated checks
-reported clean, because the failure mode here is meaning, not format.
+An **independent AI agent** reviewed the Hausa strings after the interactive dashboard was
+built. It had not written them. Full record: **`docs/HAUSA_REVIEW.md`**, which lists every
+string, the correction, and the ground on which it was provable.
 
-1. **`ba zafi ba`** — the disclosure's "it is not a vote". *Zafi* means *pain*. The word
-   for a vote is *zabi*. A Hausa reader gets nonsense in the single most important
-   sentence on the page. It was fixed to `ba zabi ba` on 29 September 2026.
-2. **"It is not a survey" has no Hausa word at all.** The English sentence carries two
-   caveats; the Hausa carried one, because there is no survey word in the draft. Half the
-   disclaimer was simply missing for a Hausa-reading visitor. Still open.
-3. **`jagoranta`** in "self-selected visitors" is not a recognised Hausa word. This is the
-   phrase establishing the whole sample caveat. Still open, and I am not confident enough
-   in a replacement to guess.
-4. **`maƙalashin`** (file attachment) was used where **`sharhi`** (comment) was meant,
-   directly contradicting the field label above it. Fixed to `sharhi`.
+**Why the findings were trusted enough to apply.** Only defects provable by one of three
+grounds were corrected, and all three are checkable without trusting the reviewer's Hausa
+judgement: **(a)** the Hausa contradicts the English printed beside it, **(b)** it contradicts
+another Hausa string for the same concept in the same file, **(c)** the element is
+structurally untranslated. Anything the reviewer called *questionable* or *idiomatic* was
+left alone — a stiff phrase is not a defect, and rewriting one on an AI's say-so would swap
+an unknown for another unknown.
 
-Also noted and not corrected, lower severity: `Fihimmanci na sectors` for "sector
-priorities" is questionable (*fihimma* / *gabanawa* / *maƙasudi* are all candidates), and
-the consent line's `a banda su kasance a lura` is grammatically muddled.
+**The three that mattered most.**
+
+1. **A privacy warning had inverted.** *"Please do not include your name, phone number,
+   address…"* had no negative marker in the Hausa and read as an instruction to include
+   them. The one finding that could have caused real harm.
+2. **"Never an exact age" had become "never an age".** The form collects an age *band*; the
+   Hausa asserted the poll asks for no age. `mukulli` ("lock") had also been used for
+   "group".
+3. **The map's "indicative, not gazetted" caveat was unintelligible.** `Makiyawa` means
+   *colours*, not *boundaries*, and the not-gazetted clause had no comprehensible form.
+   This is a boundary-licensing requirement, so it is a compliance problem, not a style one.
+
+Also: `Gwaji` (test) had been used for the Group filter while the same file used it for
+"trial" and "governance"; `maƙai` (straw) had been a calque for "endpoint" and "tracking
+reference" at 10 sites while the file already used the right words elsewhere; the
+`<optgroup>` headers on the new Group dropdown had no `data-ha` at all, because an
+optgroup's visible text is its `label` **attribute** and `setLanguage` only rewrites
+`textContent`.
+
+**What this does not do.** An AI reviewed AI-drafted Hausa. Every correction is a
+*candidate*. A native speaker must still confirm them, and a list of ~11 strings the
+reviewer flagged as merely questionable is in `docs/HAUSA_REVIEW.md` for that purpose. **The
+disclosure stays.**
+
+**Correction to §21's earlier claim.** That section named four known-wrong strings. Three
+had already been fixed in `7ce2ff9` and no longer existed — `ba zafi ba` → `ba zabi ba`,
+`jagoranta` → `da kansa su amsa`, `maƙalashin` → `sharhi`. Only the "no Hausa word for
+survey" defect survived, and it is now fixed. Do not send a native speaker to re-check the
+three that are already right.
 
 **I am not a native Hausa speaker and cannot certify any of these strings.** The structural
 checks — placeholders, terminology drift, untranslated English, identical pairs — all pass.
@@ -1805,8 +1885,22 @@ A new maintainer should be able to answer “yes” to each question:
       original design, and that small-cell suppression is the only thing making it safe to
       publish?
 - [ ] Do I know the percentage cap **lowers** a share and never raises one?
-- [ ] Do I know that four poll Hausa strings are known-suspect and that a native speaker
-      must review them before the poll is connected?
+- [ ] Do I know that the poll dashboard has three scope controls (LGA, registration area,
+      one Group lens) and that the Group control is **disabled and cleared** whenever an
+      area is selected, so the refused `ward x demographic` cross is unreachable?
+- [ ] Do I know that a **share is printed only when it is exact**, that the count still
+      shows when it is withheld, and that the group size has three states (*N answers* /
+      *at least N answers* / *too few to show*)?
+- [ ] Do I know which demographic view will actually publish (statewide gender) and which
+      will mostly suppress (LGA × age × sector), and that this is the floor working?
+- [ ] Can I say why connecting the poll is an owner action and what it needs — a Sheet, a
+      bound Apps Script deployment, and the deployment ID?
+- [ ] Do I know the independent AI pass of 30 September 2026 found and corrected 20 Hausa
+      defects, that `docs/HAUSA_REVIEW.md` holds the record, and that **an AI reviewing
+      AI-drafted Hausa does not close the native-speaker gate**?
+- [ ] Do I know that three of the four "known-suspect" strings this file once named were
+      already fixed in `7ce2ff9`, and that only the "no Hausa word for survey" defect
+      survived?
 - [ ] Can I name the credited contributor and state that nothing around his name was
       invented?
 - [ ] Do I know the four release traps in §20 are closed and test-guarded, and that the

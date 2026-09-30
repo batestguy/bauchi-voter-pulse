@@ -75,6 +75,51 @@ These are enforced in code; keep them enforced.
 - **Never cross a demographic with a registration area.** No `by_lga_ward` × age, no
   ward × gender. Age and gender breakdowns are statewide and per-LGA only. Ward × age is
   the combination that actually identifies someone.
+- **The prohibition is narrower than "no ward breakdowns", and the three permitted grains
+  are deliberate.** This was the exact line when the ward-level dashboard was added, so
+  read it before adding a cross:
+  - **PERMITTED** — area x sector (`by_ward_sector`). An *area* cross, the same shape as
+    `by_lga_sector` one level down.
+  - **PERMITTED** — LGA x demographic x sector (`by_lga_gender_sector`,
+    `by_lga_age_band_sector`). LGA is the floor for a demographic.
+  - **PERMITTED** — demographic x sector statewide (`by_gender_sector`,
+    `by_age_band_sector`). Coarser than an LGA, so not a breach, and the demographic view
+    most likely to hold a publishable figure.
+  - **REFUSED** — any combination carrying BOTH a registration area and a demographic:
+    `ward_x_gender`, `ward_x_age_band`, and anything built on them. Named in
+    `aggregate.FORBIDDEN_CROSSINGS` as data, not only as prose.
+  - `test_a_demographic_is_never_published_below_lga_level` walks the **key path** of every
+    leaf in the tally *and* the published snapshot, so a new cross cannot quietly breach
+    either rule. It walks the tally too because *building* a forbidden cross is the privacy
+    decision; publishing it is only a later, separate mistake.
+- **The dashboard must not offer a control combination the snapshot refuses.** Age band
+  and gender are ONE mutually-exclusive lens, not two stackable filters, and selecting a
+  registration area switches the lens off and clears it. Two independent filters plus a
+  ward list would be three clicks from publishing `ward x gender x sector`. The note
+  explaining why ships on the page, not in a tooltip.
+- **A share is printed only when it is exact.** If any cell in the selected scope was
+  suppressed, the true denominator is larger than the sum of the visible cells, so a
+  percentage would understate the group while looking precise. The count is still shown,
+  the share becomes a dash, and the reason appears on the page. The group size has three
+  distinct states — "N answers", "at least N answers", "too few to show" — and collapsing
+  them either hides a real group or implies one that does not exist.
+- **A bilingual element must ship with its own text.** `attr()` on an empty element, or a
+  `copy()` wrapper inside a node that JavaScript also writes to, leaves the reader with a
+  visible but empty box. `test_bilingual.test_no_bilingual_element_ships_without_text`
+  parses every page for this. Do not write that check with a regex: `\b` after a closing
+  quote needs a *word* character next and so never matches, which produced a guard that
+  passed while inspecting nothing.
+- **Never put `data-en`/`data-ha` on an element that owns children.** This has now happened
+  **twice**: once to the whole map, and once to the Group dropdown's `<optgroup>`, whose
+  nine options were all deleted on the first language switch. `setLanguage` implements the
+  pair with `textContent`, so on a parent it is a deletion, not a translation. The carrier
+  must be a leaf. For an attribute that is not text, use a name `setLanguage` does not
+  touch — `data-poll-label-en`/`-ha` for the optgroup — plus a small pass that writes the
+  attribute.
+- **`test_setLanguage_can_never_empty_an_element_that_owns_children`** walks the parsed
+  tree of every page and fails on any bilingual element with element children. It must skip
+  HTML void elements, or its element stack desynchronises and it reports hundreds of false
+  offenders. Both failure modes of that check were real and are worth not repeating.
 - **The `response_id` must be sequential, never derived from the response content.** A
   content hash is a stable fingerprint: anyone with a guess at someone's comment can
   confirm it by hash. `APM-POLL-YYYY-NNNNNN` is a receipt and nothing more.
@@ -160,13 +205,21 @@ Public sources only; anonymize; disclose outputs are social/news analysis, not p
 
 **129** Hausa strings added in September 2026 are AI-drafted and not native-speaker reviewed — 53 from S1/S2, 6 from S4, 4 in the footer contributor credit, and 66 in the S5 poll (counted across both dashboard states, which ship different strings). Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler. **The owner reviewed and accepted the S1–S4 set as written on 29 September 2026**; the poll strings are new and **not yet reviewed**. The disclosure stays, because they are still AI-drafted rather than native-speaker translated.
 
-**Four poll Hausa strings are known-suspect and must be checked by a native speaker before
-the poll is connected.** Found by reading the strings, not by a structural test:
-`ba zafi ba` should be `ba zabi ba` (*zafi* is "pain", not "vote"); the sentence saying
-"not a survey" has no word for *survey* in Hausa at all; `jagoranta` in "self-selected
-visitors" is not a recognised Hausa word; and `maƙalashin` (file attachment) was used
-where `sharhi` (comment) was meant, contradicting the label directly above it. These are
-AI-drafted and unreviewed, and the disclosure is a mitigation, not a fix.
+**A native Hausa speaker must still review the poll strings before the poll is connected.**
+An independent AI pass ran on 30 September 2026 and found **20 defects**, all now corrected
+- see `docs/HAUSA_REVIEW.md` for every string, the correction, and why it was provable. The
+three most serious: a re-identification warning that had lost its negation and so told the
+reader to *include* their name; a privacy disclosure that had dropped the word "exact" from
+"never an exact age"; and the map's licensing caveat, which said "colours" where it meant
+"boundaries". **That pass does not close this gate.** An AI reviewed AI-drafted Hausa, so
+every correction is a candidate, and a list of strings it flagged as *questionable* was
+deliberately left unchanged. The disclosure stays.
+
+**Correction to an earlier claim here.** This file previously named four known-suspect
+strings. Three had already been fixed in `7ce2ff9` and no longer existed: `ba zafi ba` ->
+`ba zabi ba`, `jagoranta` -> `da kansa su amsa`, and `maƙalashin` -> `sharhi`. Only the "no
+Hausa word for survey" defect survived, and it is corrected above. Do not send a native
+speaker to re-check the three that are already right.
 
 `services3.arcgis.com` serves **403 for `robots.txt` under every user agent**, so the one-time boundary fetch uses a narrowly-scoped, justified entry in `src/ingestion/common.py::ROBOTS_UNREACHABLE_HOSTS`. The default conservative skip is unchanged for every other host. **The owner ratified that exemption on 29 September 2026** — see `HANDOFF.md` §21.
 

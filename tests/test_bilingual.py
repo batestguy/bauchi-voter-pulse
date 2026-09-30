@@ -12,6 +12,7 @@ acronym, the party motto, and numeric values that are identical in both language
 """
 import re
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 
 from src.dashboard import render
@@ -41,10 +42,187 @@ def bilingual_pairs(html):
     return re.findall(r'data-en="(.*?)" data-ha="(.*?)"', html)
 
 
+class _BilingualTextCollector(HTMLParser):
+    """Collect `[data-en][data-ha]` elements that contain no text of their own.
+
+    Built on `html.parser` rather than a regular expression on purpose. A regex for
+    "an element with these two attributes, up to its closing tag" is easy to get subtly
+    wrong and then match nothing at all, which produces a guard that passes forever while
+    checking zero elements. That happened: the first version of this check used
+    `\\bdata-en="..."\\b`, and `\\b` after a closing quote requires a WORD character to
+    follow, so it never matched a single element and the test was vacuous. A real parser
+    cannot fail that way.
+    """
+
+    def __init__(self, js_owned):
+        super().__init__(convert_charrefs=True)
+        self.js_owned = js_owned
+        self.offenders = []
+        self._open = []          # stack of (tag, has_text, is_candidate, why)
+        self._counted = 0
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        candidate = "data-en" in attributes and "data-ha" in attributes
+        is_js_owned = any(
+            name in attributes for name in self.js_owned
+        ) or any(name in attributes for name in JS_OWNED_ATTRS)
+        self._open.append((tag, False, candidate, is_js_owned))
+        if candidate and not is_js_owned:
+            self._counted += 1
+
+    def handle_startendtag(self, tag, attrs):
+        attributes = dict(attrs)
+        if "data-en" in attributes and "data-ha" in attributes:
+            self._counted += 1
+            if not any(name in attributes for name in JS_OWNED_ATTRS):
+                self.offenders.append((tag, dict(attributes)))
+
+    def handle_data(self, data):
+        if self._open and data.strip():
+            tag, _, _, _ = self._open[-1]
+            self._open[-1] = (tag, True, self._open[-1][2], self._open[-1][3])
+
+    def handle_endtag(self, tag):
+        # Close to the matching open tag, tolerating a stray close.
+        for index in range(len(self._open) - 1, -1, -1):
+            if self._open[index][0] == tag:
+                _, has_text, candidate, is_js_owned = self._open.pop(index)
+                if candidate and not has_text and not is_js_owned:
+                    self.offenders.append((tag, {}))
+                return
+
+
+# Nodes the poll script fills in with `textContent` on first paint. They are legitimately
+# empty in the source HTML, so a "has no text" assertion about them would be wrong.
+JS_OWNED_ATTRS = frozenset({
+    "data-poll-scope-summary",
+    "data-poll-scope-total",
+})
+
+
+def bilingual_elements_with_no_text(html):
+    """Bilingual elements that ship with no visible text of their own.
+
+    `setLanguage` rewrites `textContent` from `data-ha`, so a bilingual element with empty
+    content renders as a visible but EMPTY box until someone toggles the language. That is
+    worse than an untranslated string, because the box looks deliberate and there is
+    nothing to read. It happened here twice: a note explaining why a share was withheld,
+    and a note explaining why the demographic filter is switched off, were both written as
+    `<p {attr(...)}>` with no inner text.
+    """
+    collector = _BilingualTextCollector(JS_OWNED_ATTRS)
+    collector.feed(html)
+    collector.close()
+    # A guard that inspects nothing is worse than no guard, because it reads as coverage.
+    if collector._counted == 0:
+        raise AssertionError("no bilingual elements were inspected; the check is broken")
+    return collector.offenders
+
+
+# HTML void elements: reported by `handle_starttag` but never closed. Any tree walker built
+# on `html.parser` has to skip them or its element stack silently desynchronises.
+VOID_ELEMENTS = frozenset({
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
+    "param", "source", "track", "wbr",
+})
+
+
+class _ElementChildrenCollector(HTMLParser):
+    """Find `[data-en][data-ha]` elements whose DIRECT children include an element.
+
+    The paired data attributes are a *text swap* contract, and `setLanguage` implements it
+    with `textContent`. On a parent, that is a deletion of the children. This exists because
+    the defect is invisible in a flat scan of the markup: the offending page looks correct
+    until someone switches language, and it has now happened twice -- once to the whole map,
+    once to the Group dropdown's options.
+
+    Each stack entry records the element's own DIRECT child tags, populated as siblings open
+    while it is on the stack. Counting the ancestor stack instead would flag every element
+    on the page, which is how the first version of this check failed.
+    """
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.parents_with_bilingual_children = []
+        self._open = []   # list of [tag, is_bilingual, [direct_child_tags]]
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag in VOID_ELEMENTS:
+            # A void element has no closing tag, so pushing it would desynchronise the
+            # whole stack and make every element below it look like it owns children. That
+            # is how the first version of this check reported 379 offenders on a page with
+            # two of them.
+            if self._open:
+                self._open[-1][2].append(tag)
+            return
+        if self._open:
+            self._open[-1][2].append(tag)
+        self._open.append([
+            tag,
+            "data-en" in attributes and "data-ha" in attributes,
+            [],
+        ])
+
+    def handle_startendtag(self, tag, attrs):
+        # A self-closing tag is still an element child of whatever is open.
+        if self._open:
+            self._open[-1][2].append(tag)
+
+    def handle_endtag(self, tag):
+        for index in range(len(self._open) - 1, -1, -1):
+            if self._open[index][0] == tag:
+                entry = self._open.pop(index)
+                if entry[1] and entry[2]:
+                    attributes = dict()
+                    self.parents_with_bilingual_children.append(
+                        (entry[0], entry[2], sorted(attributes)))
+                return
+
+    def close(self):
+        super().close()
+        self._open = []
+
+
 class BilingualRenderingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.html = PAGE.read_text(encoding="utf-8")
+
+    def test_no_bilingual_element_ships_without_text(self):
+        # Guards the whole family of defects at once, on every page, rather than one
+        # string at a time. A note that explains why a figure is withheld but has no text
+        # is a silent lie: the reader sees the withheld numbers and no reason for them.
+        for page in sorted(Path("docs").glob("*.html")):
+            with self.subTest(page=page.name):
+                offenders = bilingual_elements_with_no_text(
+                    page.read_text(encoding="utf-8"))
+                self.assertEqual(
+                    offenders, [],
+                    f"{page.name}: bilingual elements with no text: {offenders}")
+
+    def test_setLanguage_can_never_empty_an_element_that_owns_children(self):
+        # `setLanguage` rewrites `textContent` for every `[data-en][data-ha]` element, so
+        # that pair on a parent DELETES its children. It blanked the whole map once, and it
+        # blanked the Group dropdown's options once, each time because the static HTML
+        # looked correct and only the live DOM was wrong.
+        #
+        # This walks the parsed tree rather than the markup, because the defect is about
+        # NESTING, which a flat regex over a file cannot see.
+        offenders = []
+        for page in sorted(Path("docs").glob("*.html")):
+            collector = _ElementChildrenCollector()
+            collector.feed(page.read_text(encoding="utf-8"))
+            collector.close()
+            for tag, child_tags, _ in collector.parents_with_bilingual_children:
+                # A <script>'s "children" are its source text, which the parser does not
+                # report as elements, so nothing here should ever be a script.
+                offenders.append((page.name, tag, sorted(set(child_tags))))
+        self.assertEqual(
+            offenders, [],
+            "elements with data-en/data-ha that own element children; setLanguage will "
+            f"delete them on a language switch: {offenders}")
 
     def test_no_known_ui_string_ships_untranslated(self):
         pairs = bilingual_pairs(self.html)

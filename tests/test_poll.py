@@ -55,6 +55,43 @@ def repeated(sector, lga="Bauchi", n=6, **overrides):
     return [response(sector, lga=lga, **overrides) for _ in range(n)]
 
 
+# The published demographic vocabularies, as snapshot keys. A declined value is stored as
+# an empty string and therefore never appears in a published map, so a decline cannot be
+# mistaken for a group here.
+DEMOGRAPHIC_KEYS = frozenset({
+    "age_18_25", "age_26_35", "age_36_45", "age_46_55", "age_56_65", "age_66_plus",
+    "woman", "man",
+})
+AREA_PREFIX = "RA-"
+
+
+def leaf_paths(tree, prefix=()):
+    """Yield the key path leading to every count leaf in a nested count map.
+
+    A snapshot map is `key -> key -> ... -> count`, so a path is the full chain of
+    dimensions a reader would have to select to reach that number. Asserting on paths
+    rather than on individual maps is what makes "a registration area and a demographic
+    never appear together" checkable at all: it is a statement about the whole tree.
+    """
+    if isinstance(tree, dict):
+        for key, value in tree.items():
+            yield from leaf_paths(value, prefix + (key,))
+    else:
+        yield prefix
+
+
+def inner_maps(tree):
+    """Yield ``(key_path, innermost_count_map)`` for every nesting level of a count map."""
+    if isinstance(tree, dict):
+        values = list(tree.values())
+        if values and all(isinstance(v, dict) for v in values):
+            for key, value in tree.items():
+                yield from inner_maps(value)
+            return
+        yield (), tree
+
+
+
 class PollSchemaTests(unittest.TestCase):
     def setUp(self):
         self.schema = json.loads(
@@ -247,6 +284,165 @@ class PollDemographicTests(unittest.TestCase):
         self.assertEqual(
             validation.validate_response_id("apm-poll-2026-00000042"),
             "APM-POLL-2026-00000042")
+
+    def test_a_demographic_is_never_published_below_lga_level(self):
+        # Two rules, asserted as one walk over every cross the module builds rather than
+        # by naming maps, so a cross added later cannot quietly breach either:
+        #   1. a registration area and a demographic never appear in the same key path;
+        #   2. a demographic is only ever scoped by an LGA or by the whole state -- the
+        #      level above it is never anything finer than an LGA.
+        # Rule 2 permits "nothing above it" on purpose: `by_gender_sector` is statewide,
+        # which is a coarser scope than an LGA and therefore not a breach. What it forbids
+        # is a demographic hanging off a registration area, which rule 1 already catches.
+        #
+        # Both the raw tally and the published snapshot are walked. The tally is where a
+        # forbidden cross would actually be *built*, and building one is the privacy
+        # decision -- publishing it is only a later, separate mistake. Checking only the
+        # snapshot would let a forbidden cross sit in the tally indefinitely, one forgotten
+        # return-dict edit away from publication.
+        rows = repeated("water", n=8) + repeated("roads", n=7)
+        for row in rows:
+            row["ward_code"] = "RA-001"
+            row["age_band"] = "age_26_35"
+            row["gender"] = "woman"
+        snapshot = aggregate.build_public_snapshot(rows, generated_at=NOW)
+        lgas = set(validation.BAUCHI_LGAS)
+
+        trees = dict(snapshot)
+        trees.update(aggregate.tally_poll_responses(rows))
+        checked = 0
+        for map_name, tree in sorted(trees.items()):
+            if not map_name.startswith("by_"):
+                continue
+            for path in leaf_paths(tree):
+                checked += 1
+                has_area = any(str(k).startswith(AREA_PREFIX) for k in path)
+                has_demo = any(k in DEMOGRAPHIC_KEYS for k in path)
+                with self.subTest(map=map_name, path=path):
+                    self.assertFalse(
+                        has_area and has_demo,
+                        f"{map_name} reaches a number through both a registration area "
+                        f"and a demographic: {path}")
+                    if not has_demo or not path:
+                        continue
+                    index = min(
+                        i for i, k in enumerate(path) if k in DEMOGRAPHIC_KEYS)
+                    if index == 0:
+                        continue  # statewide, which is coarser than an LGA
+                    self.assertIn(
+                        path[index - 1], lgas,
+                        f"{map_name} scopes a demographic by {path[index-1]!r}, which is "
+                        f"finer than an LGA")
+        self.assertGreater(checked, 0, "the walk checked nothing at all")
+
+    def test_the_forbidden_crosses_are_named_and_absent(self):
+        # The refusal lives in data, not only in prose, so a test can assert against it and
+        # a future cross has to be added deliberately rather than by accident.
+        self.assertIn("ward_x_gender", aggregate.FORBIDDEN_CROSSINGS)
+        self.assertIn("ward_x_age_band", aggregate.FORBIDDEN_CROSSINGS)
+        self.assertIn("ward_x_sector_x_gender", aggregate.FORBIDDEN_CROSSINGS)
+        for crossing in aggregate.FORBIDDEN_CROSSINGS:
+            with self.subTest(crossing=crossing):
+                self.assertTrue(crossing.startswith("ward_"))
+                self.assertNotIn(crossing, aggregate.PUBLIC_SNAPSHOT_FIELDS)
+
+    def test_the_area_and_demographic_crosses_are_built(self):
+        # The three grains the dashboard reads: area x sector, LGA x demographic x sector,
+        # and demographic x sector statewide. Each answers a different planning question
+        # and each is a different size, which is why all three exist.
+        rows = (repeated("water", n=8, ward_code="RA-001", age_band="age_26_35",
+                         gender="woman")
+                + repeated("roads", n=7, ward_code="RA-001", age_band="age_26_35",
+                           gender="woman")
+                + repeated("education", n=6, lga="Bogoro", age_band="age_18_25",
+                           gender="man"))
+        snapshot = aggregate.build_public_snapshot(rows, generated_at=NOW)
+
+        # Area x sector: an area cross, stopped at area.
+        self.assertEqual(snapshot["by_ward_sector"]["RA-001"],
+                         {"roads": 7, "water": 8})
+        # LGA x gender x sector.
+        self.assertEqual(
+            snapshot["by_lga_gender_sector"]["Bauchi"]["woman"],
+            {"roads": 7, "water": 8})
+        # LGA x age x sector.
+        self.assertEqual(
+            snapshot["by_lga_age_band_sector"]["Bauchi"]["age_26_35"],
+            {"roads": 7, "water": 8})
+        # Demographic x sector statewide, which is the view most likely to publish.
+        self.assertEqual(snapshot["by_gender_sector"]["woman"],
+                         {"roads": 7, "water": 8})
+        self.assertEqual(snapshot["by_age_band_sector"]["age_18_25"],
+                         {"education": 6})
+
+    def test_every_new_cross_honours_the_suppression_floor(self):
+        # Adding a dimension to the UI must not lower the privacy bar. Each new map is
+        # checked cell by cell against the floor the snapshot declares.
+        rows = (repeated("water", n=8, ward_code="RA-001", age_band="age_26_35",
+                         gender="woman")
+                + repeated("roads", n=2, ward_code="RA-001", age_band="age_26_35",
+                           gender="woman")
+                + repeated("education", n=2, ward_code="RA-002", age_band="age_26_35",
+                           gender="woman"))
+        snapshot = aggregate.build_public_snapshot(rows, generated_at=NOW)
+        floor = snapshot["small_count_threshold"]
+        for map_name in ("by_ward_sector", "by_lga_age_band_sector",
+                         "by_lga_gender_sector", "by_age_band_sector",
+                         "by_gender_sector"):
+            with self.subTest(map=map_name):
+                self.assertIn(map_name, snapshot)
+                for _path, counts in inner_maps(snapshot[map_name]):
+                    for value in counts.values():
+                        if value is not None:
+                            self.assertGreaterEqual(value, floor)
+        # The two small cells are withheld, in every map they appear in.
+        self.assertIsNone(snapshot["by_ward_sector"]["RA-001"]["roads"])
+        self.assertIsNone(snapshot["by_lga_gender_sector"]["Bauchi"]["woman"]["roads"])
+        self.assertIsNone(snapshot["by_gender_sector"]["woman"]["roads"])
+        # The large sibling still publishes, so suppression is not blanking the whole group.
+        self.assertEqual(snapshot["by_ward_sector"]["RA-001"]["water"], 8)
+
+    def test_a_suppressed_cell_keeps_its_key(self):
+        # "This group answered, but too few to publish" and "this group never existed" are
+        # different facts. Dropping the key would collapse them, and the dashboard renders
+        # a withheld cell differently from an absent one.
+        rows = repeated("water", n=8) + repeated("roads", n=2)
+        snapshot = aggregate.build_public_snapshot(rows, generated_at=NOW)
+        self.assertIn("roads", snapshot["by_sector"])
+        self.assertIsNone(snapshot["by_sector"]["roads"])
+        self.assertEqual(snapshot["by_sector"]["water"], 8)
+
+    def test_nested_suppression_matches_the_flat_rule_exactly(self):
+        # `suppress_nested` is a second implementation of a privacy floor, and a second
+        # implementation is exactly the kind of thing that drifts from the first.
+        for threshold in (2, 5, 9):
+            with self.subTest(threshold=threshold):
+                flat = {str(n): n for n in range(0, 12)}
+                expected, expected_n = aggregate.suppress(flat, threshold)
+                actual, actual_n = aggregate.suppress_nested(flat, threshold)
+                self.assertEqual(actual, expected)
+                self.assertEqual(actual_n, expected_n)
+
+    def test_nested_suppression_keeps_a_zero_published(self):
+        # A zero identifies nobody. Suppressing it would read as "too few to say", which is
+        # a different and weaker statement.
+        actual, suppressed = aggregate.suppress_nested({"a": {"water": 0}}, 5)
+        self.assertEqual(actual, {"a": {"water": 0}})
+        self.assertEqual(suppressed, 0)
+
+    def test_publishable_cells_sum_to_their_own_marginal(self):
+        # The dashboard divides a cell by the group's own total. When nothing was withheld
+        # the parts must add up to the whole, or every percentage on the page is wrong.
+        rows = (repeated("water", n=8, age_band="age_26_35")
+                + repeated("roads", n=7, age_band="age_26_35")
+                + repeated("security", n=6, age_band="age_18_25"))
+        snapshot = aggregate.build_public_snapshot(rows, generated_at=NOW)
+        wide = snapshot["by_age_band_sector"]["age_26_35"]
+        per_lga = snapshot["by_lga_age_band_sector"]["Bauchi"]["age_26_35"]
+        self.assertEqual(sum(wide.values()), sum(per_lga.values()))
+        self.assertEqual(sum(wide.values()),
+                         snapshot["by_lga_age_band"]["Bauchi"]["age_26_35"])
+        self.assertEqual(sum(wide.values()) + 6, snapshot["by_lga"]["Bauchi"])
 
 
 class PollValidationTests(unittest.TestCase):
@@ -687,13 +883,112 @@ class PollPageTests(unittest.TestCase):
             repeated("water", n=8) + repeated("roads", n=6), generated_at=NOW)
         section = render.poll_results_section(snapshot)
         for mount in ("data-poll-sector-chart", "data-poll-lga-chart",
-                      "data-poll-table", "data-poll-filter", "data-poll-snapshot"):
+                      "data-poll-table", "data-poll-filter", "data-poll-snapshot",
+                      "data-poll-ward-filter", "data-poll-lens-filter",
+                      "data-poll-scope-summary", "data-poll-share-note"):
             with self.subTest(mount=mount):
                 self.assertIn(mount, section)
         self.assertIn("14 responses", section)
-        self.assertIn("Filter by LGA", section)
+        self.assertIn("LGA", section)
         for lga in render.LGAS:
             self.assertIn(f'<option value="{lga}">', section)
+
+    def test_the_dashboard_offers_area_and_demographic_scopes(self):
+        # The three scope controls the reader uses to ask "what does this group want".
+        # A missing one is a silently smaller dashboard, so each is asserted by name.
+        snapshot = aggregate.build_public_snapshot(
+            repeated("water", n=8) + repeated("roads", n=6), generated_at=NOW)
+        section = render.poll_results_section(snapshot)
+        self.assertIn('data-poll-filter', section)
+        self.assertIn('data-poll-ward-filter', section)
+        self.assertIn('data-poll-lens-filter', section)
+        # The lens offers every gender and every age band, and nothing else.
+        for key, _en, _ha in render.POLL_GENDER_OPTIONS:
+            self.assertIn(f'value="g:{key}"', section)
+        for key, _en, _ha in render.POLL_AGE_BANDS:
+            self.assertIn(f'value="a:{key}"', section)
+
+    def test_the_dashboard_cannot_offer_a_registration_area_with_a_demographic(self):
+        # The forbidden cross is ward x demographic. Two independent dropdowns plus a ward
+        # list would be three clicks from publishing it, so the page must not ship that
+        # shape: the lens is reset and disabled when an area is chosen, and the reason is
+        # shown rather than left for the reader to work out.
+        script = render.POLL_SCRIPT
+        self.assertIn("data-poll-lens-filter", script)
+        self.assertIn("data-poll-lens-lock", script)
+        section = render.poll_results_section(
+            aggregate.build_public_snapshot(repeated("water", n=8), generated_at=NOW))
+        self.assertIn("data-poll-lens-lock", section)
+        self.assertIn("Age group and gender are switched off for a registration area",
+                      section)
+        # The lock note must be hidden until an area is actually chosen.
+        self.assertIn('data-poll-lens-lock hidden', section)
+        self.assertIn("if(blocked)pollState.lens='';", script)
+        self.assertIn("select.disabled=blocked;", script)
+
+    def test_the_lens_group_headers_can_actually_be_translated(self):
+        # An <optgroup>'s visible text is its `label` ATTRIBUTE, and `setLanguage` only
+        # rewrites `textContent`. So the header needs its own pass.
+        #
+        # The pair must NOT be carried as data-en/data-ha. `setLanguage` implements that
+        # pair with `textContent`, so on an <optgroup> -- which OWNS the options -- it
+        # deleted every option on the first language switch. The Group dropdown went from
+        # nine options to one. `data-poll-label-*` names are outside setLanguage's reach.
+        section = render.poll_results_section(
+            aggregate.build_public_snapshot(repeated("water", n=8), generated_at=NOW))
+        for english, hausa in (("Gender", "Jinsi"), ("Age group", "Shekaru")):
+            with self.subTest(header=english):
+                self.assertIn(f'data-poll-label-en="{english}"', section)
+                self.assertIn(f'data-poll-label-ha="{hausa}"', section)
+                self.assertIn(f'label="{english}"', section)
+        # The forbidden names must not reappear on the optgroup.
+        self.assertNotIn('data-en="Gender" data-ha="Jinsi"', section)
+        self.assertNotIn('data-en="Age group" data-ha="Shekaru"', section)
+        # ...and the script must copy the pair onto the attribute on every render.
+        script = render.POLL_SCRIPT
+        self.assertIn("const pollSyncLensGroupLabels=()=>", script)
+        self.assertIn("group.setAttribute('label',currentLanguage==='ha'&&ha?ha:en);", script)
+        self.assertIn("[data-poll-optgroup]", script)
+        self.assertIn("pollSyncLensGroupLabels();", script)
+
+    def test_the_dashboard_never_shows_a_share_it_cannot_compute(self):
+        # A percentage is a division. If a sibling cell in the same scope was suppressed the
+        # true denominator is unknown, so a percentage would understate the group and look
+        # precise. The page must gate the share on every cell being publishable.
+        script = render.POLL_SCRIPT
+        self.assertIn("const pollShareIsExact=scope=>", script)
+        self.assertIn("return values.every(value=>typeof value==='number');", script)
+        # The gate must be consulted before any share is written to the page.
+        self.assertIn("if(exact){", script)
+        self.assertIn("data-poll-share-note", script)
+        # ...and the table must not fall back to a stale denominator when it is withheld.
+        self.assertIn("c2.className='is-share-withheld';", script)
+
+    def test_the_group_size_has_three_distinct_states(self):
+        # "487 women answered", "at least 20 answered" and "too few to show" are three
+        # different facts. A regression here made the statewide gender lens report "too few
+        # to show" for a group of nearly five hundred people, because only the LGA case had
+        # a published marginal to divide by. So the states must be asserted by name.
+        script = render.POLL_SCRIPT
+        # Statewide x demographic has no marginal, so it sums its own publishable cells.
+        self.assertIn("allPublishable?visible.reduce((sum,cell)=>sum+cell,0):null", script)
+        # When something is withheld the sum becomes an explicit lower bound, not a total.
+        self.assertIn("lowerBound:", script)
+        self.assertIn("if(scope.lowerBound)return false;", script)
+        # And the reader is told which of the three they are looking at.
+        self.assertIn("if(typeof scope.total==='number')", script)
+        self.assertIn("else if(scope.lowerBound)", script)
+        self.assertIn("at least ", script)
+        self.assertIn("answers in this group: too few to show", script)
+
+    def test_the_area_scope_uses_a_published_marginal_not_its_own_sum(self):
+        # A registration area and an LGA x demographic scope both have a published count of
+        # how many people are in the group. Dividing by the sum of the visible cells instead
+        # would silently disagree with that published number whenever anything was withheld.
+        script = render.POLL_SCRIPT
+        self.assertIn("total:totalOf(snap.by_ward,pollState.ward),", script)
+        self.assertIn("total:totalOf((margin[pollState.lga]||{}),value),", script)
+        self.assertIn("total:totalOf(snap.by_lga,pollState.lga),", script)
 
     def test_a_suppressed_cell_is_carried_as_null_into_the_page(self):
         # The page must be able to tell "too few to publish" from "nobody chose this",
@@ -738,7 +1033,7 @@ class PollPageTests(unittest.TestCase):
 
     def test_the_form_is_bilingual(self):
         for en, ha in (("Which sector should APM prioritise first?",
-                        "Wane sector APM ya fi fahimta da farko?"),
+                        "Wane sector APM ya fi gabanawa da farko?"),
                        ("Comment (optional, not counted)", "Sharhi (zaɓi, ba a taƙaita ba)"),
                        ("Cast vote", "Yi amsa"),
                        ("Woman", "Mace"),
@@ -757,10 +1052,14 @@ class PollPageTests(unittest.TestCase):
         section = render.poll_results_section(
             aggregate.build_public_snapshot(repeated("water", n=8), generated_at=NOW))
         for en, ha in (("Sector priorities so far.", "Gabanawa na sectors har yanzu."),
-                       ("Which sector comes first", "Wane sector ya farko"),
+                       ("Which sector this group put first",
+                        "Wane sector wannan ƙungiya ya farko"),
                        ("Responses by LGA", "Amsa ta LGA"),
                        ("Exact counts", "Adadin daidai"),
-                       ("Filter by LGA", "Zaɓi ta LGA"),
+                       ("Registration area", "Wurin ƙaura zaye"),
+                       ("Group", "ƙungiya"),
+                       ("Everyone", "Kowa"),
+                       ("Who answered", "Wa suka amsa"),
                        ("Responses", "Amsa"),
                        ("Share", "Raba")):
             with self.subTest(label=en):
