@@ -13,8 +13,12 @@ The properties these defend are the ones that would make a published poll dishon
 5. **A build with no endpoint cannot send anything.** The disabled state is asserted in
    the HTML, in the JavaScript, and in the tests.
 """
+import csv
 import json
 import re
+import shutil
+import subprocess
+import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -759,6 +763,109 @@ class PercentageFloorTests(unittest.TestCase):
     def test_count_cannot_exceed_total(self):
         with self.assertRaises(ValueError):
             aggregate.share_of_total(5, 3, percentage_floor=0)
+
+
+class PollEndpointScriptTests(unittest.TestCase):
+    """The Apps Script endpoint, which is a paste-and-deploy step on the owner's account.
+
+    An agent cannot reach a Google account, so this file cannot be executed by the agent
+    that would otherwise review it. That is exactly why it needs its own harness: the
+    endpoint is the one piece of code that decides what a member of the public can write
+    into the campaign's records, and "it looked right" is a weak form of evidence for it.
+
+    `docs/apps-script/test_endpoint.mjs` loads the real Code.gs with the Apps Script
+    globals stubbed and runs the real doPost. It is not a mock of the endpoint; it is the
+    endpoint, with only the platform objects faked.
+    """
+
+    APPS = Path("docs/apps-script")
+
+    def setUp(self):
+        self.code_path = self.APPS / "Code.gs"
+        self.harness = self.APPS / "test_endpoint.mjs"
+        if not self.code_path.exists():
+            self.skipTest("Code.gs is generated; run build_code_gs.py")
+
+    def _node(self):
+        return shutil.which("node") or shutil.which("nodejs")
+
+    def test_the_generated_script_is_valid_javascript(self):
+        # A syntax error here is invisible until the owner deploys, at which point the
+        # endpoint is dead and the poll silently accepts nothing.
+        node = self._node()
+        if not node:
+            self.skipTest("node not available")
+        with tempfile.TemporaryDirectory() as directory:
+            probe = Path(directory) / "code.js"
+            probe.write_text(
+                self.code_path.read_text(encoding="utf-8"), encoding="utf-8")
+            result = subprocess.run([node, "--check", str(probe)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr[-600:])
+
+    def test_the_endpoint_harness_passes(self):
+        node = self._node()
+        if not node:
+            self.skipTest("node not available")
+        result = subprocess.run([node, str(self.harness)],
+                                capture_output=True, text=True)
+        self.assertEqual(
+            result.returncode, 0,
+            "the endpoint harness failed; it exists to catch validation defects before "
+            f"deployment, not after:\n{result.stdout}\n{result.stderr}")
+
+    def test_the_endpoint_vocabularies_have_not_drifted_from_the_contract(self):
+        # The endpoint re-implements every rule in src/poll/validation.py, because the
+        # browser cannot be trusted. Two implementations of one rule drift unless
+        # something asserts they agree, and drift here is silent: a sector accepted by one
+        # and refused by the other is not visible until real people are turned away.
+        code = self.code_path.read_text(encoding="utf-8")
+        vocabularies = (
+            ("ALLOWED_SECTORS", validation.ALLOWED_SECTORS),
+            ("BAUCHI_LGAS", validation.BAUCHI_LGAS),
+            ("AGE_BANDS", validation.AGE_BANDS),
+            ("GENDER_OPTIONS", validation.GENDER_OPTIONS),
+            ("FORBIDDEN_IDENTITY_FIELDS", validation.FORBIDDEN_IDENTITY_FIELDS),
+        )
+        for name, expected in vocabularies:
+            with self.subTest(vocabulary=name):
+                block = _js_array(code, name)
+                self.assertIsNotNone(block, f"{name} not found in Code.gs")
+                values = _js_string_list(block)
+                for value in expected:
+                    self.assertIn(
+                        value, values,
+                        f"{name} in Code.gs is missing {value!r} from the contract")
+
+    def test_the_endpoint_ward_map_matches_the_form(self):
+        # The form offers areas from data/delivery/lga_wards.csv. If the endpoint's map
+        # disagrees, a respondent can select an area the endpoint then refuses.
+        with open("data/delivery/lga_wards.csv", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        code = self.code_path.read_text(encoding="utf-8")
+        match = re.search(r"var WARD_MAP_SOURCE = '([^']*)';", code)
+        self.assertIsNotNone(match, "WARD_MAP_SOURCE not found in Code.gs")
+        pairs = {}
+        for group in match.group(1).split(";"):
+            lga, _, codes = group.partition(":")
+            pairs[lga] = {c for c in codes.split(",") if c}
+        expected = {}
+        for row in rows:
+            expected.setdefault(row["lga"], set()).add(row["ward_code"])
+        self.assertEqual(pairs, expected)
+        self.assertEqual(
+            sum(len(v) for v in pairs.values()), 212,
+            "every registration area in lga_wards.csv must be in the endpoint's map")
+
+
+def _js_array(source, name):
+    """Return the body of a `var NAME = [ ... ];` literal in a JS source file."""
+    match = re.search(rf"var\s+{re.escape(name)}\s*=\s*\[(.*?)\];", source, re.S)
+    return match.group(1) if match else None
+
+
+def _js_string_list(body):
+    return re.findall(r"'([^']*)'", body)
 
 
 class PollPageTests(unittest.TestCase):

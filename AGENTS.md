@@ -138,6 +138,31 @@ These are enforced in code; keep them enforced.
   as "nobody wants water", which is the opposite of the truth, and a reader could not tell
   the two apart.
 
+## Poll endpoint rules
+The Apps Script intake endpoint lives in `docs/apps-script/`. It is **generated**:
+`Code.gs.template` + `data/delivery/lga_wards.csv` -> `Code.gs`, via `build_code_gs.py`.
+Never edit `Code.gs` directly; edit the template and regenerate, or the next build discards
+the change.
+- **The endpoint re-implements every rule in `src/poll/validation.py`, and that is not
+  optional.** The browser sends JSON and anyone can send anything. Two implementations of one
+  rule drift unless something asserts they agree, so
+  `test_the_endpoint_vocabularies_have_not_drifted_from_the_contract` and
+  `test_the_endpoint_ward_map_matches_the_form` exist for that. Change a rule in both places
+  or the tests fail.
+- **`docs/apps-script/test_endpoint.mjs` runs the real `doPost`** with the Apps Script
+  globals stubbed -- it is the endpoint, not a mock of it. Run it after any edit
+  (`node docs/apps-script/test_endpoint.mjs`, expect 64/64). It is wired into the Python
+  suite, so `python -m unittest discover -s tests` runs it too.
+- **That harness exists because an agent cannot reach a Google account.** The endpoint is the
+  one file here that no agent can execute, so it is also the one most likely to ship broken.
+  It has already caught three real bugs, the worst being a `doPost` that persisted the raw
+  request body instead of the validated record -- storing `bAUcHi` as an LGA name and
+  `age_unspecified` as a *published demographic*. **Persist the record `validate_` returns.**
+- **Never echo stored data back.** The response is `{response_id}` and nothing else.
+- **`Code.gs` is committed deliberately.** It contains no credential, no Sheet ID and no
+  deployment ID; the only data in it is the public registration-area map, which is already in
+  `lga_wards.csv` and on the form.
+
 ## Map rules (phase S4)
 These are enforced in code; keep them enforced.
 - **Never quantize below 3 dp.** At 2 dp, 56% of shared boundary edges collapse and the map

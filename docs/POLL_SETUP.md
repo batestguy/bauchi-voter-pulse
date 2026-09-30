@@ -88,12 +88,25 @@ respondent typed unprompted, which is why the form warns them not to.
 
 ## 2. Create the Apps Script endpoint
 
+**The endpoint is already written and tested. Follow
+[`apps-script/DEPLOY.md`](apps-script/DEPLOY.md) instead of this section** — it has the
+exact clicks, and it explains why the code needed its own test harness.
+
+| File | What it is |
+|---|---|
+| [`apps-script/Code.gs`](apps-script/Code.gs) | The complete endpoint. Paste it as-is. Generated from `Code.gs.template` plus the real ward map by `build_code_gs.py`, so its registration-area map cannot drift from the form's. |
+| [`apps-script/appsscript.json`](apps-script/appsscript.json) | The manifest. |
+| [`apps-script/test_endpoint.mjs`](apps-script/test_endpoint.mjs) | 64 checks that run the real `doPost` with the Apps Script globals stubbed. Run it after any edit: `node docs/apps-script/test_endpoint.mjs`. |
+
+The notes below are the reasoning the implementation already follows, kept because they are
+what a future editor needs in order not to undo it. The summary is at `DEPLOY.md`.
+
 1. Open the Sheet → Extensions → Apps Script.
 2. Create a bound script for the Sheet.
-3. Implement `doPost(e)` as the intake boundary.
-4. **Repeat every rule in `src/poll/validation.py`. Do not trust browser validation.** The
-   browser sends JSON; anyone can send anything.
-5. The permitted payload fields are exactly `sector`, `lga`, `ward_code`, `age_band`,
+3. `doPost(e)` is the intake boundary, and it **repeats every rule in
+   `src/poll/validation.py`**. Do not trust browser validation: the browser sends JSON and
+   anyone can send anything.
+4. The permitted payload fields are exactly `sector`, `lga`, `ward_code`, `age_band`,
    `gender`, `comment`, `consent`, and an empty `website` honeypot. Reject anything else.
 
    - `identity_field_forbidden` for any of `name`, `full_name`, `phone`, `phone_number`,
@@ -101,25 +114,35 @@ respondent typed unprompted, which is why the form warns them not to.
      `date_of_birth`, `dob`, `age`, `age_years`, `exact_age`, `years_old`
    - `invalid_lga` for anything outside the 20 Bauchi LGAs
    - `invalid_ward` for a registration-area code that does not belong to the selected LGA
-   - `ward_map_required_for_ward_code` if a code arrives with no approved map loaded
+   - `ward_not_configured_for_lga` if a code arrives with no approved map loaded
    - `invalid_choice` for an age band or gender outside the closed list
 
    Reject with a specific code rather than silently dropping the field:
 
    A silently-ignored identity field is still an identity field on the wire and in any
    log between the browser and the Sheet. Reject it instead.
-6. Allocate `response_id` server-side using `APM-POLL-YYYY-NNNN`. This is a tracking
-   reference for one response. **It is not a voter ID and must never be described as
-   one**, in the Sheet, in the response, or in any UI.
+5. **Persist the validated record, not the raw request body.** `validate_` returns a new
+   normalised object — canonical LGA spelling, declines collapsed to `''`, trimmed and
+   length-capped text. Writing the raw payload instead throws all of that away: it stores
+   `bAUcHi` as an LGA name and `age_unspecified` as a *demographic*, which the snapshot would
+   then publish as its own slice. This was a real bug in the first draft of `Code.gs`; the
+   harness caught it.
+6. Allocate `response_id` server-side as `APM-POLL-YYYY-NNNNNN`, sequentially, from Script
+   Properties. This is a tracking reference for one response. **It is not a voter ID and
+   must never be described as one**, in the Sheet, in the response, or in any UI.
+   **Never derive it from the response content**: a content hash is a stable fingerprint
+   that anyone who can guess someone's comment can confirm by hash.
 7. Reject duplicate IDs. The public form deliberately sends no idempotency token, and the
    one-per-browser marker in `localStorage` is trivially cleared. Treat the Sheet, not the
    browser, as the record of what was actually cast. Never use a voter ID as a
-   deduplication key — there is no voter ID.
-8. Add rate limiting and safe logging. Never log a comment, and never log a whole payload.
+   deduplication key — there is no voter ID. `setupSheets` adds a conditional format that
+   highlights a duplicate `response_id` in red.
+8. Add rate limiting and safe logging. Never log a comment, and never log a whole payload —
+   log the rejection code and nothing else.
 9. Return JSON with exactly one field, `response_id`, matching
-   `^APM-POLL-[0-9]{4}-[0-9]{4,12}$`. Do not return the comment, the sector, or any stored
-   value back to the browser — an endpoint that echoes the comment makes it visible in
-   the network tab of the respondent's own browser. The browser validates the shape
+   `^APM-POLL-[0-9]{4}-[0-9,12}$`. Do not return the comment, the sector, or any stored
+   value back to the browser — an endpoint that echoes the comment makes it visible in the
+   network tab of the respondent's own browser. The browser validates the shape
    before displaying anything, and treats a violation as a failed vote.
 
 ## 3. Deployment settings

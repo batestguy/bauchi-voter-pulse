@@ -20,7 +20,7 @@
 > mutually-exclusive Group lens (Woman, Man, or an age band) — over one sector chart and
 > one exact-counts table. The tally gained five crosses to make this possible:
 > `by_ward_sector`, `by_lga_gender_sector`, `by_lga_age_band_sector`, `by_gender_sector`,
-> `by_age_band_sector`. **275 tests pass** (1 skip: Playwright).
+> `by_age_band_sector`. **279 tests pass** (1 skip: Playwright).
 >
 > **Two rules make it safe, and both are enforced:**
 > - A registration area and a demographic are **never** published in the same figure. The
@@ -60,23 +60,42 @@
 > correction is a candidate. A native speaker must still confirm them and the disclosure
 > stays.
 >
+> ### The poll endpoint is BUILT and TESTED; only the Google account steps remain
+>
+> `docs/apps-script/` contains the complete Apps Script intake endpoint, a manifest, a
+> click-by-click deployment guide, and **a 64-check harness that runs the real `doPost`
+> against test payloads** with the platform objects stubbed. It is not a mock of the
+> endpoint — it is the endpoint.
+>
+> **Why that harness exists.** An agent cannot reach a Google account, so the endpoint is
+> the one piece of code that would otherwise ship without anything able to execute it. It
+> found three real bugs before deployment, the worst being that `doPost` persisted the
+> **raw request body** instead of the validated record — so the Sheet would have stored
+> `bAUcHi` as an LGA name and `age_unspecified` as a *published demographic*. A second was a
+> decline marker matched at a fixed offset that never matched, with the same effect. Both
+> are fixed and both are break-tested.
+>
+> **What remains is ten minutes of clicking on the owner's Google account:** create the
+> Sheet, paste the file, deploy as a web app, copy the `/exec` URL, set `POLL_ENDPOINT`.
+> Full steps, including the CORS check everyone skips, are in `docs/apps-script/DEPLOY.md`.
+>
 > ### What is NOT deployed, and why
 >
-> - **The poll is still not connected.** It needs a private Google Sheet, a bound Apps Script
->   deployment, and its deployment ID. Those belong to the owner — see `docs/POLL_SETUP.md`
->   §1–4. Setting a guessed URL would make the build *look* connected while silently
->   discarding every vote, so it was deliberately left `""`.
+> - **The poll is still not connected**, because connecting needs a Sheet, a bound Apps
+>   Script deployment and its deployment ID, all on the owner's Google account. Setting a
+>   guessed URL would make the build *look* connected while silently discarding every vote,
+>   so `POLL_ENDPOINT` is deliberately still `""`.
 > - **No snapshot exists**, so the page renders the honest empty state. Connecting the poll
 >   does not publish results; a separate owner-controlled job must build
 >   `data/delivery/poll_snapshot.json` (see `POLL_SETUP.md` §5, field list now corrected).
-> - **The dashboard is committed but not pushed.** The handoff's standing instruction is
->   that pushing was authorised once, on 26 September 2026, and is not a standing
->   authorisation. Push was not run this session.
+> - **The dashboard is committed but not pushed.** The standing instruction is that pushing
+>   was authorised once, on 26 September 2026, and is not a standing authorisation.
 >
 > **Owner gates:** the `services3.arcgis.com` robots exemption (§21) was ratified on
 > 29 September 2026, and 69 AI-drafted Hausa strings were reviewed and accepted as written
-> the same day. **S5 added 66, and the 30 September dashboard added more.** All are
-> AI-drafted; the disclosure stays.
+> the same day. **S5 and the 30 September dashboard added more.** All are AI-drafted; the
+> disclosure stays, and a native speaker must still review the corrections in
+> `docs/HAUSA_REVIEW.md` before connection.
 
 ---
 
@@ -90,11 +109,11 @@ records what actually happened and why the plan's seam fix had to be abandoned �
 
 ```bash
 cd D:\APMdeliverable
-python -m unittest discover -s tests -q     # expect 275 OK (1 skip)
+python -m unittest discover -s tests -q     # expect 279 OK (1 skip)
 python src/dashboard/render.py              # expect six page sizes
 ```
 
-If the test count is not 275, something has regressed. Investigate before proceeding.
+If the test count is not 279, something has regressed. Investigate before proceeding.
 
 **3. Do not touch the preserved local work.** It must still be untracked or modified:
 
@@ -115,9 +134,9 @@ disclosure stays because the strings are still not native-speaker translated. **
 pass of 30 September corrected 20 of them without closing the gate — see `docs/HAUSA_REVIEW.md`.
 
 **5. S5 is built and ships disabled. Next task: connect the poll (owner) or start S6.**
-`docs/POLL_SETUP.md` is the full Sheets + Apps Script guide. **Connecting it is not an agent
-task**: it needs a private Sheet, a bound Apps Script deployment, and the deployment ID,
-all of which belong to the owner. The one-line change in §4 is the last step, not the first.
+**The endpoint code is already written and tested** — see `docs/apps-script/DEPLOY.md` for the
+ten minutes of clicking that remain. The one-line `POLL_ENDPOINT` change is the LAST step,
+not the first, and the CORS check in DEPLOY.md step 5 is the one people skip.
 The sharpest open owner question is the **retention period for the comment column** — a
 300-char free-text field held indefinitely is not anonymous in any meaningful sense.
 **Also: a native Hausa speaker must review the corrected strings before connection.**
