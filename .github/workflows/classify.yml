@@ -1,0 +1,106 @@
+name: classify
+# The middle of the pipeline. `scrape.yml` writes data/raw/ and this writes
+# data/classified/ + data/aggregates/. Both existed as scripts long before either had a
+# workflow, which is how the corpus came to be eight days stale while the page rebuild
+# carried on publishing as if it were current.
+on:
+  schedule:
+    # Sunday 05:00 UTC, ahead of the Monday 06:00 page rebuild, so a week's posts are
+    # classified and aggregated before the pages that read them are regenerated.
+    - cron: "0 5 * * SUN"
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  # Deliberately the SAME group as scrape.yml and rebuild-pages.yml, not a new one. All
+  # three push to the index, and two of them at once race on it: the loser's push fails in
+  # a way that reads as a network problem rather than a concurrency bug. cancel-in-progress
+  # is false, so they queue rather than cancelling a run that has already paid for calls.
+  group: repo-pages-write
+  cancel-in-progress: false
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    env:
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+      # The vendored client, not an npm install. It is committed, so the runner needs no
+      # package registry and the version cannot drift out from under the schema.
+      JEV_BIN: third_party/jev/jev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+
+      - name: Check the classification key
+        id: key
+        # No key is a configuration state, not a failure: the run is green and says so
+        # loudly. A red run for a missing secret trains people to ignore red runs, and the
+        # one thing this job must not do is fail quietly in a way nobody notices for a
+        # month. Scraped posts keep accumulating in data/raw/ meanwhile, unclassified, and
+        # the next successful run picks them all up -- classification is a delta over
+        # unclassified rows, not a batch of a fixed size.
+        run: |
+          if [ -z "${TYPESAFE_API_KEY}" ]; then
+            echo "::warning title=No classification key::TYPESAFE_API_KEY is not set, so nothing was classified. Add it under Settings > Secrets > Actions. Scraped rows are accumulating in data/raw/ and will be classified on the next successful run."
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_key=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Classify posts that have never been classified
+        if: steps.key.outputs.has_key == 'true'
+        run: python -m src.classification.classify_new
+
+      - name: Re-aggregate
+        if: steps.key.outputs.has_key == 'true'
+        # Runs even if classification classified nothing. That rewrites the aggregates with
+        # a new build date and no new data, which is honest: the build date says when the
+        # numbers were produced, and nothing about it implies new posts arrived.
+        run: python -m src.aggregation.aggregate
+
+      - name: Refuse to commit a smaller corpus than the one already published
+        if: steps.key.outputs.has_key == 'true'
+        # The guard that matters most in this file. A truncated classified set would
+        # produce aggregates that are quietly, correctly computed from less data -- and
+        # nothing downstream can tell that from a genuine week with no news. Comparing the
+        # row count against what is already committed turns a silent data loss into a red
+        # run, which is the only outcome anyone would notice.
+        run: |
+          python - <<'PY'
+          import csv, glob, pathlib, subprocess, sys
+          counts = {}
+          for path in sorted(glob.glob("data/classified/*.csv")):
+              if pathlib.Path(path).name.startswith("pilot"):
+                  continue
+              with open(path, encoding="utf-8", newline="") as handle:
+                  counts[path] = sum(1 for _ in csv.DictReader(handle))
+          now = sum(counts.values())
+          try:
+              was = int(subprocess.run(
+                  ["git", "show", "HEAD:data/aggregates/pipeline_stats.csv"],
+                  capture_output=True, text=True).stdout
+                  .split("classified,")[1].split("\n")[0])
+          except Exception:
+              was = 0
+          print(f"classified rows: {was} committed -> {now} after this run")
+          if now < was:
+              print("::error title=Corpus shrank::Fewer classified rows than the committed "
+                    "build. Refusing to commit, because aggregates computed from a smaller "
+                    "corpus are indistinguishable from a real result.", file=sys.stderr)
+              sys.exit(1)
+          PY
+
+      - name: Commit classifications, review queues and aggregates
+        if: steps.key.outputs.has_key == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions@users.noreply.github.com"
+          # data/human_review/ is staged for a reason that is easy to miss: classify.py
+          # writes each batch's review queue there, and a queue that is not committed is
+          # human work thrown away on the next run. It is the same class of bug as the
+          # one this workflow exists to end.
+          git add data/classified/ data/aggregates/ data/human_review/
+          git diff --cached --quiet || git commit -m "data(classified): weekly classification and aggregates"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

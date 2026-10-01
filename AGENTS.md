@@ -169,6 +169,33 @@ These are enforced in code; keep them enforced.
   as "nobody wants water", which is the opposite of the truth, and a reader could not tell
   the two apart.
 
+## Pipeline wiring rules
+The pipeline is four steps, and each has a workflow in `.github/workflows/`. The middle two
+had scripts but no workflow for weeks, so the corpus stopped on 23 September 2026 while the
+page rebuild kept publishing every Monday as if it were current. **A missing workflow file
+is not a runtime error** — that is the whole hazard, and `tests/test_pipeline_workflow.py`
+asserts the wiring by name for that reason.
+- **A missing API key is a configuration state, not a failure.** The run stays green and
+  says so with a `::warning::` annotation on the run itself. A red run for a missing secret
+  trains people to ignore red runs; a green run that says nothing is how a month of staleness
+  goes unnoticed. Both facts are true and the guard needs both.
+- **The paid step is gated on the key.** `classify_new.py` swallows failures in CI so the
+  page rebuild carries on, which is right — but it emits a `::warning::` for the same reason.
+- **The review queue must be staged with the classifications.** `classify.py` writes each
+  batch's `data/human_review/queue_*.csv`; a queue that is not committed is human work
+  discarded on the next run. Same class of bug as the 160 untracked reviews.
+- **A shrinking corpus refuses to commit.** Aggregates computed from a truncated set are
+  correct, and nothing downstream can tell them from a real quiet week. The guard compares
+  the classified row count against the committed `pipeline_stats.csv`.
+- **All three writing jobs share `repo-pages-write`** and `cancel-in-progress: false`. A
+  distinct group per job looks right and serialises nothing; cancelling a run throws away
+  classification calls already paid for.
+- **The Jev client is vendored** at `third_party/jev/jev` and run via `JEV_BIN`. An `npm
+  install` would let the client version drift out from under the schema between two runs of
+  the same spec.
+- **`pilot_classified.csv` is never corpus.** Every reader and every counter excludes it, or
+  the shrink guard fires for the wrong reason and people learn to ignore it.
+
 ## Human review rules
 The classification pipeline's human-review layer lives in `src/aggregation/reviews.py`, the
 queues in `data/human_review/`, and the protocol in `data/human_review/README.md`. These
