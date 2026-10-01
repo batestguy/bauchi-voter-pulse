@@ -1,0 +1,9 @@
+# Everything in this folder is a build-time artefact for the repo, not an Apps Script file.
+# Without this, `clasp push` tries to upload the generator, the test harness, the guide and
+# the template as if they were scripts, and the deployment ends up with junk functions in it.
+*.template
+*.md
+*.mjs
+*.py
+.clasp.json
+.claspignore

@@ -61,7 +61,16 @@ MAX_SUBMITTED_AGE = timedelta(hours=24)
 MAX_SUBMITTED_CLOCK_SKEW = timedelta(minutes=5)
 
 _PHONE_SHAPE = re.compile(r"^\+?[0-9](?:[0-9 ().-]*[0-9])?$")
-_EMAIL_LOCAL = r"[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+"
+# The local part is a dot-atom and therefore MAY contain dots. The class below originally
+# omitted ".", which rejected every address of the shape `first.last@example.com` -- that
+# is, a large share of real addresses -- because the greedy match stopped at the first dot
+# and then required an "@" that was not there. Nobody noticed because the failure is a
+# clean `invalid_email` rather than a crash, and the only visible symptom is a member of
+# the public who typed a normal address and was told no.
+#
+# The `-` stays last in the class so it is a literal rather than a range, and the leading
+# and trailing dots are rejected separately below, which the "no .." check does not cover.
+_EMAIL_LOCAL = r"[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+"
 _EMAIL_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
 _EMAIL_SHAPE = re.compile(
     rf"^{_EMAIL_LOCAL}@{_EMAIL_LABEL}(?:\.{_EMAIL_LABEL})*\.[A-Za-z]{{2,63}}$"
@@ -225,7 +234,12 @@ def normalize_phone(value: Any) -> str:
 
 
 def normalize_email(value: Any) -> str:
-    """Validate an email conservatively and lowercase only its domain."""
+    """Validate an email conservatively and lowercase only its domain.
+
+    The local part keeps its dots and its case; only the domain is lowercased. Rewriting
+    the local part would change an address the respondent gave us, and the local part is
+    case-sensitive per RFC 5321.
+    """
 
     cleaned = validate_text_length(value, "email", required=False)
     if not cleaned:
@@ -234,6 +248,11 @@ def normalize_email(value: Any) -> str:
         raise RequestValidationError("invalid_email", field="email")
 
     local_part, domain = cleaned.rsplit("@", 1)
+    # A dot-atom may not begin or end with a dot. "no .." above does not catch either, and
+    # the regex cannot express both without also rejecting `..`, which is why this is a
+    # separate check rather than more pattern.
+    if local_part.startswith(".") or local_part.endswith("."):
+        raise RequestValidationError("invalid_email", field="email")
     if len(local_part) > 64 or any(
         len(label) > 63 for label in domain.split(".")
     ):

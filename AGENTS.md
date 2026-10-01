@@ -169,6 +169,60 @@ These are enforced in code; keep them enforced.
   as "nobody wants water", which is the opposite of the truth, and a reader could not tell
   the two apart.
 
+## Request endpoint rules
+The request form's Apps Script intake lives in `docs/requests-script/`. It is **generated**:
+`Code.gs.template` + `data/delivery/lga_wards.csv` -> `Code.gs`, via `build_code_gs.py`.
+Never edit `Code.gs` directly. It is a separate folder from `docs/apps-script/` on purpose:
+the two contracts are opposites, and one shared file would blend them.
+- **The request form stores PII; the poll does not.** A name, a phone, an email and a
+  street address are the point of this form. That makes it the highest-risk code here, and
+  the rules follow from that rather than from the poll's. Do not weaken them to match the
+  poll, and do not apply the poll's identity rules to it.
+- **The endpoint re-implements every rule in `src/requests/validation.py`, and that is not
+  optional.** The browser sends JSON and anyone can send anything. Two implementations of
+  one rule drift unless something asserts they agree, so
+  `test_the_endpoint_vocabularies_have_not_drifted_from_the_contract` and
+  `test_the_endpoint_field_lists_match_the_contract` exist for that. Change a rule in both
+  places or the tests fail.
+- **`docs/requests-script/test_endpoint.mjs` runs the real `doPost`** (268 checks) with the
+  platform objects stubbed -- the endpoint, not a mock of it. Run it after any edit. It is
+  wired into the Python suite.
+- **The `Audit` tab is three columns and cannot hold a fourth.** Timestamp, outcome, stable
+  rejection code. A rejected request carries all five private fields and must leave only
+  the code behind. `test_the_audit_tab_cannot_hold_a_contact_field` asserts the append
+  literally. Never log a name, phone, email, address, detail or payload.
+- **Persist the record `validate_` returns**, never the raw payload. That bug once stored
+  `bAUcHi` as an LGA name in the poll.
+- **A count check cannot see a skipped column.** `row.length === 14` is still true when
+  index 7 is a hole, so the count passes and the Sheet receives the email in the phone
+  column. `persist_` therefore pre-sizes with `new Array(COLUMN_COUNT)` **and** checks
+  `hasOwnProperty` per column. Do not "simplify" that to a length test.
+- **The endpoint refuses to run without a complete ward map** (`requireWardMap_`), called on
+  the request path. The Python contract tolerates a missing map and marks the row
+  `ward_map_missing`; for an endpoint that warning is invisible, and misattributed
+  locations that still read as validated are the failure. An empty map is a loud failure.
+- **The response is `{ request_id }` and nothing else.** `test_the_endpoint_returns_only_the_
+  tracking_reference` asserts it.
+- **The tracking reference is sequential and never content-derived**, and it must be one of
+  the two things `test_a_client_cannot_choose_its_own_reference` checks: `request_id` is
+  refused *by name* as well as by the unknown-field sweep. Both guards exist because each
+  alone is one edit from gone. The drift test asserts the absence of `computeDigest`,
+  `computeHmac` and `getUuid` **in the function body**, not of the words "hash"/"sha" --
+  the file explains in a comment why hashing must not be used, so a word-level check fails
+  on the explanation and would pass on a real digest call.
+- **`Code.gs` is committed deliberately.** No credential, no Sheet ID, no deployment ID;
+  the only data in it is the public registration-area map, already in `lga_wards.csv` and
+  on the form. `.clasp.json` is gitignored and must stay that way; `.clasp.json.example` is
+  committed instead.
+- **A paste into the Apps Script editor can land *inside* the default `myFunction()` stub
+  and still look correct.** Delete the file and add a fresh one named `Code.gs` rather than
+  pasting over the stub.
+- **There is no rate limiting and no automatic purge here, and that is honest rather than
+  forgotten.** Rate limiting means deciding what to count, and counting by IP would store a
+  new identifier this system does not currently hold. A retained request is staff workflow
+  data, so expiring it automatically would delete needs nobody has actioned. Both are owner
+  decisions and both are stated in `docs/GOOGLE_SHEETS_SETUP.md` §3 and §5.
+
 ## Poll endpoint rules
 The Apps Script intake endpoint lives in `docs/apps-script/`. It is **generated**:
 `Code.gs.template` + `data/delivery/lga_wards.csv` -> `Code.gs`, via `build_code_gs.py`.
