@@ -126,6 +126,37 @@ These are enforced in code; keep them enforced.
 - **Q2 never moves a number.** `tally_poll_responses` reads `sector` only. The comment is
   validated and length-capped but never counted, bucketed or published. A test asserts two
   runs with very different comments produce identical tallies.
+- **A stored comment is kept on its own tab, and the split is the design.** `Comments`
+  holds `sector, lga, received_at, comment` — and **not** `ward_code`, `age_band`, `gender`
+  or `response_id`. The `response_id` is the load-bearing omission: it is the join key back
+  to the `Responses` row that *does* carry the area and the demographics, so shipping it
+  beside the text would let anyone with read access to both tabs re-join them and make the
+  split decorative. `Responses` has no `comment` column at all.
+  `test_the_endpoint_splits_the_comment_onto_its_own_tab` asserts both header rows
+  literally, and the harness asserts the comment row is exactly 4 columns wide.
+- **The cost of that split is real and stated: a comment can no longer be tied to its own
+  vote.** That is the trade, not a defect. Reading what people said about a sector in an
+  LGA needs none of the join key.
+- **A comment-write failure must never fail the request.** The vote is already stored
+  before the comment is written, so raising here would lose the vote *and* teach the
+  respondent to retry — which is how duplicate votes happen. It is swallowed and audited
+  by code, like an audit-write failure.
+- **Retention is a CEILING, not a floor, and the direction is the point.** The risk of
+  holding someone's free text grows with time, so the value that must be *refused* is the
+  long one — the exact mirror of `small_count_threshold`, which refuses small values.
+  `MAX_COMMENT_RETENTION_DAYS = 365`; 180 is the default; `0` and negatives are refused
+  too, because a 0-day setting that failed to delete would be false in the permissive
+  direction. Both copies are asserted against each other by
+  `test_the_endpoint_retention_has_not_drifted_from_the_contract`.
+- **"Retained for 180 days" is only true because something deletes them.** The daily
+  `purgeExpiredComments` trigger, installed once by `installRetention`, clears the text and
+  keeps sector, LGA and timestamp. An unparseable timestamp is **deleted, not kept** — we
+  cannot prove it is inside the window, and keeping it would be the permissive reading of
+  an unknown. Every one of these three names is asserted present, and the purge is exercised
+  against a real grid (expired cleared, recent kept, unparseable cleared, idempotent).
+- **Blanking a cell does not remove it from Sheet version history.** An expired comment
+  stays recoverable until the owner prunes it. That is an owner action no code can reach,
+  and it is stated in both guides — do not describe the purge as complete without it.
 - **The percentage cap lowers a share, it never raises one.** It is
   `min(share, 100 - floor)`, so a single response cannot render as 100%. Do not "fix" it
   into a minimum: raising a small share would invent support the votes do not show.
@@ -151,8 +182,14 @@ the change.
   or the tests fail.
 - **`docs/apps-script/test_endpoint.mjs` runs the real `doPost`** with the Apps Script
   globals stubbed -- it is the endpoint, not a mock of it. Run it after any edit
-  (`node docs/apps-script/test_endpoint.mjs`, expect 64/64). It is wired into the Python
+  (`node docs/apps-script/test_endpoint.mjs`, expect 111/111). It is wired into the Python
   suite, so `python -m unittest discover -s tests` runs it too.
+  - Its sheet stubs are **grid-backed**, not `getRange() -> {}`. The purge is only
+    testable if `appendRow` / `getRange().getValues()` / `setValues()` behave, and a stub
+    that returns `{}` would make the retention mechanism the one part of the endpoint that
+    can never be executed. Its comment test string used to hold a **literal NUL byte**;
+    it is now `"hello world"`, for the reason `Code.gs` documents about control
+    characters surviving copy-paste.
 - **That harness exists because an agent cannot reach a Google account.** The endpoint is the
   one file here that no agent can execute, so it is also the one most likely to ship broken.
   It has already caught three real bugs, the worst being a `doPost` that persisted the raw

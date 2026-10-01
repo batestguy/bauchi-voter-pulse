@@ -229,6 +229,80 @@ few to show" rather than inventing a number.
 single response can never render as 100%. Note the direction: the cap **lowers** a share,
 it never raises one. Setting the floor to 0 disables it.
 
+## 5a. Comments are kept — on their own tab, for a bounded time
+
+The owner decided the complaints are worth keeping, and they are: a vote says a sector
+matters, a complaint says *which* tap has been dry for seven months, and only the second
+one tells the campaign what to do. So `setupSheets` creates **four** tabs, not two.
+
+| Tab | Holds | Free text? |
+|---|---|---|
+| `Responses` | the vote: sector, LGA, area, age band, gender | **no** |
+| `Comments` | the complaint: sector, LGA, timestamp, text | yes |
+| `Audit` | timestamp, outcome, rejection code | no |
+| `Retention` | the policy, in plain text, in the Sheet itself | no |
+
+**Why the comment is on its own tab.** Free text sitting on the same row as a registration
+area, an age band and a gender is closer to naming a person than any single field on it.
+The `Responses` row already carries all three, so any row holding the comment *and* that
+row has already re-identified the writer. Splitting them is what makes keeping the comments
+defensible.
+
+**What the `Comments` row deliberately does not have:** `ward_code`, `age_band`, `gender`,
+and `response_id`. The last one is the load-bearing omission — the tracking reference is
+the join key back to the `Responses` row that *does* carry the area and the demographics,
+so shipping it alongside the text would let anyone who can read both tabs re-join them and
+make the split decorative.
+
+**The cost, stated plainly:** a comment can no longer be tied back to its own vote. That is
+the trade, and it is the right one — reading what people said about a sector in an LGA
+needs none of the join key.
+
+### The steps
+
+1. Run `setupSheets` as normal. It creates all four tabs and the `Responses` header no
+   longer has a `comment` column.
+2. Run `installRetention` **once**, from the dropdown. It installs a daily trigger that
+   calls `purgeExpiredComments`. Re-running it is safe — it will not double the trigger.
+   The execution log should read `retention installed: daily purge at 180 day(s)`.
+3. Restrict sharing. `Comments` is the tab to keep to yourself and whoever curates the
+   study. `Responses` can be shared more freely, precisely because it holds no free text.
+4. Confirm the trigger exists: Triggers (clock icon in the left sidebar) → should show
+   `purgeExpiredComments`, running Daily.
+
+### What the purge does, and does not do
+
+At **180 days**, a comment's text is deleted. The row survives — sector, LGA and timestamp
+are not identifying on their own, and they are the same fields the published snapshot
+already aggregates and suppresses. So you keep the shape of the study (how many
+complaints, about what, where, over time) without keeping the words.
+
+An unparseable timestamp is **deleted**, not kept: we cannot prove it is inside the window,
+so it goes. Keeping it would be the permissive reading of an unknown.
+
+### Why 180 days, and why there is a ceiling
+
+180 covers a reporting cycle plus a re-run of the analysis. The **hard ceiling is 365**,
+and `validate_comment_retention_days` *refuses* anything above it rather than honouring
+it. This is the opposite direction to `small_count_threshold`, which refuses values that
+are too small — and deliberately so. The risk of holding someone's free text grows with
+time, so the value that must be refused is the long one. Raising the ceiling means editing
+a bound and re-deriving its justification, not changing a config number.
+
+`0` is refused too, for a separate reason: a 0-day setting reads as "we do not keep these",
+so if the purge silently failed to run, the setting would be false in the permissive
+direction.
+
+**One thing the purge cannot do.** Google Sheets keeps *version history*, so an expired
+comment can still be recovered from the file's revision history even after the cell is
+blanked. Blanking is necessary and not sufficient. To actually drop it, prune version
+history in the Sheet: **File → Version history → Name current version** (which starts a
+new version) and, in Drive, **Activity → Version history** → delete old versions. Do this
+on a schedule, not once. This is an owner action; no code can reach it.
+
+And separately, as ever: **Google retains IP addresses in Apps Script execution logs**
+regardless of what this Sheet stores. Not fixable in code.
+
 ## 6. Owner decisions before deployment
 
 These are yours, not the implementer's:
@@ -244,10 +318,10 @@ These are yours, not the implementer's:
 - [ ] Confirm the comment cap of 300 characters, or change it in
       `src/poll/validation.py::MAX_LENGTHS`.
 - [ ] Confirm the percentage cap, or set `POLL_PERCENTAGE_FLOOR = 0`.
-- [ ] Set a **retention period** for the comment column, and a process that actually
-      deletes on schedule. An anonymous poll that keeps free text forever is not anonymous
-      in any meaningful sense.
-- [ ] Decide who may read the raw Sheet.
+- [ ] **Run `installRetention` once**, after `setupSheets`. This is the step that makes
+      comment retention real. Details in §5a.
+- [ ] Decide who may read the raw Sheet — and note that the `Comments` tab is the one to
+      restrict, because it is the only tab holding free text. Details in §5a.
 - [ ] Confirm the results publication cadence.
 - [ ] Decide whether the poll closes, and what the page says when it does. A poll left
       open forever slowly becomes a different claim than the one you made.
@@ -264,6 +338,11 @@ These are yours, not the implementer's:
 - Never publish a cell below the suppression floor, and never publish a
   demographic × registration-area cross-tabulation.
 - Never count, bucket, summarise or publish the comment.
+- Never move the comment back onto the `Responses` row, and never add `ward_code`,
+  `age_band`, `gender` or `response_id` to the `Comments` row. That combination is what
+  the split exists to prevent, and three tests assert it.
+- Never raise `MAX_COMMENT_RETENTION_DAYS` to "keep them indefinitely", and never let the
+  daily `purgeExpiredComments` trigger be deleted or paused.
 - Never present a poll result as a verified need, achievement, promise, evidence figure or
   outcome measurement. It is a stated preference from a self-selected visitor.
 - Never remove the self-selected / not-representative disclosure.

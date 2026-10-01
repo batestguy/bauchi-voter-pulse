@@ -765,6 +765,104 @@ class PercentageFloorTests(unittest.TestCase):
             aggregate.share_of_total(5, 3, percentage_floor=0)
 
 
+class CommentStorageTests(unittest.TestCase):
+    """Where a stored complaint is kept, and for how long.
+
+    The owner wants the comments kept — they are the part of the poll no tally can replace.
+    So these tests do not argue for deleting them. They pin down the two things that make
+    keeping them defensible: the stored row cannot be joined back to the respondent, and it
+    cannot accumulate forever without something deleting it.
+    """
+
+    def _record(self, **overrides):
+        record = response(
+            comment="Our borehole has been dry since March",
+            ward_code="RA-001",
+            age_band="age_26_35",
+            gender="woman",
+            **overrides,
+        )
+        return record
+
+    def test_a_stored_comment_keeps_what_the_study_needs(self):
+        stored = validation.comment_record(self._record())
+        self.assertEqual(stored["comment"], "Our borehole has been dry since March")
+        self.assertEqual(stored["sector"], "water")
+        self.assertEqual(stored["lga"], "Bauchi")
+        self.assertEqual(stored["created_at"], "2026-09-29T10:00:00Z")
+
+    def test_a_stored_comment_carries_no_area_no_demographics_and_no_join_key(self):
+        # The whole rule, in one assertion. A distinctive complaint plus a registration
+        # area plus an age band plus a gender is a person, and the response_id is the key
+        # that would let the two tabs be re-joined by anyone who can read both.
+        stored = validation.comment_record(self._record())
+        self.assertEqual(set(stored), set(validation.COMMENT_RECORD_FIELDS))
+        flat = json.dumps(stored)
+        for forbidden in ("RA-001", "age_26_35", "woman", "ward", "gender", "response_id"):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, flat)
+
+    def test_the_projection_cannot_grow_a_field_without_a_deliberate_change(self):
+        # COMMENT_RECORD_FIELDS is exported as data, so adding a column to the stored
+        # comment is a change to a tuple a reviewer can see rather than a silent extra key.
+        self.assertEqual(
+            validation.COMMENT_RECORD_FIELDS,
+            ("sector", "lga", "comment", "created_at"))
+
+    def test_a_vote_with_no_comment_stores_no_comment(self):
+        # Otherwise the Comments tab becomes a second copy of the vote count.
+        self.assertEqual(validation.comment_record(response(comment="")), {})
+        self.assertEqual(validation.comment_record(response(comment="   ")), {})
+        self.assertEqual(validation.comment_record(response()), {})
+
+    def test_stored_comments_are_not_quoted_anywhere_on_the_public_page(self):
+        # The two projections are opposite directions. A comment may be STORED and must
+        # still never be PUBLISHED, so the public path is checked to still exclude it.
+        stored = validation.comment_record(self._record())
+        self.assertNotIn("comment", validation.public_projection(self._record()))
+        self.assertNotIn("ward_code", stored)
+
+    def test_the_retention_ceiling_is_refused_rather_than_honoured(self):
+        # The direction is the point. Holding free text gets riskier the longer it is
+        # held, so the value that must be refused is the LARGE one -- the mirror image of
+        # the small-cell floor, which refuses small values.
+        self.assertEqual(
+            validation.validate_comment_retention_days(365),
+            validation.MAX_COMMENT_RETENTION_DAYS)
+        for too_long in (366, 1000, 10_000, 365 * 10):
+            with self.subTest(days=too_long):
+                with self.assertRaises(validation.PollValidationError) as caught:
+                    validation.validate_comment_retention_days(too_long)
+                self.assertEqual(caught.exception.code,
+                                 "invalid_comment_retention_days")
+
+    def test_zero_retention_is_refused_because_it_is_a_permissive_lie(self):
+        # "Keep for 0 days" reads as "do not keep these". If the implementation then failed
+        # to delete anything, the setting would be false in the direction that matters.
+        for zeroish in (0, -1, -365):
+            with self.subTest(days=zeroish):
+                with self.assertRaises(validation.PollValidationError):
+                    validation.validate_comment_retention_days(zeroish)
+
+    def test_the_default_retention_is_inside_the_bounds(self):
+        self.assertEqual(
+            validation.validate_comment_retention_days(
+                validation.DEFAULT_COMMENT_RETENTION_DAYS),
+            validation.DEFAULT_COMMENT_RETENTION_DAYS)
+        self.assertGreater(validation.DEFAULT_COMMENT_RETENTION_DAYS,
+                           validation.MIN_COMMENT_RETENTION_DAYS)
+        self.assertLessEqual(validation.DEFAULT_COMMENT_RETENTION_DAYS,
+                             validation.MAX_COMMENT_RETENTION_DAYS)
+
+    def test_a_non_integer_retention_is_refused(self):
+        # A float of 2.5 days cannot be honoured by a daily trigger, so it is a
+        # misconfiguration rather than a rounding question.
+        for bad in ("180", 180.5, None, True):
+            with self.subTest(value=bad):
+                with self.assertRaises(validation.PollValidationError):
+                    validation.validate_comment_retention_days(bad)
+
+
 class PollEndpointScriptTests(unittest.TestCase):
     """The Apps Script endpoint, which is a paste-and-deploy step on the owner's account.
 
@@ -836,6 +934,57 @@ class PollEndpointScriptTests(unittest.TestCase):
                     self.assertIn(
                         value, values,
                         f"{name} in Code.gs is missing {value!r} from the contract")
+
+    def test_the_endpoint_retention_has_not_drifted_from_the_contract(self):
+        # The endpoint enforces the purge, so its copy of the retention numbers is the one
+        # that decides how long a respondent's words survive. Drift here is silent in the
+        # same way vocabulary drift is: the endpoint would quietly delete on a schedule
+        # nobody approved, or refuse to delete at all.
+        code = self.code_path.read_text(encoding="utf-8")
+
+        def constant(name):
+            match = re.search(rf"var\s+{name}\s*=\s*(\d+)\s*;", code)
+            self.assertIsNotNone(match, f"{name} not found in Code.gs")
+            return int(match.group(1))
+
+        self.assertEqual(constant("COMMENT_RETENTION_DAYS"),
+                         validation.DEFAULT_COMMENT_RETENTION_DAYS)
+        self.assertEqual(constant("MAX_COMMENT_RETENTION_DAYS"),
+                         validation.MAX_COMMENT_RETENTION_DAYS)
+        self.assertEqual(constant("MIN_COMMENT_RETENTION_DAYS"),
+                         validation.MIN_COMMENT_RETENTION_DAYS)
+
+    def test_the_endpoint_splits_the_comment_onto_its_own_tab(self):
+        # The split is the whole privacy argument for keeping comments, so it is asserted
+        # against the literal header rows rather than left to a visual read: a header that
+        # grew a ward_code, or a Responses header that grew a comment, would be invisible
+        # in a diff-sized glance at 400 lines of generated JavaScript.
+        code = self.code_path.read_text(encoding="utf-8")
+        responses_header = re.search(
+            r"responses\.appendRow\(\[(.*?)\]\)", code, re.S)
+        self.assertIsNotNone(responses_header, "Responses header not found")
+        responses_columns = _js_string_list(responses_header.group(1))
+        comments_header = re.search(
+            r"comments\.appendRow\(\[(.*?)\]\)", code, re.S)
+        self.assertIsNotNone(comments_header, "Comments header not found")
+        comments_columns = _js_string_list(comments_header.group(1))
+
+        self.assertNotIn("comment", responses_columns)
+        self.assertEqual(comments_columns,
+                         ["sector", "lga", "received_at", "comment"])
+        for forbidden in ("ward_code", "age_band", "gender", "response_id"):
+            with self.subTest(column=forbidden):
+                self.assertNotIn(forbidden, comments_columns)
+
+    def test_the_endpoint_actually_purges_rather_than_only_documenting_it(self):
+        # "Retained for 180 days" is a sentence. These three names are the mechanism, and
+        # each one missing would leave the sentence unenforced in a different way: no purge
+        # to call, no ceiling to validate, no trigger to run it.
+        code = self.code_path.read_text(encoding="utf-8")
+        for function in ("purgeExpiredComments", "validateRetentionDays_",
+                         "installRetention"):
+            with self.subTest(function=function):
+                self.assertIn(f"function {function}(", code)
 
     def test_the_endpoint_ward_map_matches_the_form(self):
         # The form offers areas from data/delivery/lga_wards.csv. If the endpoint's map

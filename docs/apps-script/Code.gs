@@ -24,6 +24,7 @@
  * - Return anything except { response_id }. Echoing the comment back would show it to
  *   the respondent in their own network tab.
  * - Log a comment, or log a whole payload. Log the rejection code and nothing else.
+ * - Keep a stored comment forever. See COMMENTS SHEET and COMMENT_RETENTION_DAYS below.
  *
  * Note that Google retains IP addresses in Apps Script execution logs no matter what this
  * Sheet stores. That is a platform property, not something this code can remove.
@@ -73,8 +74,54 @@ var MAX_SUBMITTED_SKEW_MINUTES = 5;
 
 var SHEET_NAME = 'Responses';
 var AUDIT_SHEET_NAME = 'Audit';
+var COMMENTS_SHEET_NAME = 'Comments';
 
 var _wardMap = null;
+
+/* ============================================================================
+ * COMMENTS SHEET -- WHERE Q2 IS STORED, AND WHY IT IS A SEPARATE TAB
+ * ============================================================================
+ * The owner wants the complaints kept. They are the part of the poll no tally can
+ * replace: a vote says a sector matters, a complaint says WHICH tap has been dry for
+ * seven months, and only the second one tells the campaign what to actually do.
+ *
+ * So they are stored. The reason they are stored apart is that on a single row the free
+ * text would sit beside the registration area, the age band and the gender -- and a
+ * distinctive complaint plus an area plus two demographics is a person. The Responses row
+ * already carries all three, so any row that holds the comment and that row together has
+ * already re-identified the writer.
+ *
+ * This tab therefore carries ONLY: sector, lga, comment, received_at.
+ *
+ *   - No ward_code.  212 registration areas, and the form itself warns most will be
+ *                    suppressed for small counts. Publishing or storing one area
+ *                    alongside free text is the re-identification case exactly.
+ *   - No age_band, no gender.  Both are answerable by anyone who knows the respondent.
+ *   - No response_id.  This is the load-bearing omission. The tracking reference IS the
+ *                    join key back to the Responses row that holds the area and the
+ *                    demographics. Writing it next to the comment would let the two tabs
+ *                    be re-joined by anyone who can read both, which would make this
+ *                    split decorative. Without it the comment cannot be re-attached to its
+ *                    vote even with full read access to both tabs.
+ *
+ * The cost is honest and worth stating: a comment cannot be tied back to its own vote.
+ * That is the trade being made, and it is the right one -- the qualitative use is reading
+ * what people said about a sector in an LGA, which needs none of the join key.
+ *
+ * ACCESS: restrict this tab to the owner and whoever curates the study. The Responses tab
+ * can be shared more freely precisely because it holds no free text.
+ */
+
+/** Mirrors DEFAULT_COMMENT_RETENTION_DAYS in src/poll/validation.py. */
+var COMMENT_RETENTION_DAYS = 180;
+
+/** Mirrors MAX_COMMENT_RETENTION_DAYS. A comment older than this is deleted, not kept. */
+var MAX_COMMENT_RETENTION_DAYS = 365;
+
+/** Mirrors MIN_COMMENT_RETENTION_DAYS. 0 is refused: "delete on arrival" is not retention,
+ *  and a 0-day setting that silently failed to delete would be a lie in the permissive
+ *  direction. */
+var MIN_COMMENT_RETENTION_DAYS = 1;
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -199,6 +246,22 @@ function validateWardCode_(value, lga) {
  *  removes the arithmetic that was silently wrong. */
 var DECLINE_SUFFIX = '_unspecified';
 
+/** Mirrors validate_comment_retention_days in src/poll/validation.py.
+ *
+ *  A CEILING with a floor under it, and the direction is the point: holding someone's
+ *  free text gets riskier the longer it is held, so the value that must be REFUSED is
+ *  the large one. This exists so "keep it forever" cannot be reached by editing one
+ *  number. */
+function validateRetentionDays_(value) {
+  if (typeof value !== 'number' || isNaN(value) || Math.floor(value) !== value) {
+    reject_('invalid_comment_retention_days', 'comment_retention_days');
+  }
+  if (value < MIN_COMMENT_RETENTION_DAYS || value > MAX_COMMENT_RETENTION_DAYS) {
+    reject_('invalid_comment_retention_days', 'comment_retention_days');
+  }
+  return value;
+}
+
 function validateClosedChoice_(value, allowed, field) {
   if (value === null || value === undefined) { return ''; }
   if (typeof value !== 'string') { reject_('invalid_type', field); }
@@ -261,6 +324,7 @@ function doPost(e) {
     var record = validate_(payload, receivedAt);
     var responseId = nextResponseId_();
     persist_(responseId, record, receivedAt);
+    persistComment_(record, receivedAt);
     return jsonResponse_({ response_id: responseId });
   } catch (error) {
     // Log the CODE only. Never the payload, never the comment, never the submitted value.
@@ -361,30 +425,135 @@ function parseSubmittedAt_(value, now) {
 
 /* ------------------------------------------------------------------ storage */
 
+/* Column order, asserted by index in test_endpoint.mjs:
+ *   0 response_id  1 received_at  2 sector  3 lga  4 ward_code  5 age_band  6 gender
+ *   7 consent      8 validation_status
+ *
+ * There is no comment column here, and that is the change. The comment moved to its own
+ * tab because a row carrying free text AND a registration area AND two demographics is
+ * closer to a person than any single field on it. See the COMMENTS SHEET block above. */
 function persist_(responseId, record, receivedAt) {
   var sheet = sheet_(SHEET_NAME);
   // One append, one row, positional. appendRow is atomic enough here and avoids the
   // read-modify-write race of getRange/setValues under concurrency.
   sheet.appendRow([
     responseId,
-    Utilities.formatDate(receivedAt, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    formatTimestamp_(receivedAt),
     record.sector,
     record.lga,
     record.ward_code,
     record.age_band,
     record.gender,
-    record.comment,
     true,
     'accepted'
   ]);
   audit_(receivedAt, 'accepted', '');
 }
 
+function formatTimestamp_(when) {
+  return Utilities.formatDate(
+    when, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+}
+
+/** Store Q2 on its own tab, stripped to sector, lga, comment and received_at.
+ *
+ *  Mirrors src/poll/validation.py::comment_record. The four fields are written
+ *  positionally, and test_endpoint.mjs asserts both what is present and what is absent --
+ *  a sixth column appearing here would be invisible in a visual read of this file.
+ *
+ *  A vote with no comment writes no row. There is nothing to study, and an empty row per
+ *  vote would inflate the Comments tab into a second copy of the vote count.
+ *
+ *  The write MUST NOT be allowed to fail the request. The vote is already recorded in
+ *  Responses by this point, and telling a respondent their vote was rejected because a
+ *  sidecar write failed would lose the vote and teach them to retry -- which is how you
+ *  get duplicate votes. So a failure is swallowed here, exactly as an audit-write failure
+ *  is, and recorded as a code. */
+function persistComment_(record, receivedAt) {
+  var comment = record.comment;
+  if (!comment) { return; }
+  try {
+    sheet_(COMMENTS_SHEET_NAME).appendRow([
+      record.sector,
+      record.lga,
+      formatTimestamp_(receivedAt),
+      comment
+    ]);
+  } catch (writeError) {
+    // Never let a sidecar-write failure turn an accepted vote into a rejected response.
+    // No comment value, no payload, nothing identifying -- only the fact that it failed.
+    audit_(receivedAt, 'comment_write_failed', 'comment_sidecar_failed');
+  }
+}
+
+/** Delete comments older than the retention ceiling. Run daily by installRetention_.
+ *
+ *  This is the function that makes keeping the comments defensible. Without it,
+ *  "retained for 180 days" is a sentence in a document; with it, the sheet cannot keep
+ *  growing past it whether or not anyone remembers.
+ *
+ *  It deletes the free text and keeps the rest of the row. The sector, LGA and timestamp
+ *  are not identifying on their own -- they are the same fields the published snapshot
+ *  already aggregates and suppresses -- so keeping them preserves the shape of the study
+ *  (how many complaints, about what, where, over time) without retaining the words.
+ *
+ *  Deliberately NOT deleting the whole row: an empty comment cell is the audit trail that
+ *  the retention policy ran and applied, which is worth more than the row's own contents.
+ */
+function purgeExpiredComments() {
+  var retention = validateRetentionDays_(COMMENT_RETENTION_DAYS);
+  var sheet = sheet_(COMMENTS_SHEET_NAME);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) { return 'purge: no comments to review'; }
+
+  var cutoff = new Date(new Date().getTime() - (retention * 24 * 60 * 60 * 1000));
+  var range = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
+  var values = range.getValues();
+  var cleared = 0;
+  var kept = 0;
+
+  for (var r = 0; r < values.length; r++) {
+    var stamp = values[r][2];
+    var text = values[r][3];
+    if (!text) { continue; }               // already purged
+    var parsed = new Date(stamp);
+    if (isNaN(parsed.getTime())) {
+      // An unparseable timestamp is the one case that cannot be argued about: we cannot
+      // prove it is inside the window, so it goes. Keeping it would be the permissive
+      // reading of an unknown.
+      values[r][3] = '';
+      cleared++;
+      continue;
+    }
+    if (parsed.getTime() < cutoff.getTime()) {
+      values[r][3] = '';
+      cleared++;
+    } else {
+      kept++;
+    }
+  }
+
+  if (cleared) { range.setValues(values); }
+  return 'purge: ' + cleared + ' comment(s) expired, ' + kept + ' retained';
+}
+
+/** Install the daily purge. Idempotent -- safe to re-run; it never doubles the trigger. */
+function installRetention() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'purgeExpiredComments') {
+      return 'retention already installed: ' + COMMENT_RETENTION_DAYS + ' day(s)';
+    }
+  }
+  ScriptApp.newTrigger('purgeExpiredComments').timeBased().everyDays(1).create();
+  return 'retention installed: daily purge at ' + COMMENT_RETENTION_DAYS + ' day(s)';
+}
+
 /** Non-identifying operational fields only. No payload, no comment, no ward. */
 function audit_(receivedAt, status, code) {
   try {
     sheet_(AUDIT_SHEET_NAME).appendRow([
-      Utilities.formatDate(receivedAt, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      formatTimestamp_(receivedAt),
       status,
       code
     ]);
@@ -395,23 +564,50 @@ function audit_(receivedAt, status, code) {
 
 /* --------------------------------------------------------------------- setup */
 
-/** Run ONCE from the editor to create both tabs with their exact columns.
+/** Run ONCE from the editor to create all three tabs with their exact columns.
  *  This is deliberately not automatic: an endpoint must never create schema on a request. */
 function setupSheets() {
+  var retention = validateRetentionDays_(COMMENT_RETENTION_DAYS);
   var book = SpreadsheetApp.getActiveSpreadsheet();
   var responses = book.getSheetByName(SHEET_NAME);
   if (!responses) {
     responses = book.insertSheet(SHEET_NAME);
-    // response_id, received_at, sector, lga, ward_code, age_band, gender, comment,
+    // response_id, received_at, sector, lga, ward_code, age_band, gender,
     // consent, validation_status
+    // NOTE: no comment column. It moved to the Comments tab -- see the block above.
     responses.appendRow(['response_id', 'received_at', 'sector', 'lga', 'ward_code',
-                         'age_band', 'gender', 'comment', 'consent', 'validation_status']);
+                         'age_band', 'gender', 'consent', 'validation_status']);
   }
   var audit = book.getSheetByName(AUDIT_SHEET_NAME);
   if (!audit) {
     audit = book.insertSheet(AUDIT_SHEET_NAME);
     // received_at, validation_status, rejection_code
     audit.appendRow(['received_at', 'validation_status', 'rejection_code']);
+  }
+  var comments = book.getSheetByName(COMMENTS_SHEET_NAME);
+  if (!comments) {
+    comments = book.insertSheet(COMMENTS_SHEET_NAME);
+    // sector, lga, received_at, comment -- and nothing else. Deliberately no ward_code,
+    // no age_band, no gender and no response_id. The last one is the join key back to the
+    // Responses row that HAS those, so shipping it here would undo the whole split.
+    comments.appendRow(['sector', 'lga', 'received_at', 'comment']);
+  }
+  var retentionNote = book.getSheetByName('Retention');
+  if (!retentionNote) {
+    retentionNote = book.insertSheet('Retention');
+    retentionNote.appendRow(['What', 'Value']);
+    retentionNote.appendRow(['Comment retention (days)', String(retention)]);
+    retentionNote.appendRow(['Hard ceiling (days)', String(MAX_COMMENT_RETENTION_DAYS)]);
+    retentionNote.appendRow(['Automatic purge', 'daily, purgeExpiredComments']);
+    retentionNote.appendRow(['What is purged', 'the free text only; sector, LGA and '
+                             + 'received_at are kept']);
+    retentionNote.appendRow(['Never stored with a comment',
+                             'ward_code, age_band, gender, response_id']);
+    retentionNote.appendRow(['Who may read this Sheet',
+                             'owner + the study curator. Comments are free text.']);
+    retentionNote.appendRow(['Also note',
+                             'Google retains IP addresses in Apps Script execution logs '
+                             + 'regardless of what this Sheet stores.']);
   }
   // A blunt but effective duplicate guard. The public form deliberately sends no
   // idempotency token, and the one-per-browser localStorage marker is trivially cleared,
@@ -422,7 +618,9 @@ function setupSheets() {
     .setRanges([responses.getRange('A2:A')])
     .build();
   responses.setConditionalFormatRules([rule]);
-  return 'setup complete: ' + responses.getLastRow() + ' response row(s)';
+  return 'setup complete: ' + responses.getLastRow() + ' response row(s); '
+    + COMMENTS_SHEET_NAME + ' holds comments for ' + retention + ' day(s). '
+    + 'Now run installRetention once.';
 }
 
 /** Health check. Run it from the editor, or GET the /exec URL, to prove the deployment
@@ -434,6 +632,8 @@ function doGet() {
     sectors: ALLOWED_SECTORS.length,
     wards: Object.keys(wardMap_()).length,
     responses_sheet: SHEET_NAME,
-    audit_sheet: AUDIT_SHEET_NAME
+    audit_sheet: AUDIT_SHEET_NAME,
+    comments_sheet: COMMENTS_SHEET_NAME,
+    comment_retention_days: COMMENT_RETENTION_DAYS
   });
 }

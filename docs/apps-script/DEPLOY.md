@@ -105,13 +105,47 @@ is every paste, which is where all the friction was.
 2. **Run.** First run: **Review permissions → Advanced → Go to (project name) → Allow.**
 3. The **Execution log** at the bottom should end with:
    ```
-   setup complete: 0 response row(s)
+   setup complete: 0 response row(s); Comments holds comments for 180 day(s). Now run installRetention once.
    ```
 
-It creates two tabs: `Responses` (10 columns) and `Audit` (3 columns), and adds a
-conditional format on column A that highlights a duplicate `response_id` in red. The public
-form sends no idempotency token and the one-per-browser marker in `localStorage` is
-trivially cleared, so **the Sheet is the record of what was actually cast**.
+It creates **four** tabs:
+
+| Tab | Columns | Free text? |
+|---|---|---|
+| `Responses` | 9 — `response_id, received_at, sector, lga, ward_code, age_band, gender, consent, validation_status` | no |
+| `Comments` | 4 — `sector, lga, received_at, comment` | **yes** |
+| `Audit` | 3 — `received_at, validation_status, rejection_code` | no |
+| `Retention` | the policy in plain text | no |
+
+> The `Responses` tab has **no `comment` column**, and `Comments` has **no `ward_code`,
+> `age_band`, `gender` or `response_id`**. That is deliberate. Free text on a row that also
+> holds an area and two demographics is close to naming a person, and the `response_id` is
+> the join key that would let anyone with read access to both tabs put them back together.
+> See `POLL_SETUP.md` §5a.
+
+It also adds a conditional format on `Responses` column A that highlights a duplicate
+`response_id` in red. The public form sends no idempotency token and the one-per-browser
+marker in `localStorage` is trivially cleared, so **the Sheet is the record of what was
+actually cast**.
+
+## 3b. Run installRetention (1 min) — do not skip
+
+1. Function dropdown → **`installRetention`** → **Run**.
+2. The **Execution log** should read:
+   ```
+   retention installed: daily purge at 180 day(s)
+   ```
+3. Check it exists: **Triggers** (clock icon, left sidebar) → one row, `purgeExpiredComments`,
+   running **Daily**.
+
+Without this step the comments are stored and nothing ever deletes them, which is the one
+outcome the whole retention design exists to prevent. Running it twice is safe — it will
+not install a second trigger.
+
+> **Also prune version history on a schedule.** Blanking a cell does not remove the old
+> value from the Sheet's version history, so an expired comment stays recoverable there.
+> File → **Version history** → *Name current version*, and in Drive → **Activity → Version
+> history** → delete old versions. No code can reach this; it is an owner action.
 
 ## 4. Deploy (3 min)
 
@@ -189,14 +223,27 @@ snapshot = build_public_snapshot(rows_from_the_responses_tab)
 
 ## Retain, or the poll is not anonymous
 
-The `comment` column is 300 characters of free text. It is never counted and never
-published, but **an anonymous poll that keeps free text forever is not anonymous in any
-meaningful sense.** Set a retention period — 90 days is a defensible default — and a process
-that actually deletes on schedule, not a note in a document.
+This is built and enforced, not left as a note.
 
-Separately: **Google retains IP addresses in Apps Script execution logs** regardless of what
-the Sheet stores. That is a platform property this code cannot remove. Decide about it
-consciously, and do not pretend the poll collects no data at all.
+The `comment` is 300 characters of free text. It is never counted and never published. It
+is stored on the `Comments` tab — on its own, stripped of the area and the demographics,
+with no key back to the row that has them — and it is **deleted automatically at 180 days**
+by the daily `purgeExpiredComments` trigger installed in step 3b. The row survives; the
+words do not, so you keep the shape of the study without keeping the text.
+
+`validate_comment_retention_days` **refuses** any retention above 365 days, and refuses
+`0`. The direction matters and is the opposite of `small_count_threshold`: the risk of
+holding free text grows with time, so the value that must be refused is the long one. If
+you want a different period, change `COMMENT_RETENTION_DAYS` in `Code.gs.template`, run
+`python docs/apps-script/build_code_gs.py`, and `clasp push` — do not edit `Code.gs`.
+
+Restrict the `Comments` tab to yourself and whoever curates the study. `Responses` can be
+shared more freely, because it holds no free text.
+
+Separately, and not fixable in code: **Google retains IP addresses in Apps Script execution
+logs** regardless of what the Sheet stores, and **Sheet version history** keeps an expired
+comment recoverable until you prune it (step 3b). Decide about both consciously, and do not
+pretend the poll collects no data at all.
 
 ## If something goes wrong
 
@@ -207,3 +254,5 @@ consciously, and do not pretend the poll collects no data at all.
 | CORS error in the console | redeploy as **Web app** (not *Execute as me* API), then reload hard |
 | `authorization` error | the Google account lost access to the script |
 | Votes arrive but the page shows nothing | expected: no snapshot has been built yet (§6) |
+| `invalid_comment_retention_days` on startup | `COMMENT_RETENTION_DAYS` is outside 1–365; that is the ceiling refusing, not a bug |
+| `missing_sheet: Comments` | `setupSheets` has not been re-run since this change; it is idempotent, just run it again |
