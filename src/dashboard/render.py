@@ -24,7 +24,17 @@ LGAS = [
 ]
 
 LGA_WARDS_FILE = "lga_wards.csv"
-REQUEST_ENDPOINT = ""
+# The request endpoint is deployed and bound to the "APM requests" Sheet, with
+# setupSheets run so the Requests and Audit tabs exist. It collects a name, an optional
+# email and a street address -- real personal data, unlike the poll -- so unlike the poll
+# it has no automatic purge. That is a deliberate owner decision, not an oversight, and it
+# is stated in docs/GOOGLE_SHEETS_SETUP.md rather than left to look forgotten.
+#
+# As with the poll, the `/exec` URL is public by construction: it is the browser-facing
+# address of the deployment and anyone reading the page can see it. What protects the data
+# is the contract in src/requests/validation.py and the Audit tab, not secrecy.
+REQUEST_ENDPOINT = ("https://script.google.com/macros/s/"
+                    "AKfycbwsh4IuhBt7EtbgmN_crXzXdUOLLjLzIkCtWLiizJJ56mMk7zJU59DA0Sn6cT3ikT4F/exec")
 # The poll endpoint is deployed and bound to the "APM poll responses" Sheet, with
 # setupSheets and installRetention both run: the Responses, Comments and Audit tabs exist
 # and the daily purge trigger is installed. It was connected only after a real vote
@@ -692,8 +702,15 @@ if(publicRequestForm){
   const updateRequestRas=()=>{
     const selectedLga=requestLga.value;
     [...requestRa.options].forEach(option=>{
-      if(option.hasAttribute('data-request-ra-lga'))option.hidden=Boolean(selectedLga)&&option.dataset.requestRaLga!==selectedLga;
-      else option.hidden=Boolean(selectedLga);
+      const matches=!option.hasAttribute('data-request-ra-lga')||!selectedLga||option.dataset.requestRaLga===selectedLga;
+      // `disabled` is what actually removes an option from a native select. Setting only
+      // `hidden` looks correct and does nothing: Chromium ignores the hidden attribute on
+      // <option>, so every one of the 212 areas stayed selectable whatever LGA was chosen.
+      // A visitor picking Bauchi and then the first area in the list got RA-001, which is
+      // Alkaleri's, and the endpoint refused it as invalid_ward -- surfacing only as
+      // "we could not send your request", with no indication of why.
+      option.hidden=!matches;
+      option.disabled=!matches;
     });
     requestRa.disabled=!selectedLga;
     requestRa.value='';

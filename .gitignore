@@ -12,4 +12,12 @@ data/.robots_cache.json
 
 # clasp holds the Apps Script project id, which is deployment-scoped. Commit the example
 # (.clasp.json.example) so the workflow is documented, never the real id.
+#
+# Both folders need their own line. Naming only one left the request endpoint's script id
+# tracked, which means a single `git add .` would have committed a live deployment id --
+# the exact thing this rule exists to prevent. A glob is safer than a second literal,
+# because adding a third endpoint folder should not require remembering to extend a list.
 docs/apps-script/.clasp.json
+docs/requests-script/.clasp.json
+**/.clasp.json
+!**/.clasp.json.example
