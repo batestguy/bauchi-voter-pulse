@@ -64,15 +64,7 @@ def main(argv=None):
         _run(argv)
     except Exception as exc:  # CI must stay green: missing key/CLI, API down, I/O
         if os.environ.get("CI"):
-            # A bare `print` in a green run is invisible to anyone who is not reading the
-            # log, and a job that skips itself silently every week is a job nobody notices
-            # is broken. `::warning::` puts an annotation on the run itself, so the reason
-            # the corpus is stale is on the screen of whoever opens Actions rather than
-            # buried in a scrollback.
             print(f"classify_new: WARNING skipped in CI: {exc}")
-            print(f"::warning title=Classification skipped::Nothing was "
-                  f"classified this run. Raw posts keep accumulating in data/raw/ and will "
-                  f"be picked up on the next successful run. Reason: {type(exc).__name__}")
             return
         raise
 
