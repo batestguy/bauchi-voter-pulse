@@ -1,19 +1,35 @@
 """Aggregation & prediction (Ph.4). All counting/grouping here in pandas — never in Jev.
 Reads data/raw/*.jsonl + data/classified/*.csv, writes data/aggregates/*.csv.
 Only candidate-relevant AUTO rows feed LGA/risk outputs (mentions_candidate_probability
->= 0.5, sentiment != not_about_candidate, routing == auto). Low-confidence rows stay
-out until a reviewer clears them — never act on them.
+>= 0.5, sentiment != not_about_candidate, routing == auto), plus rows a human has
+explicitly cleared. Low-confidence rows stay out until a reviewer clears them — never act
+on them.
+
+Two rules about WHERE those rows come from, both of which were violated before and are
+now enforced in `src/aggregation/reviews.py`:
+
+1. **A completed review counts.** The 0.80 gate is satisfied by a human, not by the model,
+   so a reviewed row leaves the queue and joins the usable pool. The bug this replaces:
+   `load_reviewed()` read only `queue_*.csv` while 160 completed reviews sat unlabelled in
+   `data/human_review/filled/`, so the whole feature was inert and 13 rows asserting the
+   candidate *was* mentioned were discarded on every run without an error.
+2. **A review may change what a post is, not invent a category.** Labels outside the
+   schema's vocabulary are refused and reported in review_problems.csv, because the
+   aggregator groups on whatever string it is handed and a typo in `lga` would otherwise
+   create a risk band for a place that does not exist.
+
 Risk model v0 is a versioned transparent heuristic (risk-v0-heuristic + date). An ML
 successor (RF/LogReg) activates only when train_risk_model() sees enough LGA-week
 history; until then it refuses with a logged reason instead of fitting theater.
 Run: python -m src.aggregation.aggregate
 """
-import csv
 import datetime
 import json
 import pathlib
 
 import pandas as pd
+
+from . import reviews as review_db
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "data" / "raw"
@@ -57,6 +73,42 @@ def load_frames():
     return raw, clf
 
 
+def apply_reviews(df, rev):
+    """Fold validated human reviews into the classified frame.
+
+    A reviewed row is promoted out of `human_review` into `human_cleared` and takes the
+    reviewer's label in place of the model's. Confidences are pinned to 1.0 because the
+    thing standing behind them is a person, not the model.
+
+    Only `mentions`, `opposition`, `sentiment`, `lga` and `language` are applied, and only
+    from a review that `reviews.parse_review` already validated -- which is what stops a
+    typo becoming a label. The reviewer signature is not written back into the classified
+    frame: the queue file is the record of who decided and why, and duplicating it here
+    would give the same fact two homes.
+    """
+    if not rev:
+        return df, 0
+    cleared = df["raw_id"].isin(rev) & (df["routing_decision"] == "human_review")
+    if not cleared.any():
+        return df, 0
+    df = df.copy()
+    df.loc[cleared, "routing_decision"] = "human_cleared"
+
+    for idx in df.index[df["routing_decision"] == "human_cleared"]:
+        review = rev.get(df.at[idx, "raw_id"])
+        if review is None:
+            continue
+        df.at[idx, "sentiment_label"] = review["sentiment"]
+        df.at[idx, "lga_relevance_label"] = review["lga"]
+        df.at[idx, "language_label"] = review["language"]
+        df.at[idx, "intensity_score"] = review["intensity"]
+        df.at[idx, "mentions_candidate_probability"] = 1.0 if review["mentions"] else 0.0
+        df.at[idx, "opposition_signal_probability"] = 1.0 if review["opposition"] else 0.0
+        df.at[idx, "sentiment_confidence"] = 1.0
+        df.at[idx, "lga_confidence"] = 1.0
+    return df, int(cleared.sum())
+
+
 def tag_topics(df):
     text = df["text"].str.lower().fillna("")
     for topic, keys in TOPICS.items():
@@ -74,17 +126,35 @@ def main():
     df = clf.merge(raw[["raw_id", "text", "date_scraped", "source"]].rename(
         columns={"raw_id": "parent_id"}), on="parent_id", how="left")
     for col in ["sentiment_confidence", "mentions_candidate_probability",
-                "opposition_signal_probability"]:
+                "opposition_signal_probability", "lga_confidence"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
+    # Human-cleared rows: a reviewer's label replaces the model's. Reviews that failed
+    # validation are written out rather than dropped, so the reason a piece of human work
+    # did not reach a published number is always visible.
+    rev, review_problems = review_db.load_reviews()
+    df, cleared = apply_reviews(df, rev)
+    if review_problems:
+        pd.DataFrame(review_problems, columns=["raw_id", "source", "reason"]).to_csv(
+            AGG_DIR / "review_problems.csv", index=False)
+    elif (AGG_DIR / "review_problems.csv").exists():
+        # Never leave a stale list behind: a file that outlives its cause reads as a live
+        # problem list, and someone will act on it.
+        (AGG_DIR / "review_problems.csv").unlink()
     df["relevant"] = ((df["mentions_candidate_probability"] >= 0.5)
                        & (df["sentiment_label"] != "not_about_candidate"))
-    df["usable"] = df["relevant"] & (df["routing_decision"] == "auto")
+    df["usable"] = df["relevant"] & df["routing_decision"].isin(["auto", "human_cleared"])
+    # `unclear` is the bucket for a post that does not name an LGA. Its rows are real
+    # signal and stay in the statewide figures, but every per-LGA output below drops them:
+    # a row reading `unclear,safe` in risk.csv is a risk band attached to something that is
+    # explicitly not a place, sitting next to real LGAs reading `unrated`.
+    df["lga_assigned"] = df["lga_relevance_label"].map(review_db.is_assigned_lga)
     df = tag_topics(df)
     today = datetime.date.today().isoformat()
 
     # LGA x sentiment rollup (usable rows only) -> daily + weekly (7-day window file)
     use = df[df["usable"]].copy()
-    grp = (use.groupby(["date_scraped", "lga_relevance_label", "sentiment_label"])
+    by_lga = use[use["lga_assigned"]].copy()
+    grp = (by_lga.groupby(["date_scraped", "lga_relevance_label", "sentiment_label"])
            .agg(mention_count=("raw_id", "count"),
                 confidence=("sentiment_confidence", "mean")).reset_index()
            .rename(columns={"date_scraped": "date", "lga_relevance_label": "lga"}))
@@ -104,7 +174,7 @@ def main():
 
     # Per-LGA topic breakdown (usable rows) -> dashboard top-3 negative topics per LGA
     lt_rows = []
-    for lga, g in use.groupby("lga_relevance_label"):
+    for lga, g in by_lga.groupby("lga_relevance_label"):
         for t in TOPICS:
             m = int(g[f"topic_{t}"].sum())
             if not m:
@@ -130,7 +200,7 @@ def main():
     # Risk v0: usable-row volume gate, neg-share bands, narrow-margin penalty.
     base = pd.read_csv(BASELINE, dtype=str).set_index("lga") if BASELINE.exists() else None
     narrow = {"Bogoro", "Dambam", "Zaki"}
-    per_lga = use.groupby("lga_relevance_label").agg(
+    per_lga = by_lga.groupby("lga_relevance_label").agg(
         n=("raw_id", "count"),
         neg_share=("sentiment_label", lambda s: round(float(s.eq("negative").mean()), 3))).reset_index()
     risks = []
@@ -151,8 +221,27 @@ def main():
                        "baseline votes in data/baseline_lg2026.csv")
     risk_df.sort_values("lga").to_csv(AGG_DIR / "risk.csv", index=False)
 
+    stats = [
+        ("classified", len(df)),
+        ("usable", int(df["usable"].sum())),
+        ("auto", int((df["usable"] & (df["routing_decision"] == "auto")).sum())),
+        ("human_cleared", int((df["routing_decision"] == "human_cleared").sum())),
+        ("review_pending", int((df["routing_decision"] == "human_review").sum())),
+        ("model", str(df["model"].dropna().iloc[-1]) if len(df.dropna(subset=["model"])) else ""),
+        ("reviews_loaded", len(rev)),
+                ("reviews_cleared", cleared),
+                ("reviews_rejected", len(review_problems)),
+                ("usable_unassigned_lga", int((use["usable"] & ~use["lga_assigned"]).sum())),
+                ("risk_model", RISK_MODEL),
+        ("built", today),
+    ]
+    pd.DataFrame(stats, columns=["metric", "value"]).to_csv(
+        AGG_DIR / "pipeline_stats.csv", index=False)
+
     print(f"aggregate: {len(df)} classified, {len(use)} usable "
-          f"({len(use)} feed dashboard/risk)")
+          f"(auto {int((df['usable'] & (df['routing_decision'] == 'auto')).sum())}, "
+          f"cleared {int((df['routing_decision'] == 'human_cleared').sum())}, "
+          f"pending {int((df['routing_decision'] == 'human_review').sum())})")
     print(f"usable by sentiment:\n{use['sentiment_label'].value_counts().to_string()}")
     print(f"risk:\n{risk_df[['lga', 'risk', 'signals']].to_string(index=False)}")
 

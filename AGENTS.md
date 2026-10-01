@@ -169,6 +169,50 @@ These are enforced in code; keep them enforced.
   as "nobody wants water", which is the opposite of the truth, and a reader could not tell
   the two apart.
 
+## Human review rules
+The classification pipeline's human-review layer lives in `src/aggregation/reviews.py`, the
+queues in `data/human_review/`, and the protocol in `data/human_review/README.md`. These
+are enforced in code; keep them enforced.
+- **A completed review must be VISIBLE, or the feature is theatre.** 160 finished, signed,
+  reasoned reviews sat in `data/human_review/filled/` while `load_reviewed()` read only
+  `queue_*.csv`, where nothing was labelled. 13 rows asserting the candidate *was*
+  mentioned were discarded on every run and nothing errored. **Read both the queues and
+  `filled/`.** Reading only one is not stricter, it is the original bug.
+- **A review may change what a post is; it may not invent a category.** `SENTIMENT_LABELS`,
+  `REVIEWED_LGA_LABELS`, `LANGUAGE_LABELS` and `INTENSITY_LEVELS` are closed lists. A typo
+  in `lga` would otherwise create a row in `lga_daily.csv` and a **risk band in `risk.csv`
+  for a place that does not exist**, because the aggregator groups on whatever string it is
+  handed. `unclear` IS a valid verdict — refusing it would push reviewers into guessing an
+  LGA, which is the failure the schema's `unclear` exists to prevent.
+- **`mentions` and `opposition` must be real JSON booleans.** Never
+  `str(x).lower() in ("true","1","yes")`. That coercion is why a typo, a missing key or the
+  string `"yes"` read as `False` — and for `mentions` that removes a reviewed post that does
+  reference the candidate from the counts with nothing logged. It is the worst failure
+  available here. `test_yes_is_not_a_boolean` pins the refusal.
+- **An unsigned row is not a review.** All four signature fields are required, and vague
+  reasoning is refused by a length floor, because the README required all of it and prose
+  nobody can enforce is not a control. The signature is checked BEFORE the values: an
+  unsigned row is not evidence, whatever it says.
+- **Two contradictory reviews for one `raw_id` are both refused**, not resolved by whoever
+  loaded the file last. Which human judgement wins is a reviewer's decision.
+- **`unclear` is a label, not a place.** Its rows stay in the statewide figures
+  (`topics.csv`, `opposition.csv`) and are counted in `pipeline_stats.csv` as
+  `usable_unassigned_lga`, but **no per-LGA output may carry it**: `risk.csv`,
+  `lga_daily.csv`, `lga_weekly.csv` and `lga_topics.csv` all filter on
+  `reviews.is_assigned_lga`. `risk.csv` shipped a row reading `unclear,safe` next to real
+  LGAs reading `unrated`, which reads as "somewhere in Bauchi State is safe" — a claim about
+  a location built from posts that deliberately did not name one.
+- **`lga_confidence` must be in the numeric coercion list.** It was not, so assigning the
+  pinned `1.0` to it raised `TypeError` under pandas' arrow string dtype. That crash was
+  unreachable while zero reviews loaded; it fires the instant one does.
+- **`merge_completed_reviews()` is a dry run by default** and refuses to overwrite an
+  existing verdict, refuses to fill in a verdict for a signed-but-unfinished row (counted
+  as `incomplete`, which is worth going back and finishing), and refuses to invent a queue
+  row for a `filled/` id that is in no queue.
+- **A rejected review is reported, never dropped silently.** Every one is written to
+  `data/aggregates/review_problems.csv` with its `raw_id` and reason, and that file is
+  deleted when the list goes empty so a stale one cannot be read as live.
+
 ## Request endpoint rules
 The request form's Apps Script intake lives in `docs/requests-script/`. It is **generated**:
 `Code.gs.template` + `data/delivery/lga_wards.csv` -> `Code.gs`, via `build_code_gs.py`.

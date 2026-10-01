@@ -1,0 +1,13 @@
+metric,value
+classified,2282
+usable,32
+auto,20
+human_cleared,160
+review_pending,730
+model,jev-1.13.0
+reviews_loaded,160
+reviews_cleared,160
+reviews_rejected,0
+usable_unassigned_lga,22
+risk_model,risk-v0-heuristic
+built,2026-10-01

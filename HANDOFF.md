@@ -1499,10 +1499,16 @@ confirmation:
 ```text
 src/aggregation/aggregate.py
 .evals/
-data/human_review/filled/
 .playwright-mcp/
 Abdulkadir Hammayo .png    untracked original 1139x1381 / 2.1 MB supplied portrait
 ```
+
+`data/human_review/filled/` is **no longer on this list** as of 1 October 2026. It held 160
+completed, signed, reasoned reviews that no code could see, and the human-review feature was
+inert because of it. The reviews are now loaded, validated and folded into the aggregates by
+`src/aggregation/reviews.py`, and they are committed — an untracked review corpus would make
+the fix unreproducible from a clean checkout, which is how it stayed broken for as long as
+it did.
 
 The last one is the full-size original behind `assets/brand/abdulkadir-ahmad-hammayo.png`.
 It is deliberately not committed — it is 2.1 MB of the same photograph, and the registered
