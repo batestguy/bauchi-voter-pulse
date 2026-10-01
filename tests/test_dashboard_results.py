@@ -57,14 +57,23 @@ class DashboardShowsResultsTests(unittest.TestCase):
         self.assertIn("data-poll-sector-chart", section)
         self.assertIn("data-poll-table", section)
 
-    def test_an_empty_poll_still_says_so_plainly(self):
-        # The empty state is the honest answer for an empty poll and must survive the
-        # snapshot machinery. This is the case that shipped for months.
+    def test_an_empty_poll_says_so_above_a_full_dashboard_of_zeros(self):
+        # The empty poll renders its whole dashboard -- controls, charts, table -- with
+        # every figure at zero, and says why in a line above them. That is a true statement
+        # ("nobody has answered yet"), not a placeholder for data that does not exist.
+        # What it must never do is invent a count, so the assertion is that nothing
+        # non-zero and no reporting date appears.
         from src.poll import aggregate
         snapshot = aggregate.build_public_snapshot([], generated_at="2026-10-09T12:00:00Z")
         render = self._render_with(snapshot)
         section = render.poll_results_section(snapshot)
-        self.assertIn("No responses have been recorded yet", section)
+
+        self.assertIn("Waiting for the first response", section)
+        self.assertIn("data-poll-sector-chart", section)
+        self.assertIn("data-poll-table", section)
+        # No fabricated figures, and no fabricated period.
+        self.assertNotIn("2026-10-09", section)
+        self.assertNotRegex(section, r"<b[^>]*>[1-9][0-9]*</b>")
 
     def test_a_live_figure_carries_its_provenance(self):
         from src.poll import aggregate

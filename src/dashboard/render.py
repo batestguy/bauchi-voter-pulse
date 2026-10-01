@@ -50,6 +50,21 @@ POLL_ENDPOINT = ("https://script.google.com/macros/s/"
 POLL_SNAPSHOT_FILE = "poll_snapshot.json"
 # One response must never render as "100%". The owner can set this to 0 to disable.
 POLL_PERCENTAGE_FLOOR = 10
+
+# Render the dashboard's full control surface -- both charts, the LGA dropdown, the Group
+# lens, the exact-counts table -- while the poll has no responses yet, with every figure
+# at an explicit zero.
+#
+# This is not a demonstration-data mode and it must not become one. A zero is a true
+# statement here: nobody has answered yet. Every control is live and the same markup fills
+# in as real responses arrive, so there is nothing to remove later and nothing that could
+# be mistaken for a result. Fabricating non-zero counts would be a claim about what Bauchi
+# residents want; this makes no claim at all.
+#
+# The distinction this preserves, and the one that matters: an explicit zero means "nobody
+# chose this", while a suppressed cell means "too few to say". They are never drawn the
+# same way, and the page says so above the figures.
+POLL_SHOW_EMPTY_SCAFFOLD = True
 # Mandatory, not cosmetic. The poll records an LGA and an optional registration area, so
 # a published cell below this count is a handful of identifiable people. A value of 0 or
 # 1 is refused by src/poll/validation.py rather than honoured.
@@ -1734,6 +1749,188 @@ def format_snapshot_timestamp(value):
     return parsed.strftime("%d %B %Y")
 
 
+def _poll_sector_labels():
+    """Sector labels for the dashboard, in the form the renderer uses elsewhere.
+
+    Derived from REQUEST_CATEGORIES rather than a second copy of the list, so the dashboard
+    cannot drift from the sectors the form and the endpoint accept.
+    """
+    labels = {key: en for key, en, _ha in REQUEST_CATEGORIES}
+    hausa = {key: ha for key, _en, ha in REQUEST_CATEGORIES}
+    return labels, hausa
+
+
+def _poll_dashboard_empty(floor, threshold, show_scaffold=False):
+    """The dashboard before anyone has answered, with every control in place.
+
+    `show_scaffold` renders the real controls -- the two charts, the LGA dropdown, the
+    Group lens, the exact-counts table -- with every figure at zero, instead of collapsing
+    the whole section to one sentence.
+
+    Why this is not the fabricated case. A zero here is a true statement: nobody has
+    answered yet. Every control is live, so the same page fills in as real responses arrive,
+    and nothing about it has to be undone. The alternatives are worse: a chart of invented
+    counts is a claim about what Bauchi residents want, and hiding the controls behind a
+    sentence hides the fact that the dashboard exists at all.
+
+    The distinction that matters, and the one this function preserves: an explicit zero
+    means "nobody chose this"; a suppressed cell means "too few to say", and the two are
+    never drawn the same way. Nothing here invents a count.
+    """
+    POLL_SECTOR_LABELS, POLL_SECTOR_HA = _poll_sector_labels()
+
+    disclosure = copy(
+        "These are self-selected visitors, not a representative sample. It is not a "
+        "survey and not a vote, and it does not measure how many people in Bauchi hold "
+        "this view.",
+        "Wannan mutane da suka zaɓi da kansa su amsa, ba su cikin saminci da ke wakilai ba. "
+        "Ba wani bincike ba, ba zabi ba, kuma ba ta aunawa yawanin mutane a Bauchi da wannan "
+        "ra'ayi ba.")
+
+    if not show_scaffold:
+        body = (
+            '<p class="poll-empty" data-en="No responses have been recorded yet. Results '
+            'appear here once people answer; every figure below stays at zero until then." '
+            'data-ha="Bai sami amsa ba tukuna. Sakamako za a nuna a nan idan mutane sun amsa; '
+            'kowane lambobi ya rage zuwa sifiri har sai wannan ya faru.">No responses have '
+            'been recorded yet. Results appear here once people answer; every figure below '
+            'stays at zero until then.</p>'
+        )
+        return (
+            '<section class="section poll-results" id="poll-results" '
+            'aria-labelledby="poll-results-title"><div class="shell"><div class="section-head"><div>'
+            f'<div class="eyebrow">{copy("What people have said", "Abin da mutane suka faɗa")}</div>'
+            f'<h2 id="poll-results-title">{copy("Sector priorities so far.", "Gabanawa na sectors har yanzu.")}</h2>'
+            f'</div><p>{disclosure}</p></div>'
+            f'<div class="poll-chart">{body}</div></div></section>'
+        )
+
+    # --- the scaffold -----------------------------------------------------------
+    # Every control the populated dashboard has, wired to the same client-side code and
+    # fed a snapshot whose values are all zero. The moment a real snapshot is committed the
+    # same markup fills in; nothing about this layout is temporary.
+
+    zero_snapshot = {
+        "schema_version": "poll-v1",
+        "total_responses": 0,
+        "by_sector": {key: 0 for key, _ in POLL_SECTOR_LABELS.items()},
+        "by_lga": {lga: 0 for lga in LGAS},
+        "by_lga_sector": {lga: {key: 0 for key, _ in POLL_SECTOR_LABELS.items()}
+                          for lga in LGAS},
+        "percentage_floor": floor,
+        "small_count_threshold": threshold,
+        "suppressed_cell_count": 0,
+    }
+    scaffold_payload = json.dumps(zero_snapshot, sort_keys=True).replace("</", "<\\/")
+
+    zero_bars = "".join(
+        # The populated chart is built in JavaScript and uses .poll-bar-label / .poll-bar-track /
+        # .poll-bar-value as direct grid children of .poll-bar. This markup mirrors that
+        # structure exactly, because the CSS grid has three columns and a label nested
+        # inside a wrapper collapses into one of them -- which is what the first render of
+        # this scaffold did, putting every value against its own label.
+        f'<li class="poll-bar" data-poll-row="{esc(key)}" data-poll-empty="true">'
+        f'<span class="poll-bar-label">{localized(label_en, POLL_SECTOR_HA.get(key, label_en))}</span>'
+        f'<span class="poll-bar-track"><span class="poll-bar-fill" style="width:0%"></span></span>'
+        f'<span class="poll-bar-value">0</span></li>'
+        for key, label_en in POLL_SECTOR_LABELS.items()
+    )
+
+    lga_options = "".join(f'<option value="{esc(lga)}">{esc(lga)}</option>' for lga in LGAS)
+    lens_options = "".join(
+        f'<option value="" {attr("Everyone", "Duk")}>Everyone</option>'
+        + "".join(f'<option value="{esc(k)}" {attr(en, ha)}>{esc(en)}</option>'
+                  for k, en, ha in POLL_AGE_BANDS)
+        + "".join(f'<option value="{esc(k)}" {attr(en, ha)}>{esc(en)}</option>'
+                  for k, en, ha in POLL_GENDER_OPTIONS)
+    )
+
+    zero_rows = "".join(
+        f'<tr><th scope="row">{localized(label_en, POLL_SECTOR_HA.get(key, label_en))}</th>'
+        '<td class="poll-num">0</td><td class="poll-share">&mdash;</td></tr>'
+        for key, label_en in POLL_SECTOR_LABELS.items()
+    )
+
+    banner = (
+        '<p class="poll-zero-note" role="status" data-en="Waiting for the first response. '
+        'Every figure below reads zero because nobody has answered yet, not because the '
+        'answer was no." data-ha="Ana jiran amsa ta farko. Kowane lambobi a kasa yana nuna '
+        'sifiri ba da cewa babu amsa ba.">Waiting for the first response. Every figure below '
+        'reads zero because nobody has answered yet, not because the answer was no.</p>'
+    )
+
+    controls = (
+        '<div class="poll-controls">'
+        f'<label>{copy("Local government area", "LGA")}'
+        f'<select data-poll-lga-filter disabled><option>{copy("All areas", "Duk wurare")}'
+        '</option></select></label>'
+        f'<label>{copy("Registration area", "Wurin ƙaura zaye")}'
+        f'<select data-poll-ward-filter disabled><option>{copy("Choose an LGA first", "Za fara da LGA")}'
+        '</option></select></label>'
+        f'<label>{copy("Group", "Gp")}'
+        f'<select data-poll-lens-filter disabled>{lens_options}</select></label>'
+        '</div>'
+    )
+
+    scope_summary = (
+        '<p class="poll-scope" data-poll-scope-summary>0 responses</p>'
+    )
+
+    sector_chart = (
+        f'<div class="poll-chart" data-poll-sector-chart data-poll-snapshot=\'{scaffold_payload}\'>'
+        f'<h3>{copy("By sector", "Ta bangare na aiki")}</h3>'
+        f'<ul class="poll-bars">{zero_bars}</ul>'
+        f'<p class="poll-share-note" data-poll-share-note>'
+        + copy("A share appears once there are enough answers to divide.",
+              "Zai fito da kashi idan akwai amsa da kuma ya yi wani abu na yi kashi.")
+        + '</p></div>'
+    )
+
+    lga_chart = (
+        '<div class="poll-chart" data-poll-lga-chart>'
+        f'<h3>{copy("By local government area", "Ta LGA")}</h3>'
+        '<p class="poll-empty" data-en="Every area reads zero." '
+        'data-ha="Kowane wurin yana nuna sifiri.">Every area reads zero.</p>'
+        '<ul class="poll-lga-grid">'
+        + "".join(f'<li><span>{esc(lga)}</span><b>0</b></li>' for lga in LGAS)
+        + '</ul></div>'
+    )
+
+    table = (
+        '<div class="poll-chart" data-poll-table>'
+        f'<h3>{copy("Exact counts", "Lambobi na gaskiya")}</h3>'
+        '<table><caption class="visually-hidden">'
+        + copy("Responses by sector, before small-count suppression.",
+              "Amsa ta bangare na aiki, kafin a sanya ƙananan lambobi a ɓoye.")
+        + '</caption><thead><tr>'
+        + f'<th scope="col">{copy("Sector", "Bangare")}</th>'
+        + f'<th scope="col">{copy("Responses", "Amsa")}</th>'
+        + f'<th scope="col">{copy("Share", "Zamani")}</th>'
+        + '</tr></thead><tbody>'
+        + zero_rows
+        + '</tbody></table></div>'
+    )
+
+    return (
+        '<section class="section poll-results" id="poll-results" '
+        'aria-labelledby="poll-results-title"><div class="shell"><div class="section-head"><div>'
+        f'<div class="eyebrow">{copy("What people have said", "Abin da mutane suka faɗa")}</div>'
+        f'<h2 id="poll-results-title">{copy("Sector priorities so far.", "Gabanawa na sectors har yanzu.")}</h2>'
+        f'</div><p>{disclosure}</p></div>'
+        f'{banner}'
+        f'<p class="poll-total"><b data-en="0 responses" data-ha="0 amsa">0 responses</b>'
+        f'<span data-en="{threshold} or fewer answers are never shown" '
+        f'data-ha="{threshold} ko ƙasa da haka ba a nuna amsawa ba">'
+        f'{threshold} or fewer answers are never shown</span></p>'
+        f'{scope_summary}{controls}'
+        '<div class="poll-two">'
+        f'{sector_chart}{lga_chart}'
+        '</div>'
+        f'{table}'
+        '</div></section>'
+    )
+
+
 def poll_dashboard(snapshot):
     """Two charts, one LGA dropdown, one exact table -- all from the committed snapshot.
 
@@ -1749,29 +1946,12 @@ def poll_dashboard(snapshot):
     share_of_total = _poll_module("aggregate").share_of_total
 
     if snapshot is None:
-        body = (
-            '<p class="poll-empty" data-en="No responses have been recorded yet. Once the poll is '
-            'connected, results will appear here." data-ha="Bai sami amsa ba tukuna. Idan aka haɗa '
-            'hawsar, za a nuna sakamako a nan.">No responses have been recorded yet. Once the poll '
-            'is connected, results will appear here.</p>'
-        )
-        # The disclosure ships in the empty state too, not only once data exists. A reader
-        # arriving before the first response should learn what this is before they see a
-        # number, not after.
-        return (
-            '<section class="section poll-results" id="poll-results" '
-            'aria-labelledby="poll-results-title"><div class="shell"><div class="section-head"><div>'
-            f'<div class="eyebrow">{copy("What people have said", "Abin da mutane suka faɗa")}</div>'
-            f'<h2 id="poll-results-title">{copy("Sector priorities so far.", "Gabanawa na sectors har yanzu.")}</h2>'
-            '</div><p>' + copy(
-                "These are self-selected visitors, not a representative sample. It is not a "
-                "survey and not a vote, and it does not measure how many people in Bauchi hold "
-                "this view.",
-                "Wannan mutane da suka zaɓi da kansa su amsa, ba su cikin saminci da ke wakilai ba. "
-                "Ba wani bincike ba, ba zabi ba, kuma ba ta aunawa yawanin mutane a Bauchi da wannan "
-                "ra'ayi ba.") + '</p></div>'
-            f'<div class="poll-chart">{body}</div></div></section>'
-        )
+        # No snapshot file at all is the same state as a snapshot with zero responses, so
+        # it renders the same thing. Two branches for one state is how a page ends up
+        # describing itself differently depending on which code path happened to run.
+        return _poll_dashboard_empty(
+            POLL_PERCENTAGE_FLOOR, POLL_SMALL_COUNT_THRESHOLD,
+            show_scaffold=POLL_SHOW_EMPTY_SCAFFOLD)
 
     floor = int(snapshot.get("percentage_floor", POLL_PERCENTAGE_FLOOR) or 0)
     threshold = int(snapshot.get("small_count_threshold", POLL_SMALL_COUNT_THRESHOLD) or 5)
@@ -1780,18 +1960,7 @@ def poll_dashboard(snapshot):
     payload = json.dumps(snapshot, sort_keys=True).replace("</", "<\\/")
 
     if total <= 0:
-        body = (
-            '<p class="poll-empty" data-en="No responses have been recorded yet." '
-            'data-ha="Bai sami amsa ba tukuna.">No responses have been recorded yet.</p>'
-        )
-        return (
-            '<section class="section poll-results" id="poll-results" '
-            'aria-labelledby="poll-results-title"><div class="shell"><div class="section-head"><div>'
-            f'<div class="eyebrow">{copy("What people have said", "Abin da mutane suka faɗa")}</div>'
-            f'<h2 id="poll-results-title">{copy("Sector priorities so far.", "Gabanawa na sectors har yanzu.")}</h2>'
-            '</div></div>'
-            f'<div class="poll-chart">{body}</div></div></section>'
-        )
+        return _poll_dashboard_empty(floor, threshold, show_scaffold=POLL_SHOW_EMPTY_SCAFFOLD)
 
     lga_options = "".join(
         f'<option value="{esc(lga)}">{esc(lga)}</option>' for lga in LGAS
@@ -2304,6 +2473,22 @@ a{color:inherit}
 .request-submit:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
 .request-submit:disabled{opacity:.55;cursor:wait;transform:none}
 .poll-section .section-head p{max-width:62ch}
+/* The empty-poll scaffold. A zero bar is legitimate -- nobody has answered yet -- but a
+   0-width fill next to a bare number reads as "nobody wants water", which is the opposite
+   of the truth. So a zero row is drawn as an outlined track, and the reason is stated
+   above the whole block rather than implied by the geometry. */
+.poll-zero-note{margin:0 0 18px;padding:13px 16px;border-left:3px solid var(--gold);background:var(--gold-soft);color:var(--ink);font-size:13px;line-height:1.55}
+/* The zero rows mirror the JS-built chart's structure, so these styles reuse the existing
+   .poll-bar grid. Only the "empty" treatment is added: a hatched, dashed track instead of
+   a bare zero-width fill, because a 0-width bar next to a 0 reads as a measured nothing. */
+.poll-bar[data-poll-empty=true] .poll-bar-track{background:repeating-linear-gradient(135deg,rgba(11,38,60,.07) 0 6px,transparent 6px 12px);border:1px dashed rgba(11,38,60,.22)}
+.poll-bar[data-poll-empty=true] .poll-bar-value{color:var(--muted)}
+.poll-scope{color:var(--muted)}
+.poll-lga-grid{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.poll-lga-grid li{display:flex;justify-content:space-between;gap:10px;padding:8px 11px;border:1px solid var(--line);border-radius:4px;background:var(--white);font-size:12.5px}
+.poll-lga-grid li b{font-variant-numeric:tabular-nums;color:var(--muted)}
+.poll-controls select[disabled]{background:rgba(11,38,60,.04);color:var(--muted);cursor:not-allowed}
+@media (max-width:760px){.poll-lga-grid{grid-template-columns:1fr 1fr}}
 .poll-form{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:26px;display:grid;gap:18px;box-shadow:var(--shadow);max-width:720px}
 .poll-config-status{margin:0;font-size:12px;line-height:1.5;color:var(--muted);border-left:3px solid var(--gold);padding-left:12px}
 .poll-field{display:grid;gap:7px}

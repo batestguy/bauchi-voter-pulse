@@ -1157,13 +1157,38 @@ class PollPageTests(unittest.TestCase):
         self.assertIn("not a representative sample", self.html)
         self.assertIn("It is not a survey and not a vote", self.html)
 
-    def test_an_unconnected_poll_renders_an_empty_state_not_zeros(self):
-        # No snapshot file exists, so the page must say so. Seeding placeholder results
-        # would be the worst possible failure here.
-        self.assertIsNone(render.load_poll_snapshot())
-        self.assertIn("No responses have been recorded yet.", self.html)
-        self.assertNotIn('class="poll-bar-fill"', self.html)
-        self.assertNotIn('class="poll-bars"', self.html)
+    def test_the_zero_dashboard_never_shows_a_bar_width(self):
+        # This test used to assert the opposite: that an empty poll contained no bars at
+        # all. That was protecting the right thing -- no seeded or placeholder results --
+        # by forbidding the whole control surface, which also hid the fact that the
+        # dashboard exists. The scaffold shows every sector at an explicit zero, so the
+        # property that actually matters is now asserted directly: a zero-width fill, and
+        # no non-zero width anywhere.
+        self.assertIsNone(render.load_poll_snapshot(), "no snapshot file is committed")
+        self.assertIn("Waiting for the first response", self.html)
+
+        # The bars exist...
+        self.assertIn('class="poll-bars"', self.html)
+        # ...and every fill is zero-width.
+        widths = re.findall(r'class="poll-bar-fill" style="width:([0-9.]+)%"', self.html)
+        self.assertTrue(widths, "expected the zero scaffold to render bar fills")
+        for width in widths:
+            with self.subTest(width=width):
+                self.assertEqual(float(width), 0.0,
+                                 "an empty poll must not render a bar of any width")
+
+        # And no figure is non-zero: every published count is 0.
+        for value in re.findall(r'<b class="poll-bar-value">(\d+)</b>', self.html):
+            with self.subTest(value=value):
+                self.assertEqual(int(value), 0)
+
+    def test_the_zero_scaffold_is_not_a_seeded_tally(self):
+        # The line above the figures has to say why they are zero. Without it, a grid of
+        # labelled zeros is indistinguishable from a poll where nobody chose anything --
+        # which is a claim, and a false one.
+        self.assertIn("not because the answer was no", self.html)
+        # And no reporting date is fabricated, because there is no reporting period yet.
+        self.assertNotIn("data-poll-period", self.html)
 
     def test_no_placeholder_tally_is_committed_anywhere(self):
         path = render.DATA / render.POLL_SNAPSHOT_FILE
@@ -1305,11 +1330,48 @@ class PollPageTests(unittest.TestCase):
         self.assertNotIn("Aminu", section)
         self.assertNotIn("0801", section)
 
-    def test_the_empty_snapshot_renders_the_empty_state(self):
+    def test_the_empty_snapshot_shows_zero_without_inventing_a_count(self):
+        # The dashboard renders its full control surface before anyone has answered: both
+        # charts, the LGA dropdown, the Group lens and the exact-counts table, with every
+        # figure an explicit zero. A zero is a true statement here -- nobody has answered
+        # yet -- and every control is live, so the same markup fills in as real responses
+        # arrive.
+        #
+        # What this must NOT become is a demonstration-data mode. The distinction the page
+        # depends on is that an explicit zero means "nobody chose this" while a suppressed
+        # cell means "too few to say"; those are different facts and are never drawn the
+        # same way. So the scaffold is asserted to carry zeros, to say why, and to never
+        # claim a response exists.
         section = render.poll_results_section(
             aggregate.build_public_snapshot([], generated_at=NOW))
-        self.assertIn("No responses have been recorded yet.", section)
-        self.assertNotIn("poll-bars", section)
+
+        # It says what the state is.
+        self.assertIn("Waiting for the first response", section)
+        # The disclosure still ships above the figures, not after a number appears.
+        self.assertIn("not a representative sample", section)
+
+        # The full control surface is present and wired.
+        for mount in ("data-poll-sector-chart", "data-poll-lga-chart",
+                      "data-poll-table", "data-poll-lga-filter",
+                      "data-poll-ward-filter", "data-poll-lens-filter",
+                      "data-poll-scope-summary"):
+            with self.subTest(mount=mount):
+                self.assertIn(mount, section)
+
+        # Every sector is present, and every one reads zero.
+        self.assertIn("poll-bars", section)
+        for key, label_en, _ha in render.REQUEST_CATEGORIES:
+            with self.subTest(sector=key):
+                self.assertIn(f'data-poll-row="{key}"', section)
+        # Every row carries a real sector key: no empty attribute, which would render a bar
+        # with no label and silently disappear from the chart.
+        self.assertNotIn('data-poll-row=""', section)
+
+        # Nothing claims a response exists.
+        self.assertNotRegex(section, r"<b[^>]*>[1-9]")   # no non-zero bar count
+        self.assertNotIn(" responses</b>", section.replace("0 responses</b>", ""))
+        # And no fabricated reporting period.
+        self.assertNotIn("generated_at", section)
 
     def test_the_poll_lives_on_exactly_one_page(self):
         for slug in ("index", "achievements", "atlas", "agenda", "sources"):
