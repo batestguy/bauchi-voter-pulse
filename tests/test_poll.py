@@ -1030,13 +1030,48 @@ class PollPageTests(unittest.TestCase):
         for key, _, _ in render.REQUEST_CATEGORIES:
             self.assertIn(f'value="{key}"', self.html)
 
-    def test_the_build_ships_disabled_and_says_nothing_is_sent(self):
-        # The disabled state is the safety property, so it is asserted in the markup.
-        self.assertIn('data-poll-endpoint=""', self.html)
-        self.assertIn('data-poll-configured="false"', self.html)
-        self.assertIn("data-poll-submit disabled", self.html)
-        self.assertIn("No vote is being recorded", self.html)
-        self.assertEqual(render.POLL_ENDPOINT, "")
+    def test_the_button_state_and_the_endpoint_agree(self):
+        # This used to assert the build ships disabled, which was true and then stopped
+        # being true when the endpoint was connected. The invariant worth keeping is not
+        # "disabled" -- it is that the button's state is derived from the endpoint, so an
+        # empty endpoint can never present a live button. Asserting a fixed state would
+        # mean editing this test at the moment of connection, which is exactly when a test
+        # is least likely to be read carefully.
+        configured = render.POLL_ENDPOINT.strip()
+        if configured:
+            self.assertTrue(configured.startswith("https://"), "endpoint must be https")
+            self.assertIn("/exec", configured)
+            self.assertIn('data-poll-configured="true"', self.html)
+            self.assertNotIn("data-poll-submit disabled", self.html)
+            # A connected poll must still refuse to claim identity.
+            self.assertIn("No name, phone, email, address or voter ID is requested", self.html)
+        else:
+            self.assertIn('data-poll-endpoint=""', self.html)
+            self.assertIn('data-poll-configured="false"', self.html)
+            self.assertIn("data-poll-submit disabled", self.html)
+            self.assertIn("No vote is being recorded", self.html)
+
+    def test_an_empty_endpoint_still_renders_as_closed(self):
+        # The disabled path must survive being unused, or it silently rots the next time
+        # someone clears the constant. This re-renders the whole site with the endpoint
+        # forced empty and asserts nothing can send.
+        original = render.POLL_ENDPOINT
+        target = Path("docs/poll.html")
+        backup = target.read_text(encoding="utf-8")
+        try:
+            render.POLL_ENDPOINT = ""
+            render.render()
+            html = target.read_text(encoding="utf-8")
+            self.assertIn('data-poll-endpoint=""', html)
+            self.assertIn("data-poll-submit disabled", html)
+            self.assertIn("No vote is being recorded", html)
+            script = render.POLL_SCRIPT
+            self.assertIn("if(!pollEndpointReady){", script)
+            self.assertLess(script.index("if(!pollEndpointReady){"),
+                            script.index("await fetch("))
+        finally:
+            render.POLL_ENDPOINT = original
+            target.write_text(backup, encoding="utf-8")
 
     def test_a_disabled_build_contains_no_code_path_that_can_send(self):
         script = render.POLL_SCRIPT
@@ -1333,6 +1368,66 @@ class PollPageTests(unittest.TestCase):
             return set(re.findall(r"^(?:const|let|var)\s+([A-Za-z_$][\w$]*)", script, re.M))
         overlap = top_level(render.POLL_SCRIPT) & top_level(render.REQUEST_SCRIPT)
         self.assertEqual(overlap, set(), f"poll and request scripts collide on {overlap}")
+
+
+class ContentTypePreflightTests(unittest.TestCase):
+    """The POST must not declare `application/json`.
+
+    This is the one bug in the whole endpoint integration that no test could have caught
+    and that a unit test alone would never have found, because the failure only exists in a
+    real browser talking to a real Google deployment.
+
+    `application/json` is not a CORS-safelisted request content type, so the browser sends
+    an `OPTIONS` preflight before the POST. Google Apps Script answers that preflight with
+    `200 OK` and **no `Access-Control-Allow-*` headers at all**, the browser therefore
+    blocks the exchange, and `fetch` rejects with a bare `TypeError: Failed to fetch` --
+    no console error, no status code, and a user-visible message saying only "we could not
+    send your vote". The vote is never recorded and nothing says why.
+
+    `text/plain;charset=utf-8` is safelisted, so no preflight is sent. Both endpoints read
+    `e.postData.contents` and never inspect `e.contentType`, so the JSON body still parses
+    identically. Measured against the live poll deployment on 1 October 2026:
+
+        Content-Type: application/json       -> TypeError: Failed to fetch
+        Content-Type: text/plain;charset=utf-8 -> 200 {"response_id":"APM-POLL-2026-..."}
+
+    Asserted on both scripts, because the request form sends the same way and would fail
+    the same way, silently, on the day it was connected.
+    """
+
+    def _fetch_calls(self, script):
+        return [line for line in script.splitlines() if "fetch(" in line]
+
+    def test_the_poll_does_not_send_a_content_type_that_triggers_a_preflight(self):
+        for line in self._fetch_calls(render.POLL_SCRIPT):
+            with self.subTest(line=line.strip()[:80]):
+                self.assertNotIn("'Content-Type':'application/json'", line)
+                self.assertIn("'Content-Type':'text/plain;charset=utf-8'", line)
+
+    def test_the_request_form_does_not_either(self):
+        for line in self._fetch_calls(render.REQUEST_SCRIPT):
+            with self.subTest(line=line.strip()[:80]):
+                self.assertNotIn("'Content-Type':'application/json'", line)
+                self.assertIn("'Content-Type':'text/plain;charset=utf-8'", line)
+
+    def test_neither_script_declares_json_as_a_request_content_type(self):
+        for name, script in (("poll", render.POLL_SCRIPT),
+                             ("request", render.REQUEST_SCRIPT)):
+            with self.subTest(script=name):
+                self.assertNotIn("'Content-Type': 'application/json'", script)
+                self.assertNotIn('"Content-Type": "application/json"', script)
+
+    def test_the_endpoints_do_not_require_a_json_content_type_to_parse(self):
+        # The other half of the fix. If either endpoint ever started validating
+        # `e.contentType`, the safelisted workaround would stop being safe, so the
+        # guarantee has to be asserted on the endpoint rather than assumed.
+        for path in ("docs/apps-script/Code.gs",
+                     "docs/requests-script/Code.gs"):
+            source = Path(path).read_text(encoding="utf-8")
+            with self.subTest(endpoint=path):
+                self.assertIn("postData.contents", source)
+                self.assertNotIn("e.contentType", source)
+                self.assertNotIn("contentType ==", source)
 
 
 if __name__ == "__main__":

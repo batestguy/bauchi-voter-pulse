@@ -64,13 +64,6 @@
       "maxLength": 120,
       "description": "Optional private follow-up name. It must never be logged, echoed in errors, or published."
     },
-    "phone": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 40,
-      "pattern": "^\\+?[0-9](?:[0-9 ().\\-]*[0-9])?$",
-      "description": "Optional private follow-up phone. The shape permits 7 to 15 digits and common spacing, parenthesis, and hyphen formatting. Normalization removes formatting without inferring a country code."
-    },
     "email": {
       "type": "string",
       "minLength": 1,
@@ -122,9 +115,6 @@
         "type": "string"
       },
       "name": {
-        "type": "string"
-      },
-      "phone": {
         "type": "string"
       },
       "email": {
@@ -188,7 +178,6 @@
       "address",
       "details",
       "name",
-      "phone",
       "email",
       "consent"
     ],

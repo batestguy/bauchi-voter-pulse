@@ -324,5 +324,25 @@ class PhoneRemovalTests(unittest.TestCase):
         self.assertNotIn("phone", record)
         self.assertNotIn("email", record)
 
+    def test_the_published_schema_no_longer_offers_a_phone(self):
+        # The schema is the document a reader trusts to describe what the form collects.
+        # It kept offering a phone for a full session after the code, the form and the
+        # endpoint had all stopped accepting one, so the documented contract and the real
+        # one disagreed and nothing noticed -- the one place a phone was still described
+        # as collectable.
+        raw = Path("src/requests/request_schema.json").read_text(encoding="utf-8")
+        self.assertNotIn("phone", raw)
+        contract = json.loads(raw)
+        self.assertNotIn("phone", contract["properties"])
+        self.assertNotIn("phone", contract["x-normalized-private-record"]["properties"])
+
+    def test_the_schema_and_the_validator_agree_on_the_optional_private_fields(self):
+        # The two descriptions of the same rule drift unless something compares them, and
+        # this is the only check that would have caught the drift above.
+        contract = json.loads(
+            Path("src/requests/request_schema.json").read_text(encoding="utf-8"))
+        documented = set(contract["properties"]) & set(validation.OPTIONAL_PRIVATE_FIELDS)
+        self.assertEqual(documented, set(validation.OPTIONAL_PRIVATE_FIELDS))
+
 if __name__ == "__main__":
     unittest.main()

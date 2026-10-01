@@ -27,7 +27,7 @@ PAGE_BUILDERS = render.PAGE_BUILDERS
 PAGE_NAV = render.PAGE_NAV
 SHELL_CSS = render.SHELL_CSS
 
-PAGE_SLUGS = ("index", "achievements", "atlas", "poll", "agenda", "sources")
+PAGE_SLUGS = ("index", "achievements", "atlas", "poll", "agenda", "about", "sources")
 
 
 def read(slug):
@@ -41,7 +41,7 @@ class GeneratedPageTests(unittest.TestCase):
                 self.assertTrue((DOCS / f"{slug}.html").exists())
                 self.assertGreater((DOCS / f"{slug}.html").stat().st_size, 10_000)
 
-    def test_render_lists_exactly_the_six_pages(self):
+    def test_render_lists_exactly_the_seven_pages(self):
         self.assertEqual(tuple(PAGE_BUILDERS), PAGE_SLUGS)
 
     def test_every_page_has_its_own_title_and_description(self):

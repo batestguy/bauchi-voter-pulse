@@ -234,8 +234,13 @@ class PromiseIntegrityTests(unittest.TestCase):
 
     def test_agenda_renders_each_promise_once(self):
         # S3 moved the agenda onto its own page.
+        #
+        # Matched on the class alone, deliberately. The earlier `'<article class="agenda-card">'`
+        # asserted the tag carried no other attribute, which is not what this test is about:
+        # it counts one card per promise. Adding the anchor the About page deep-links to
+        # broke it, and the fix is to the regex rather than to remove a working link.
         html = Path("docs/agenda.html").read_text(encoding="utf-8")
-        cards = re.findall(r'<article class="agenda-card">', html)
+        cards = re.findall(r'<article [^>]*class="agenda-card"', html)
         self.assertEqual(len(cards), len(render.read_csv("promises.csv")))
 
     def test_validator_catches_a_reintroduced_duplicate(self):

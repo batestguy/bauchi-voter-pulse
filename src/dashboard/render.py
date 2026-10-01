@@ -25,11 +25,18 @@ LGAS = [
 
 LGA_WARDS_FILE = "lga_wards.csv"
 REQUEST_ENDPOINT = ""
-# The poll endpoint is deliberately empty, exactly like REQUEST_ENDPOINT. An empty
-# endpoint is the disabled state, not a missing feature: the submit button ships
-# `disabled` and no code path can send anything. `data/poll_snapshot.json` is a
-# committed, versioned snapshot of aggregated counts -- never raw responses.
-POLL_ENDPOINT = ""
+# The poll endpoint is deployed and bound to the "APM poll responses" Sheet, with
+# setupSheets and installRetention both run: the Responses, Comments and Audit tabs exist
+# and the daily purge trigger is installed. It was connected only after a real vote
+# round-tripped and returned a sequential response_id, because an endpoint that is
+# deployed but unwired fails silently and a poll that silently discards votes is worse
+# than a poll that is visibly closed.
+#
+# The `/exec` URL is public by construction -- it is the browser-facing address of the
+# deployment and anyone reading the page can see it. What protects the data is the
+# contract in src/poll/validation.py, not the secrecy of this string.
+POLL_ENDPOINT = ("https://script.google.com/macros/s/"
+                 "AKfycbyIWqhapObAv3ysdp1u8eJ9tMjDQLsP136D6PXrwMwNM5ytnS0S2m8i5qJgjC2SF6oj7A/exec")
 POLL_SNAPSHOT_FILE = "poll_snapshot.json"
 # One response must never render as "100%". The owner can set this to 0 to disable.
 POLL_PERCENTAGE_FLOOR = 10
@@ -63,7 +70,7 @@ REQUEST_CATEGORIES = (
 
 ASSET_FILES = [
     "apm-logo.png", "apm-emblem.png", "yakubu-adamu-hero.png", "yakubu-adamu-portrait.png",
-    "bala-mohammed.png", "abdulkadir-ahmad-hammayo.png"
+    "yakubu-adamu-single.png", "bala-mohammed.png", "abdulkadir-ahmad-hammayo.png"
 ]
 
 FEATURED_ACHIEVEMENTS_FILE = "featured_achievements.csv"
@@ -99,6 +106,21 @@ SECTOR_HA = {
     "agriculture": "Noma da abinci",
     "governance": "Isar da ganyayi da gwaji",
     "infrastructure": "Infastructure da haɗi",
+}
+
+# The About page states how many commitments there are, and that number comes from the
+# promises file rather than from a sentence somebody wrote. It shipped once as "Five
+# commitments" over an eight-row file, which is a wrong number on the candidate's own
+# agenda -- the one page a voter is most likely to check.
+ABOUT_COMMITMENT_COUNT = {
+    1: ("One commitment.", "Alkawari daya."),
+    2: ("Two commitments.", "Alkawari biyu."),
+    3: ("Three commitments.", "Alkawari uku."),
+    4: ("Four commitments.", "Alkawari hudu."),
+    5: ("Five commitments.", "Alkawarin daya da biyar."),
+    6: ("Six commitments.", "Alkawarin shida."),
+    7: ("Seven commitments.", "Alkawarin bakwai."),
+    8: ("Eight commitments.", "Alkawarin takwas."),
 }
 
 
@@ -706,7 +728,7 @@ if(publicRequestForm){
     showRequestStatus('submitting');
     requestConfirmation.hidden=true;
     try{
-      const response=await fetch(requestEndpointUrl.href,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),credentials:'omit',referrerPolicy:'no-referrer'});
+      const response=await fetch(requestEndpointUrl.href,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','Accept':'application/json'},body:JSON.stringify(payload),credentials:'omit',referrerPolicy:'no-referrer'});
        if(!response.ok)throw new Error('request_failed');
        const responseData=await response.json().catch(()=>null);
        const responseKeys=responseData&&typeof responseData==='object'&&!Array.isArray(responseData)?Object.keys(responseData):[];
@@ -1198,7 +1220,16 @@ if(publicPollForm){
     pollSubmit.disabled=true;
     showPollStatus('submitting');
     try{
-      const response=await fetch(pollEndpointUrl.href,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),credentials:'omit',referrerPolicy:'no-referrer'});
+      // Content-Type is text/plain, NOT application/json, and that is load-bearing.
+      // `application/json` is not a CORS-safelisted content type, so the browser sends an
+      // OPTIONS preflight first. Google Apps Script answers that preflight with 200 and NO
+      // Access-Control-Allow-* headers, the browser blocks the whole exchange, and `fetch`
+      // rejects with a bare "Failed to fetch" -- no console error, no status, no clue.
+      // text/plain is safelisted, so no preflight happens; the endpoint reads
+      // `e.postData.contents` and never inspects the content type, so the JSON still parses.
+      // Verified against the live deployment 1 October 2026: application/json failed,
+      // text/plain returned a response_id. Do not "correct" this back.
+      const response=await fetch(pollEndpointUrl.href,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','Accept':'application/json'},body:JSON.stringify(payload),credentials:'omit',referrerPolicy:'no-referrer'});
       if(!response.ok)throw new Error('poll_endpoint_rejected');
       const data=await response.json();
       const trackingId=typeof data.response_id==='string'?data.response_id.trim().toUpperCase():'';
@@ -2396,7 +2427,28 @@ a{color:inherit}
 .sponsor-contribution b{color:#fff;font-weight:700}
 .reveal{opacity:0;transform:translateY(15px);animation:rise .7s ease forwards;animation-delay:var(--delay,0s)}
 @keyframes rise{to{opacity:1;transform:translateY(0)}}
+/* --- about page ----------------------------------------------------------
+   The About page shipped with no rules of its own, so the portrait rendered at
+   its natural 720px and the commitments section was a heading, a paragraph and a
+   button stranded in 200px of nothing. These are ordinary section rules in the
+   same house style as .agenda-grid and .featured-slide. */
+.about-grid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1fr);gap:48px;align-items:start}
+.about-figure{margin:0}
+.about-portrait{display:block;width:100%;height:auto;aspect-ratio:6/5;object-fit:cover;object-position:center 18%;border:1px solid var(--line);border-radius:4px;background:var(--sky)}
+.about-portrait--credit{aspect-ratio:1;object-position:center 22%;max-width:260px}
+.about-figure figcaption{margin-top:11px;font-size:12px;line-height:1.5;color:var(--muted)}
+.about-copy h2{font-family:Georgia,serif;font-size:clamp(1.7rem,2.7vw,2.6rem);font-weight:400;line-height:1.04;letter-spacing:-.03em;margin:12px 0 18px}
+.about-copy p{color:var(--muted);font-size:15px;line-height:1.68;max-width:56ch}
+.about-quote{margin:44px 0 0;padding:26px 0 26px 28px;border-left:3px solid var(--gold);max-width:760px}
+.about-quote p{font-family:Georgia,serif;font-size:clamp(1.1rem,1.9vw,1.45rem);font-style:italic;line-height:1.42;color:var(--ink);margin:0}
+.about-quote cite{display:block;margin-top:12px;font-family:inherit;font-size:12px;font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.about-source{margin-top:18px;font-size:12.5px;line-height:1.6;color:var(--muted);max-width:70ch}
+.about-chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px;max-width:900px}
+.about-chip{display:inline-flex;align-items:center;padding:11px 18px;border:1px solid var(--line);border-radius:999px;background:var(--white);color:var(--ink);font-size:13px;font-weight:600;text-decoration:none;transition:border-color .2s,transform .2s,box-shadow .2s}
+.about-chip:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 10px 22px rgba(11,38,60,.1)}
+.about-cta{margin:30px 0 0}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+@media (max-width:1050px){.about-grid{grid-template-columns:1fr;gap:30px}.about-portrait{max-width:520px}.about-portrait--credit{max-width:190px}}
 @media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
 @media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}.poll-form{padding:18px}.poll-grid{grid-template-columns:1fr}.poll-bar{grid-template-columns:1fr;gap:5px}.poll-bar-track{height:12px}.poll-chart{padding:18px}.poll-controls select{min-width:0;width:100%}.poll-two{grid-template-columns:1fr;gap:18px}.poll-stats{grid-template-columns:1fr 1fr}.poll-scope{padding:16px}.poll-scope-count{margin-left:0;flex-basis:100%}}
 @media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-map-layout{grid-template-columns:1fr;gap:22px}.lga-map-column{position:static}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
@@ -2503,6 +2555,7 @@ PAGE_NAV = (
     ("atlas", "LGA atlas", "Taswirar LGA"),
     ("poll", "Speak to us", "Yi magana da mu"),
     ("agenda", "APM agenda", "Bayan-APM"),
+    ("about", "About", "Game da shi"),
     ("sources", "Sources", "Bayane"),
 )
 
@@ -2852,7 +2905,7 @@ def body_agenda(ctx):
         clause = ' <span class="agenda-kind">' + copy("published clause", "bendi da aka wallafa") + "</span>" \
             if promise.get("promise_type") == "Published commitment clause" else ""
         cards.append(
-            f'<article class="agenda-card"><div><span class="agenda-no">0{idx}</span>'
+            f'<article class="agenda-card" id="promise-{esc(sector)}"><div><span class="agenda-no">0{idx}</span>'
             f'<h3>{copy(label, ha)}</h3>'
             f'<p>{localized(promise.get("promise_text", ""), promise.get("promise_text_ha", ""))}</p>'
             f'<p class="agenda-type">{esc(promise.get("promise_type", ""))}{clause}</p>'
@@ -2874,6 +2927,149 @@ def body_agenda(ctx):
                       "APM agenda", "Bayan-APM")
             + '<main id="main">' + section + "</main>")
 
+
+def body_about(ctx):
+    """The About page.
+
+    Prose, not data: every sentence here is the owner's, drafted with them and confirmed
+    by them, and the source register carries the campaign materials it comes from. It states
+    nothing that is not on a registered source, and it links to the agenda rather than
+    repeating it -- `agenda.html` is where the five commitments live, with their source
+    links, and a second copy would be a second thing to drift.
+    """
+    header = subpage_open("about")
+    hero = page_hero(
+        "About the candidate", "Game da mai tambaya",
+        "The man behind the movement.", "Mutumin da ke bayan aikin ci gabansu.",
+        "Dr. Yakubu Adamu has spent his working life inside Bauchi\u2019s economy \u2014 "
+        "first in the banks, then in the state treasury, now in the service of all twenty "
+        "local government areas.",
+        "Dr. Yakubu Adamu ya yi rayuwar aiki cikin sauro Bauchi \u2014 farkon da bangare, "
+        "sannan da kaban kasa, yanzu da hidima ga duk lga ashiru.",
+        "About", "Game da shi")
+
+    story = (
+        '<section class="section" id="who"><div class="shell">'
+        '<div class="about-grid">'
+        '<figure class="about-figure">'
+        '<img class="about-portrait" src="assets/brand/yakubu-adamu-single.png" '
+        'alt="Portrait of Dr. Yakubu Adamu" '
+        'data-alt-en="Portrait of Dr. Yakubu Adamu" '
+        'data-alt-ha="Hotun na Dr. Yakubu Adamu" '
+        'width="720" height="600" loading="eager" decoding="async">'
+        '<figcaption>' + copy(
+            "Dr. Yakubu Adamu, APM candidate for Bauchi State Governor.",
+            "Dr. Yakubu Adamu, mai neman mukamu na APM don Babban Sarkin Bauchi.")
+        + '</figcaption></figure>'
+        '<div class="about-copy">'
+        + f'<div class="eyebrow">{copy("Who he is", "Yawan shi")}</div>'
+        + f'<h2>{copy("A career built inside the Bauchi economy.", "Karautu da aka gina a cikin sauro Bauchi.")}</h2>'
+        + '<p>' + copy(
+            "Born and raised in Bauchi, Dr. Yakubu Adamu built his career in financial "
+            "services before he entered public office. He held senior roles at City "
+            "Monument Bank and Skye Bank, led the public sector team for the North-East at "
+            "Polaris Bank, and served as Commissioner for Finance and Economic Development "
+            "in Bauchi State \u2014 the office that touches every naira the state collects "
+            "and every naira it spends.",
+            "An girmama shi a Bauchi kuma ya girma a nan, Dr. Yakubu Adamu ya gina karautinsa a "
+            "fihirar hankali kafin ya shiga aiki a sectorar hukumu. Ya riƙe muhimman riga a "
+            "City Monument Bank da Skye Bank, ya jagoranta karkashin ruwa na ƙasa da Arewa "
+            "a Polaris Bank, kuma ya yi aiki a matsayin Sarkin Kudi da Ci gabar Hasken "
+            "Bauchi \u2014 kantin da ke tare da kowane kudi da jihar ke tara da kowane kudi "
+            "da ke yi amfani.")
+        + '</p><p>' + copy(
+            "He was affirmed as the Allied Peoples Movement\u2019s candidate for the 2027 "
+            "Bauchi governorship at Government House in May 2026, with Mahmood Babamaji "
+            "Abubakar as his running mate, on a platform of continuity, internal party "
+            "democracy and an issue-based campaign.",
+            "An tabbatar da shi a matsayin mai neman mukamu na Allied Peoples Movement na "
+            "2027 a Government House a cikin Mayu 2026, tare da Mahmood Babamaji Abubakar a "
+            "matsayin abokin harkinsa, kan wanda ke ciki ci gaba da kowane, democracyar "
+            "cikin bangare da gaggawa da ke mayar da hankali a kan batun.")
+        + '</p></div></div>'
+        '<blockquote class="about-quote"><p>'
+        + copy(
+            "Good people of Bauchi, I stand before you not just as a candidate, but as a "
+            "partner in our shared journey toward a more prosperous future.",
+            "Mutane masu ardata na Bauchi, ina tsaye a gabanku ba don ina mai neman "
+            "mukamu kawai ba, amma don ina kashewa da ku a cikin tafiarmu na zuciya zuwa "
+            "ci gabar da rayuwa mai kyau.")
+        + '</p><cite>' + copy("Dr. Yakubu Adamu", "Dr. Yakubu Adamu")
+        + '</cite></blockquote>'
+        '<p class="about-source">' + copy(
+            "Words published by the candidate. The full campaign position is on the agenda "
+            "page, and every commitment there carries its own source.",
+            "Kalmar da aka wallafa da Dr. Yakubu Adamu. Matsayin gaggawa cikinsa yana kan "
+            "shafin bayan-APM, kuma kowane alkawari a nan yana da saurinsa.")
+        + '</p></div></section>')
+
+    chips = []
+    for promise in ctx["promise_rows"]:
+        sector = promise.get("sector", "")
+        if not sector:
+            continue
+        label = SECTOR_LABELS.get(sector, sector.title())
+        chips.append(
+            f'<li><a class="about-chip" href="agenda.html#promise-{esc(sector)}">'
+            + copy(label, SECTOR_HA.get(sector, label)) + '</a></li>')
+
+    # The count is read from the data, never written by hand. The page previously said
+    # "Five commitments" over an eight-row promises file and enumerated five sectors that
+    # were not the five in it -- a wrong number on the candidate's own agenda page, which is
+    # the one page a voter would fact-check.
+    count = len(chips)
+    heading = copy(*ABOUT_COMMITMENT_COUNT.get(
+        count, (f"{count} commitments.", f"{count} alkawari.")))
+    commitments = (
+        '<section class="section" id="commitments"><div class="shell"><div class="section-head"><div>'
+        + f'<div class="eyebrow">{copy("What he is standing for", "Abin da yake tsayawa da shi")}</div>'
+        + f'<h2>{heading}</h2></div>'
+        + '<p>' + copy(
+            "Every commitment is published in full on the agenda page, with the measure "
+            "that would show whether it was delivered and the source it came from. "
+            "Selecting one takes you straight to it.",
+            "Kowane alkawari yana wallafa shi gaba a cikin shafin bayan-APM, tare da "
+            "matakan aunawa da zai nuna ko an iska shi da kuma tushen da ya fito. "
+            "Zaɓi ɗaya zai kai ka kai tsaye a kai shi.")
+        + '</p></div>'
+        '<ul class="about-chips">' + "".join(chips) + '</ul>'
+        '<p class="about-cta"><a class="btn btn-primary" href="agenda.html">'
+        + copy("Read the full agenda", "Karanta cikakken bayan-APM")
+        + '</a></p></div></section>')
+
+    contributor = (
+        '<section class="section" id="contributor"><div class="shell"><div class="about-grid about-grid--credit">'
+        '<figure class="about-figure about-figure--credit">'
+        '<img class="about-portrait about-portrait--credit" '
+        'src="assets/brand/abdulkadir-ahmad-hammayo.png" '
+        'alt="Portrait of Abdulkadir Ahmad (Hammayo)" '
+        'data-alt-en="Portrait of Abdulkadir Ahmad (Hammayo)" '
+        'data-alt-ha="Hotun na Abdulkadir Ahmad (Hammayo)" '
+        'width="512" height="512" loading="lazy" decoding="async">'
+        '<figcaption>' + copy(
+            "Abdulkadir Ahmad (Hammayo), contributor.",
+            "Abdulkadir Ahmad (Hammayo), mai ba da da\u0199i.")
+        + '</figcaption></figure>'
+        '<div class="about-copy">'
+        + f'<div class="eyebrow">{copy("Contributor", "Mai ba da da\u0199i")}</div>'
+        + f'<h2>{copy("Built with people, not just published by them.", "An gina shi da mutane, ba da kayan da aka wallafa shi kawai ba.")}</h2>'
+        + '<p>' + copy(
+            "This site was built by Abdulkadir Ahmad (Hammayo) \u2014 a dedicated member of "
+            "his campaign team.",
+            "Wannan shafi an gina shi da Abdulkadir Ahmad (Hammayo) \u2014 memba mai \u0199aukar "
+            "hankali na hukumar sa.")
+        + '</p></div></div></div></section>')
+
+    return (header + hero + story + commitments + contributor
+            + '<section class="section" id="about-source-note"><div class="shell">'
+            + '<p class="note-box">' + copy(
+        "Sources: the candidate\u2019s own published campaign materials and Bauchi State "
+        "reporting, listed on the sources page. Photographs are used with the owner\u2019s "
+        "permission.",
+        "Bayanan: kayan gaggawa da aka wallafa da Dr. Yakubu Adamu da kayan manyautar "
+        "Bauchi, da aka lissafi a kan shafin bayane. Hotuna an yi amfani da su tare da "
+        "permission daga mai shi.")
+        + '</p></div></section>')
 
 def body_sources(ctx):
     header = subpage_open("sources")
@@ -2922,6 +3118,8 @@ PAGE_BUILDERS = {
              "Tell APM Bauchi one need in your area. No voter ID is ever requested."),
     "agenda": (body_agenda, "APM agenda · APM Bauchi",
                "Published APM Bauchi campaign commitments, kept separate from completed achievements."),
+    "about": (body_about, "About · APM Bauchi",
+             "Dr. Yakubu Adamu: career, published commitments, and who built this site."),
     "sources": (body_sources, "Sources & method · APM Bauchi",
                 f"{len(build_sources())} registered public sources for the APM Bauchi record, with the grading legend and build method."),
 }

@@ -42,7 +42,7 @@ jobs:
       - name: Verify every generated page exists
         run: |
           missing=0
-          for page in index achievements atlas poll agenda sources; do
+          for page in index achievements atlas poll agenda about sources; do
             if [ ! -f "docs/${page}.html" ]; then
               echo "::error::docs/${page}.html was not generated. A page listed in PAGE_BUILDERS is missing from the build."
               missing=1

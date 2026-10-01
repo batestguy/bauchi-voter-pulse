@@ -10,7 +10,7 @@ The new interface uses the official APM identity and approved campaign assets, p
 
 ## Product
 
-The site is **six flat pages** generated from one renderer:
+The site is **seven flat pages** generated from one renderer:
 
 | Page | Contents |
 |---|---|
@@ -19,6 +19,7 @@ The site is **six flat pages** generated from one renderer:
 | `docs/atlas.html` | The 20-LGA map — the page's only area selector — the selected-area evidence panel and the not-geo-located registration-area list |
 | `docs/poll.html` | The bilingual need-request form (the poll arrives in S5) |
 | `docs/agenda.html` | The published campaign commitments |
+| `docs/about.html` | About the candidate, and who built this site |
 | `docs/sources.html` | Source register, grading legend, build method |
 - `src/dashboard/render.py` — static generator/validator for delivery data, carousel, LGA map, bilingual request form
 - `data/delivery/` — sources, needs, achievements, promises, indicators, featured achievements, provisional electoral RAs, LGA queue, asset register, source snapshots and review queue
@@ -90,7 +91,7 @@ python src/dashboard/render.py
 python -m http.server 8766 --directory docs
 ```
 
-Open `http://127.0.0.1:8766/index.html`, then follow the nav to the other five pages.
+Open `http://127.0.0.1:8766/index.html`, then follow the nav to the other six pages.
 The suite is **162 `unittest` tests**; no pytest, lint or typecheck suite is installed.
 
 `tests/test_browser_layout.py` needs a browser and is **skipped** unless Playwright is
@@ -187,6 +188,18 @@ robots exemption recorded in `src/ingestion/common.py::ROBOTS_UNREACHABLE_HOSTS`
 registrable domain `arcgis.com` serves a retrievable permissive robots.txt, and the layer
 is openly CC BY 4.0, but the default conservative skip is unchanged for every other host.
 **The owner ratified this exemption on 29 September 2026.**
+
+## The About page
+
+`about.html` carries the candidate's portrait, a short account of his public record,
+his own published words, and a contributor subsection naming Abdulkadir Ahmad
+(Hammayo) with his registered portrait. The five commitments are **linked to
+`agenda.html` rather than repeated**, so there is one authoritative copy of them.
+
+The candidate portrait is `yakubu-adamu-single.png`, taken from the candidate's own
+campaign site and used unmodified, so no third-party photographer's copyright is in
+play. It is registered in `asset_register.csv` with a SHA-256, an approval status and
+an `approved_at` date, and `validate_data()` hashes it on every build.
 
 ## The opinion poll (phase S5)
 
