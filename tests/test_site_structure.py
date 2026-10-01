@@ -400,6 +400,35 @@ class ReleaseTrapTests(unittest.TestCase):
             with self.subTest(page=slug):
                 self.assertIn(f"docs/{slug}.html", handoff)
 
+    def test_the_page_cards_list_every_subpage(self):
+        # The home page advertises the site with a row of cards. About was added to
+        # PAGE_NAV and to PAGE_BUILDERS but not to that list, so the landing page listed
+        # five pages while the nav linked to six and the site shipped seven -- and the
+        # heading beside them read "Five pages, one record." None of that broke a link or
+        # failed a test, because nothing compared the cards against the pages.
+        cards = re.findall(r'<a class="nav-card" href="([a-z]+)\.html"', read("index"))
+        expected = [slug for slug in PAGE_SLUGS if slug != "index"]
+        self.assertEqual(cards, expected,
+                         "the landing-page cards and the generated pages disagree")
+
+    def test_the_page_count_in_the_heading_matches_the_cards(self):
+        html = read("index")
+        cards = re.findall(r'<a class="nav-card" href="[a-z]+\.html"', html)
+        section = re.search(r'id="pages".*?</section>', html, re.S)
+        self.assertIsNotNone(section)
+        heading = re.search(r'<h2><span data-en="([^"]*)"', section.group(0))
+        self.assertIsNotNone(heading)
+        for word, number in (("Two", 2), ("Three", 3), ("Four", 4), ("Five", 5),
+                             ("Six", 6), ("Seven", 7), ("Eight", 8), ("Nine", 9),
+                             ("Ten", 10)):
+            if heading.group(1).startswith(word):
+                self.assertEqual(
+                    number, len(cards),
+                    f"heading says {heading.group(1)!r} but there are {len(cards)} cards")
+                break
+        else:
+            self.fail(f"unrecognised page-count heading: {heading.group(1)!r}")
+
     def test_readme_lists_every_page(self):
         readme = Path("README.md").read_text(encoding="utf-8")
         for slug in PAGE_SLUGS:

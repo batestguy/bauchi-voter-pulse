@@ -2712,6 +2712,10 @@ def document(*, slug, title, description, body, scripts="", built=""):
 # ---------------------------------------------------------------------------
 
 def _nav_cards():
+    # One row per subpage. This list was written when there were five and About was
+    # appended to PAGE_NAV without being added here, so the home page advertised five
+    # pages while the nav linked to six and the site shipped seven. Derive the count in the
+    # heading from this list rather than writing a number beside it.
     cards = [
         ("achievements", "01", "Achievements", "Ayyuka da aka yi",
          "The five approved records, every public achievement, and the measurement ledger.",
@@ -2725,7 +2729,10 @@ def _nav_cards():
         ("agenda", "04", "APM agenda", "Bayan-APM",
          "The published campaign commitments, kept separate from achievements.",
          "Alkawarin gaggawa da aka wallafa, an rabu da ayyuka da aka kammala."),
-        ("sources", "05", "Sources", "Bayane",
+        ("about", "05", "About", "Game da shi",
+         "The candidate's record, his own words, and who built this site.",
+         "Karautu da mai tambaya, kalmar kansa, da wanda ya gina wannan shafi."),
+        ("sources", "06", "Sources", "Bayane",
          "Every record traced to a source, with the grading legend and method.",
          "Kowane bayana yana da sauro, tare da ma'ana da hanyar tantawa."),
     ]
@@ -2737,7 +2744,29 @@ def _nav_cards():
             f'<h3>{localized(label_en, label_ha)}</h3>'
             f'<p>{localized(blurb_en, blurb_ha)}</p>'
             f'<span class="nav-card-go">{copy("Open", "Buɗe")} &rarr;</span></a>')
-    return '<div class="nav-cards">' + "".join(items) + "</div>"
+    return '<div class="nav-cards">' + "".join(items) + "</div>", len(cards)
+
+
+# The heading beside the page cards used to read "Five pages, one record." as a literal,
+# written when there were five cards. Adding About to the nav without adding it here left
+# the home page advertising fewer pages than the site had -- so the number is derived.
+PAGE_COUNT_WORDS = {
+    1: ("One page", "Shafi daya"),
+    2: ("Two pages", "Shafi biyu"),
+    3: ("Three pages", "Shafi uku"),
+    4: ("Four pages", "Shafi hudu"),
+    5: ("Five pages", "Shafi biyar"),
+    6: ("Six pages", "Shafi shida"),
+    7: ("Seven pages", "Shafi bakwai"),
+    8: ("Eight pages", "Shafi takwas"),
+    9: ("Nine pages", "Shafi bakwai"),
+    10: ("Ten pages", "Shafi shina"),
+}
+
+
+def page_count_heading(count: int) -> str:
+    english, hausa = PAGE_COUNT_WORDS.get(count, (f"{count} pages", f"Shafi {count}"))
+    return copy(f"{english}, one record.", f"{hausa}, rubutanci daya.")
 
 
 def body_index(ctx):
@@ -2770,6 +2799,8 @@ def body_index(ctx):
         '<div class="portrait-caption"><strong>Dr. Yakubu Adamu</strong>'
         f'<span {attr("Bauchi State Governor candidate", "Mikaƙin gwamna jihada Bauchi")}>Bauchi State Governor candidate</span>'
         '</div></div></div></header>')
+
+    nav_cards_html, nav_card_count = _nav_cards()
 
     sections = [
         '<section class="section" id="progress"><div class="shell"><div class="section-head"><div>'
@@ -2805,11 +2836,11 @@ def body_index(ctx):
         f'<div class="continuity-item"><b>03</b><span>{copy("Turn every promise into a result that can be tracked.", "Sanya kowane alkawari ya zama sakamako da za a iya sa shi ido a kai.")}</span></div>'
         '</div></div></div></section>',
 
-        '<section class="section" id="pages"><div class="shell"><div class="section-head"><div>'
-        f'<div class="eyebrow">{copy("Go deeper", "Tafi ciki")}</div>'
-        f'<h2>{copy("Five pages, one record.", "Shafi biyu da daya, rubutanci daya.")}</h2></div>'
-        f'<p>{copy("Every page keeps its own sources. Nothing here is a private poll.", "Kowane shafi yana da sauro shi. Babu komi a ciki da yake private poll.")}</p>'
-        '</div>' + _nav_cards() + '</div></section>',
+'<section class="section" id="pages"><div class="shell"><div class="section-head"><div>'
+        + f'<div class="eyebrow">{copy("Go deeper", "Tafi ciki")}</div>'
+        + f'<h2>{page_count_heading(nav_card_count)}</h2></div>'
+        + f'<p>{copy("Every page keeps its own sources. Nothing here is a private poll.", "Kowane shafi yana da sauro shi. Babu komi a ciki da yake private poll.")}</p>'
+        + '</div>' + nav_cards_html + '</div></section>',
     ]
     return hero + stats + "".join(sections) + "</main>"
 
