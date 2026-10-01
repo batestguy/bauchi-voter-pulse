@@ -103,6 +103,21 @@ These are enforced in code; keep them enforced.
   the share becomes a dash, and the reason appears on the page. The group size has three
   distinct states — "N answers", "at least N answers", "too few to show" — and collapsing
   them either hides a real group or implies one that does not exist.
+- **The published dashboard is a committed snapshot, and nothing but `build_snapshot.py`
+  writes it.** The cron re-renders pages; it does not read the Sheet. A working poll with
+  no snapshot is the state this repo shipped in for months: votes arriving correctly,
+  dashboard permanently empty, nothing failing. Run
+  `python src/poll/build_snapshot.py <exported Responses.csv>` then render and commit.
+- **The Sheet's `received_at` is the aggregator's `created_at`, and CSV `consent` is a
+  string.** Two one-word mismatches between the endpoint's header and
+  `src.poll.aggregate`, plus the absence of booleans in CSV. Passing the Sheet's column
+  names through untranslated tallied **zero from twelve good rows** and printed
+  `counted 0` with no error. `build_snapshot.py` maps both and
+  `tests/test_build_snapshot.py` asserts the mapping against the real aggregator, because
+  the failure is silent and identical in every case.
+- **An empty export must write no snapshot.** The page renders its own honest empty state;
+  a committed snapshot of zeroes would replace that with a chart of nothing. The builder
+  exits non-zero and writes nothing, and a test asserts it.
 - **A bilingual element must ship with its own text.** `attr()` on an empty element, or a
   `copy()` wrapper inside a node that JavaScript also writes to, leaves the reader with a
   visible but empty box. `test_bilingual.test_no_bilingual_element_ships_without_text`

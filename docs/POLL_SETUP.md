@@ -179,12 +179,28 @@ confident, because the disabled build is provably inert and a connected build is
 The site is static, so results come from a **committed aggregate snapshot**, never from
 reading the Sheet in the browser.
 
-1. A scheduled, owner-controlled job reads the `Responses` tab and builds a snapshot with
-   `src.poll.aggregate.build_public_snapshot(...)`.
-2. Write it to `data/delivery/poll_snapshot.json`. **The field set is not yours to choose** —
-   it is `aggregate.PUBLIC_SNAPSHOT_FIELDS`, and a test asserts the file's keys match it
-   exactly. Build the snapshot with `build_public_snapshot` rather than assembling the
-   dictionary by hand, and the shape is correct by construction:
+1. Export the `Responses` tab: **File > Download > Comma-separated values (.csv)**.
+2. Build the snapshot:
+   ```bash
+   python src/poll/build_snapshot.py ~/Downloads/Sheet1.csv
+   ```
+   It writes `data/delivery/poll_snapshot.json`, then:
+
+   ```bash
+   python src/dashboard/render.py
+   git add data/delivery/poll_snapshot.json docs/*.html
+   git commit -m "data(poll): publish the weekly aggregate"
+   git push
+   ```
+
+   The weekly cron then re-renders and commits on its own schedule, but it does **not**
+   read the Sheet: this step is the one that brings votes into the published page, and
+   skipping it is why the dashboard can sit empty while votes are arriving correctly.
+
+   **Do not hand-assemble the JSON.** `build_snapshot.py` calls
+   `src.poll.aggregate.build_public_snapshot(...)`, so the shape is correct by
+   construction, small cells are suppressed, and comments are never read. The field set is
+   `aggregate.PUBLIC_SNAPSHOT_FIELDS` and a test asserts the file's keys match it exactly:
 
    ```text
    schema_version            reporting_period_start   reporting_period_end
@@ -203,8 +219,28 @@ reading the Sheet in the browser.
    (`by_lga_gender_sector`, `by_lga_age_band_sector`) and the area map (`by_ward_sector`)
    are what the interactive dashboard reads; see `SITE_EXPANSION_PLAN.md` for the
    dashboard's scope rules and `AGENTS.md` for the crossings that are refused.
-3. Commit it. The weekly `rebuild-pages.yml` cron picks it up and republishes.
 4. Never commit raw rows, comments, response IDs, or timestamps of individual responses.
+
+### Two column names that do not match, and why it is worth knowing
+
+The `Responses` tab header says **`received_at`**; the aggregator reads **`created_at`**.
+They differ by one letter, nothing upstream checks it, and passing the Sheet's own column
+name straight through produced a snapshot reporting `counted 0` from twelve perfectly good
+rows — a dashboard of nothing, built from real data, with no error anywhere. CSV also has
+no booleans, so `consent` arrives as the string `"TRUE"` where the aggregator requires the
+JSON boolean `true`.
+
+`build_snapshot.py` performs both mappings explicitly and `tests/test_build_snapshot.py`
+asserts them against the real aggregator. If you ever extend that script, keep them: they
+fail silently and identically, which is the worst combination available.
+
+### Why this step is manual
+
+A workflow that reads the Sheet needs a Google service-account key committed as a
+repository secret. On a public repository that is a real increase in attack surface, and
+the alternative keeps every credential out of git entirely. At campaign volumes, exporting
+the tab and running one command is the better trade. Revisit it only if the weekly ritual
+becomes the bottleneck.
 
 Until that file exists, the page renders an honest empty state: "No responses have been
 recorded yet." That is deliberate. **Never seed, example, or placeholder results**, and
