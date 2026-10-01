@@ -1967,7 +1967,7 @@ def poll_section(ward_rows):
   <div class="shell">
     <div class="section-head">
       <div><div class="eyebrow">{copy("One question", "Ƙa tambaya daya")}</div><h2 id="poll-title">{copy("Which sector should APM prioritise first?", "Wane sector APM ya fi gabanawa da farko?")}</h2></div>
-      <p>{copy("Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied.", "Zaɓi sector daya. Shi kawai abin da wannan hawsar tana ƙirgita. ƙoƙin sharhi da ke kasa yana tare da ita, ba tambaya ta biyu ba, kuma ba a taƙaita shi ba.")}</p>
+      <p>{copy("Pick one sector. That is the only thing this poll counts. The comment box below is a note attached to your vote, not a second question, and it is never tallied.", "Zaɓi sector daya. Shi kawai abin da wannan hawsar tana ƙirgita. ƙoƙin sharhi da ke kasa yana tare da ita, ba tambaya ta biyu ba.")}</p>
     </div>
     <form class="poll-form" id="public-poll-form" method="post" action="about:blank" onsubmit="return false" data-poll-form data-poll-endpoint="{esc(POLL_ENDPOINT)}" data-poll-configured="{str(endpoint_configured).lower()}" aria-describedby="poll-config-status poll-comment-note poll-identity-note">
       <p class="poll-config-status" id="poll-config-status" data-poll-config-status data-en="{esc(status_en)}" data-ha="{esc(status_ha)}">{esc(status_en)}</p>
@@ -2016,9 +2016,9 @@ def poll_section(ward_rows):
         <p class="poll-note" data-en="We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions." data-ha="Muna tambaya ƙungiya, ba shekaru kuma daidai ba, kuma ba suna, waya, imel ko adireshi ba. Za ka iya tsayawa duk tambayoyin ba tare da su ba.">We ask for a group, never an exact age, and never a name, phone number, email or address. You can skip both questions.</p>
       </fieldset>
       <div class="poll-field">
-        <label for="poll-comment">{copy("Comment (optional, not counted)", "Sharhi (zaɓi, ba a taƙaita ba)")}</label>
+        <label for="poll-comment">{copy("Say a bit more (optional)", "Kara bayan aƙari (zaɓi)")}</label>
         <textarea id="poll-comment" name="comment" rows="3" maxlength="{max_comment}" aria-describedby="poll-comment-note"></textarea>
-        <p class="poll-note" id="poll-comment-note" data-en="This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail." data-ha="Wannan sharhi yana tare da amsar kuma ba a taƙaita ko wallafa shi ba. Ka yi hankali ka guji shigar da suna, l waya, adireshi ko wani bayan da ke gano mutum.">This comment is attached to your vote and never counted or published. Please do not include your name, phone number, address or any identifying detail.</p>
+        <p class="poll-note" id="poll-comment-note" data-en="Your note goes with your vote. Please do not include your name, phone number, address or any identifying detail." data-ha="Wannan sharhi yana tare da amsar. Ka yi hankali ka guji shigar da suna, l waya, adireshi ko wani bayan da ke gano mutum.">Your note goes with your vote. Please do not include your name, phone number, address or any identifying detail.</p>
       </div>
       <div class="poll-field poll-honeypot" aria-hidden="true"><label for="poll-website" data-en="Website" data-ha="Yanayin gari">Website</label><input id="poll-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
       <div class="poll-consent">
@@ -2823,13 +2823,13 @@ def body_poll(ctx):
         '</div><div class="note-box">' + copy(
             "The poll asks for no name, phone number, email, address, exact age or voter ID. It "
             "records one sector choice, the area you live in, optional age group and gender, "
-            "and an optional comment, and the comment is never counted. Areas and groups with "
+            "and an optional comment that goes with it. Areas and groups with "
             "very few answers are never published. The request form below is separate and can "
             "ask for contact details if you choose to give them. Any confirmation reference on "
             "either form is a generated tracking reference, not a voter ID.",
             "Hawsar ba ta nemi suna, l waya, imel, adireshi, shekaru kuma daidai ko ID na zabb'ar masu "
             "zayyawa ba. Tana yin rikodin zaɓi na sector daya, wurin da kake, shekaru da "
-            "jinsi da za ka zaɓi, da sharhi na zaɓi, kuma ba a taƙaita sharhi ba. Wurare da "
+            "jinsi da za ka zaɓi, da sharhi na zaɓi da ke tare da ita. Wurare da "
             "mukulli da ke da amsa kaɗan ba a wallafa su ba. Fom na buƙatar da ke ƙasa shi dabewa "
             "ne, yana iya nemi bayanan hulɗe idan ka zaɓi su bayar. Kowane ID na tabbaci a "
             "koɗa cikin sunu ID na bin ne, ba ID na zabb'ar masu zayyawa ba.")

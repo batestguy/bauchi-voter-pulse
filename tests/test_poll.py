@@ -1110,9 +1110,12 @@ class PollPageTests(unittest.TestCase):
         # The form must not promise a per-area result it may not be allowed to publish.
         self.assertIn("areas with very few answers are never published", self.html)
 
-    def test_q2_is_labelled_a_comment_and_excluded_from_the_tally(self):
-        self.assertIn("Comment (optional, not counted)", self.html)
-        self.assertIn("never counted or published", self.html)
+    def test_q2_invites_a_comment_without_announcing_the_tally_rule(self):
+        self.assertIn("Say a bit more (optional)", self.html)
+        # The privacy warning stays: it is what stops the writer putting their
+        # own name, phone and address into a public record.
+        self.assertIn("Please do not include your name, phone number, address",
+                      self.html)
 
     def test_results_state_the_sample_is_not_representative(self):
         self.assertIn("self-selected visitors", self.html)
@@ -1290,7 +1293,7 @@ class PollPageTests(unittest.TestCase):
     def test_the_form_is_bilingual(self):
         for en, ha in (("Which sector should APM prioritise first?",
                         "Wane sector APM ya fi gabanawa da farko?"),
-                       ("Comment (optional, not counted)", "Sharhi (zaɓi, ba a taƙaita ba)"),
+                       ("Say a bit more (optional)", "Kara bayan aƙari (zaɓi)"),
                        ("Cast vote", "Yi amsa"),
                        ("Woman", "Mace"),
                        ("Man", "Miji"),
