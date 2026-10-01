@@ -20,7 +20,6 @@ address
 category
 details
 name
-phone
 email
 consent
 validation_status

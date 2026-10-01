@@ -37,7 +37,7 @@ REQUIRED_FIELDS = (
     "details",
     "consent",
 )
-OPTIONAL_PRIVATE_FIELDS = ("name", "phone", "email")
+OPTIONAL_PRIVATE_FIELDS = ("name", "email")
 ALLOWED_PAYLOAD_FIELDS = frozenset(
     REQUIRED_FIELDS + OPTIONAL_PRIVATE_FIELDS + ("website", "submitted_at")
 )
@@ -49,7 +49,6 @@ MAX_LENGTHS = {
     "address": 300,
     "details": 1000,
     "name": 120,
-    "phone": 40,
     "email": 254,
 }
 MAX_REQUEST_ID_LENGTH = 40
@@ -60,7 +59,6 @@ WARD_MAP_REQUIRED_WARNING = "ward_map_required_before_production"
 MAX_SUBMITTED_AGE = timedelta(hours=24)
 MAX_SUBMITTED_CLOCK_SKEW = timedelta(minutes=5)
 
-_PHONE_SHAPE = re.compile(r"^\+?[0-9](?:[0-9 ().-]*[0-9])?$")
 # The local part is a dot-atom and therefore MAY contain dots. The class below originally
 # omitted ".", which rejected every address of the shape `first.last@example.com` -- that
 # is, a large share of real addresses -- because the greedy match stopped at the first dot
@@ -541,7 +539,6 @@ __all__ = [
     "is_allowed_category",
     "is_honeypot_empty",
     "normalize_email",
-    "normalize_phone",
     "public_projection",
     "validate_category",
     "validate_consent",

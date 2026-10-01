@@ -133,7 +133,6 @@ const base = {
 // Values that must never appear in any response or any audit row.
 const SECRETS = {
   name: "Aminu Bala",
-  phone: "08012345678",
   email: "aminu.bala@example.com",
   details: "The borehole has not produced water for three weeks.",
   address: "Behind the old primary school, Tudu Wada",
@@ -194,28 +193,28 @@ function accepts(name, payload, extra = {}) {
 // Column order is asserted by index, from the header setupSheets() writes, which matches
 // GOOGLE_SHEETS_SETUP.md section 1:
 //  0 request_id  1 created_at  2 lga  3 ward_code  4 address  5 category  6 details
-//  7 name  8 phone  9 email  10 consent  11 validation_status
-// 12 validation_warnings  13 submitted_at
+//  7 name  8 email  9 consent  10 validation_status  11 validation_warnings
+// 12 submitted_at
 const REQUEST_ID = 0, CREATED_AT = 1, LGA = 2, WARD = 3, ADDRESS = 4, CATEGORY = 5;
-const DETAILS = 6, NAME = 7, PHONE = 8, EMAIL = 9, CONSENT = 10, STATUS = 11;
-const WARNINGS = 12, SUBMITTED_AT = 13;
+const DETAILS = 6, NAME = 7, EMAIL = 8, CONSENT = 9, STATUS = 10;
+const WARNINGS = 11, SUBMITTED_AT = 12;
 
 accepts("minimal valid", { ...base }, {
   [LGA]: "Bauchi", [WARD]: "RA-012", [CATEGORY]: "water",
   [ADDRESS]: SECRETS.address, [DETAILS]: SECRETS.details,
-  [NAME]: "", [PHONE]: "", [EMAIL]: "", [CONSENT]: true, [STATUS]: "validated",
+  [NAME]: "", [EMAIL]: "", [CONSENT]: true, [STATUS]: "validated",
 });
 accepts("full valid", {
-  ...base, name: SECRETS.name, phone: SECRETS.phone, email: SECRETS.email,
+  ...base, name: SECRETS.name, email: SECRETS.email,
 }, {
-  [NAME]: SECRETS.name, [PHONE]: SECRETS.phone, [EMAIL]: SECRETS.email,
+  [NAME]: SECRETS.name, [EMAIL]: SECRETS.email,
 });
 
 // The row must be exactly 14 columns wide. A Sheet whose columns reshuffle silently is
 // how a name ends up in the address column, so the width is asserted rather than assumed.
 {
   const r = post({ ...base });
-  check("the request row is exactly 14 columns", r.requests[0]?.length === 14,
+  check("the request row is exactly 13 columns", r.requests[0]?.length === 13,
     `${r.requests[0]?.length} columns`);
   check("a validated row carries no validation warning", r.requests[0]?.[WARNINGS] === "",
     JSON.stringify(r.requests[0]?.[WARNINGS]));
@@ -267,33 +266,32 @@ rejects("control char in name", { ...base, name: "Aminu Bala" },
   "control_character_rejected");
 accepts("control-char escape is not a control char", { ...base, name: "Aminu\\u0000" });
 
-/* ---------------------------------------------- phone and email normalisation */
+/* ------------------- the phone number is refused, not quietly dropped */
 
-// These are the fields most likely to be mangled by a careless regex, and a mangled phone
-// number means staff cannot call the person who reported the problem.
-accepts("phone stripped of formatting", { ...base, phone: "080-1234-5678" },
-  { [PHONE]: "08012345678" });
-accepts("phone keeps a leading plus", { ...base, phone: "+234 801 234 5678" },
-  { [PHONE]: "+2348012345678" });
-// Brackets are permitted only INSIDE the number: the pattern requires a leading digit, so
-// "(080) 1234 5678" is refused while "080 (1234) 5678" is accepted. That is the contract's
-// behaviour and it is asserted rather than assumed.
-accepts("phone with brackets inside the number", { ...base, phone: "080 (1234) 5678" },
-  { [PHONE]: "08012345678" });
-rejects("phone starting with a bracket", { ...base, phone: "(080) 1234 5678" },
-  "invalid_phone");
-rejects("phone too short", { ...base, phone: "12345" }, "invalid_phone");
-rejects("phone too long", { ...base, phone: "1234567890123456" }, "invalid_phone");
-rejects("unbalanced brackets in phone", { ...base, phone: "(080 1234 5678" }, "invalid_phone");
-rejects("empty brackets in phone", { ...base, phone: "080()1234567" }, "invalid_phone");
-rejects("letters in phone", { ...base, phone: "080-CALL-NOW" }, "invalid_phone");
-accepts("blank phone is optional", { ...base, phone: "" }, { [PHONE]: "" });
+// The owner removed the phone field from the form. Removing the INPUT alone would have left
+// the endpoint still accepting and storing one, which is the opposite of "we don't want
+// such" -- so `phone` left ALLOWED_PAYLOAD_FIELDS and a payload carrying one is now
+// refused outright. This block is what distinguishes those two outcomes, and it is why the
+// removal went all the way down to the contract rather than stopping at the markup.
+rejects("a phone number is refused", { ...base, phone: "08012345678" },
+  "unsupported_field");
+rejects("a phone number is refused in an otherwise complete payload", {
+  ...base, lga: "Bauchi", ward_code: "RA-012", address: base.address,
+  category: base.category, details: base.details, consent: true,
+  phone: "+234 801 234 5678",
+}, "unsupported_field");
+// Even an empty one. An input the form no longer renders should not be a field the
+// endpoint quietly tolerates, because tolerating it is the first half of accepting it.
+rejects("an empty phone field is refused too, not ignored", { ...base, phone: "" },
+  "unsupported_field");
 
-// Only the DOMAIN is lowercased. The local part is case-sensitive per RFC, so rewriting
-// it would change an address the respondent gave us.
+/* --------------------------------------- email is the only correspondence channel */
+
+// Kept, optional, for correspondence. The domain is lowercased and the local part is not,
+// because the local part is case-sensitive and rewriting it would change an address the
+// respondent gave us.
 accepts("email domain lowercased", { ...base, email: "Aminu.Bala@Example.COM" },
   { [EMAIL]: "Aminu.Bala@example.com" });
-// The dot in the local part. This is the shape that used to be rejected outright.
 accepts("email with a dotted local part", { ...base, email: "aminu.bala@example.com" },
   { [EMAIL]: "aminu.bala@example.com" });
 accepts("email with a subdomains and a tag",
@@ -333,7 +331,7 @@ rejects("submitted_at in the future", {
 // The single most important property of this endpoint: the audit tab is three narrow
 // columns and cannot hold a contact field, even on a rejection.
 {
-  const r = post({ ...base, name: SECRETS.name, phone: SECRETS.phone, email: SECRETS.email });
+  const r = post({ ...base, name: SECRETS.name, email: SECRETS.email });
   check("an accepted request is audited", r.audit.length === 1 && r.audit[0][1] === "accepted",
     JSON.stringify(r.audit));
   check("an accepted audit row is exactly 3 columns", r.audit[0]?.length === 3,
@@ -342,7 +340,7 @@ rejects("submitted_at in the future", {
     JSON.stringify(r.audit[0]));
 }
 {
-  const r = post({ ...base, name: SECRETS.name, phone: SECRETS.phone,
+  const r = post({ ...base, name: SECRETS.name,
     email: SECRETS.email, category: "aircraft" });
   check("a rejected request is audited by code", r.audit.length === 1
     && r.audit[0][1] === "rejected" && r.audit[0][2] === "invalid_category",
@@ -378,15 +376,15 @@ rejects("submitted_at in the future", {
 /* --------------------------------------------- a column can never be skipped */
 
 // The strongest way to test the guard is to remove the value it protects. A sparse row
-// still has length 14, so a count check alone would pass and the Sheet would end up with
-// the email in the phone column and the address in the details column -- every value a
+// still has length 13, so a count check alone would pass and the Sheet would end up with
+// the email in the consent column and the address in the details column -- every value a
 // string, nothing downstream able to tell.
 {
   // Test the REAL writer against the exact defect, rather than a stand-in. Handing
   // persist_ a record whose name is absent is what a future edit to the field list would
   // actually do, and it is the shape the guard exists for: a sparse row still reports
-  // length 14, so a count check alone passes and the Sheet receives a hole -- the email
-  // landing in the phone column and the address in the details column, every value a
+  // length 13, so a count check alone passes and the Sheet receives a hole -- the email
+  // landing in the consent column and the address in the details column, every value a
   // string and nothing downstream able to tell.
   appended.requests.length = 0;
   let code = "";
@@ -394,8 +392,8 @@ rejects("submitted_at in the future", {
     sandbox.persist_("APM-2026-000001", {
       lga: "Bauchi", ward_code: "RA-012", address: SECRETS.address,
       category: "water", details: SECRETS.details,
-      // name deliberately absent, phone and email present
-      phone: SECRETS.phone, email: SECRETS.email, submitted_at: "",
+      // name deliberately absent, email present
+      email: SECRETS.email, submitted_at: "",
     }, new Date());
   } catch (error) {
     code = error.message;
@@ -410,17 +408,17 @@ rejects("submitted_at in the future", {
   sandbox.persist_("APM-2026-000002", {
     lga: "Bauchi", ward_code: "RA-012", address: SECRETS.address,
     category: "water", details: SECRETS.details,
-    name: SECRETS.name, phone: SECRETS.phone, email: SECRETS.email, submitted_at: "",
+    name: SECRETS.name, email: SECRETS.email, submitted_at: "",
   }, new Date());
   const gaps = appended.requests[0] || [];
   const holes = [];
-  for (let c = 0; c < 14; c += 1) {
+  for (let c = 0; c < 13; c += 1) {
     if (!Object.prototype.hasOwnProperty.call(gaps, c) || gaps[c] === undefined) {
       holes.push(c);
     }
   }
-  check("a complete record fills all 14 columns with no holes",
-    holes.length === 0 && gaps.length === 14,
+  check("a complete record fills all 13 columns with no holes",
+    holes.length === 0 && gaps.length === 13,
     `width ${gaps.length}, holes: ${holes.join(", ")}`);
 }
 
@@ -508,7 +506,7 @@ rejects("submitted_at in the future", {
     JSON.stringify(body));
   check("doGet reports the real area count", body.ward_areas === 212,
     String(body.ward_areas));
-  check("doGet reports the column count", body.columns === 14, String(body.columns));
+  check("doGet reports the column count", body.columns === 13, String(body.columns));
   check("doGet leaks no stored data",
     !("requests" in body) && !Object.keys(body).some((k) => SECRETS[k] !== undefined),
   JSON.stringify(body));

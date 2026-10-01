@@ -218,10 +218,17 @@ The request form's Apps Script intake lives in `docs/requests-script/`. It is **
 `Code.gs.template` + `data/delivery/lga_wards.csv` -> `Code.gs`, via `build_code_gs.py`.
 Never edit `Code.gs` directly. It is a separate folder from `docs/apps-script/` on purpose:
 the two contracts are opposites, and one shared file would blend them.
-- **The request form stores PII; the poll does not.** A name, a phone, an email and a
-  street address are the point of this form. That makes it the highest-risk code here, and
-  the rules follow from that rather than from the poll's. Do not weaken them to match the
-  poll, and do not apply the poll's identity rules to it.
+- **The request form stores PII; the poll does not.** A name, an email address and a street
+  address are the point of this form. That makes it the highest-risk code here, and the
+  rules follow from that rather than from the poll's. Do not weaken them to match the poll,
+  and do not apply the poll's identity rules to it.
+- **A phone number is REFUSED, not dropped.** The owner removed it from the form on the
+  reading that this is about one need, not about building a contact list, and that removal
+  went all the way down: `phone` left `OPTIONAL_PRIVATE_FIELDS`, `MAX_LENGTHS` and
+  `ALLOWED_PAYLOAD_FIELDS`, so a payload carrying one is an `unsupported_field`. Removing
+  the input alone would have left the endpoint still accepting and storing one. **Email is
+  the only correspondence channel** and is optional. Do not re-add a phone input, a phone
+  column, or a "contact us by phone" line without the owner asking.
 - **The endpoint re-implements every rule in `src/requests/validation.py`, and that is not
   optional.** The browser sends JSON and anyone can send anything. Two implementations of
   one rule drift unless something asserts they agree, so

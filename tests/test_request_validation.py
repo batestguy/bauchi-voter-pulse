@@ -51,14 +51,12 @@ class RequestValidationTests(unittest.TestCase):
             lga="  bauchi ",
             category=" WATER ",
             name=" Test User ",
-            phone="+234 800 000 0000",
             email="Test@Example.COM",
         )
         record = validation.validate_request(payload, LGAS, WARDS)
 
         self.assertEqual(record["lga"], "Bauchi")
         self.assertEqual(record["category"], "water")
-        self.assertEqual(record["phone"], "+2348000000000")
         self.assertEqual(record["email"], "Test@example.com")
         self.assertEqual(record["validation_status"], "validated")
         self.assertEqual(record["validation_warnings"], [])
@@ -120,7 +118,6 @@ class RequestValidationTests(unittest.TestCase):
             ("address", "a" * 301),
             ("details", "d" * 1001),
             ("name", "n" * 121),
-            ("phone", f"+{'1' * 41}"),
             ("email", f"{'e' * 245}@example.com"),
         )
         for field, value in cases:
@@ -152,7 +149,7 @@ class RequestValidationTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, "honeypot_rejected")
 
     def test_invalid_contact_shapes_do_not_echo_values(self):
-        for field, value in (("phone", "not-a-phone"), ("email", "bad-email")):
+        for field, value in (("email", "bad-email"),):
             with self.subTest(field=field):
                 with self.assertRaises(
                     validation.RequestValidationError
@@ -200,8 +197,7 @@ class RequestValidationTests(unittest.TestCase):
         private_record = validation.validate_request(
             valid_payload(
                 name="Test User",
-                phone="+234 800 000 0000",
-                email="test@example.com",
+                    email="test@example.com",
             ),
             LGAS,
             WARDS,
@@ -248,6 +244,85 @@ class RequestValidationTests(unittest.TestCase):
             ]
         )
 
+
+
+class PhoneRemovalTests(unittest.TestCase):
+    """The phone number is refused, not dropped.
+
+    The owner removed the phone field from the request form on the reading that it is about
+    one need, not about building a contact list. Removing the INPUT alone would have left
+    the endpoint still accepting and storing a number, which is the opposite of what was
+    asked -- so `phone` left `ALLOWED_PAYLOAD_FIELDS` and a payload carrying one is now an
+    `unsupported_field`.
+
+    "Refused" rather than "ignored" is the whole distinction. A silently dropped field is
+    still on the wire, in the access log, and in whatever sits in front of the endpoint, so
+    dropping it is not a privacy control and never was.
+    """
+
+    BASE = {
+        "lga": "Bauchi",
+        "ward_code": "RA-001",
+        "address": "Behind the primary school",
+        "category": "water",
+        "details": "The borehole is dry.",
+        "consent": True,
+    }
+    LGAS = ("Bauchi",)
+    WARDS = {"Bauchi": ("RA-001",)}
+
+    def _reject(self, payload):
+        with self.assertRaises(validation.RequestValidationError) as caught:
+            validation.validate_request(
+                payload, self.LGAS, self.WARDS,
+                now=datetime(2026, 9, 25, 10, 30, tzinfo=timezone.utc))
+        return caught.exception.code
+
+    def test_a_phone_number_is_refused(self):
+        self.assertEqual(self._reject({**self.BASE, "phone": "08012345678"}),
+                         "unsupported_field")
+
+    def test_a_phone_number_is_refused_in_its_international_form(self):
+        self.assertEqual(self._reject({**self.BASE, "phone": "+234 801 234 5678"}),
+                         "unsupported_field")
+
+    def test_an_empty_phone_field_is_refused_too(self):
+        # Tolerating an empty value is the first half of accepting a populated one. A field
+        # the form no longer renders should not be a field the contract quietly permits.
+        self.assertEqual(self._reject({**self.BASE, "phone": ""}), "unsupported_field")
+
+    def test_phone_is_not_an_optional_private_field(self):
+        self.assertNotIn("phone", validation.OPTIONAL_PRIVATE_FIELDS)
+
+    def test_phone_is_not_in_the_allowed_payload(self):
+        self.assertNotIn("phone", validation.ALLOWED_PAYLOAD_FIELDS)
+
+    def test_phone_has_no_length_budget(self):
+        # A length limit for a field that cannot be sent is a contradiction, and it is the
+        # kind that survives unnoticed because nothing ever exercises it.
+        self.assertNotIn("phone", validation.MAX_LENGTHS)
+
+    def test_email_is_still_collected_for_correspondence(self):
+        record = validation.validate_request(
+            {**self.BASE, "email": "aminu.bala@example.com"},
+            self.LGAS, self.WARDS, now=datetime(2026, 9, 25, 10, 30, tzinfo=timezone.utc))
+        self.assertEqual(record["email"], "aminu.bala@example.com")
+        self.assertIn("email", validation.OPTIONAL_PRIVATE_FIELDS)
+
+    def test_name_is_still_collected(self):
+        # Not asked to be removed, and it is the one field that makes a reply personal
+        # rather than anonymous.
+        record = validation.validate_request(
+            {**self.BASE, "name": "Aminu Bala"},
+            self.LGAS, self.WARDS, now=datetime(2026, 9, 25, 10, 30, tzinfo=timezone.utc))
+        self.assertEqual(record["name"], "Aminu Bala")
+
+    def test_a_request_without_any_contact_detail_still_validates(self):
+        record = validation.validate_request(
+            dict(self.BASE), self.LGAS, self.WARDS,
+            now=datetime(2026, 9, 25, 10, 30, tzinfo=timezone.utc))
+        self.assertNotIn("phone", record)
+        self.assertNotIn("email", record)
 
 if __name__ == "__main__":
     unittest.main()

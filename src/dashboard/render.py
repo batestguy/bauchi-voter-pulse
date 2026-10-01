@@ -1607,8 +1607,7 @@ def request_form_section(ward_rows):
           <legend>{copy("Optional follow-up details", "Bayanan binfollow-up (zaɓi)")}</legend>
           <div class="request-grid">
             <div class="request-field"><label for="request-name">{copy("Name (optional)", "Suna (zaɓi)")}</label><input id="request-name" name="name" type="text" maxlength="120" autocomplete="name"></div>
-            <div class="request-field"><label for="request-phone">{copy("Phone (optional)", "L waya (zaɓi)")}</label><input id="request-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" inputmode="tel"></div>
-            <div class="request-field request-field-wide"><label for="request-email">{copy("Email (optional)", "Imel (zaɓi)")}</label><input id="request-email" name="email" type="email" maxlength="254" autocomplete="email"></div>
+                <div class="request-field request-field-wide"><label for="request-email">{copy("Email, if you would like a reply (optional)", "Imel idan ka son amsa (ƙoƙari aika imel)")}</label><input id="request-email" name="email" type="email" maxlength="254" autocomplete="email"></div>
           </div>
         </fieldset>
         <div class="request-field request-honeypot" aria-hidden="true"><label for="request-website" data-en="Website" data-ha="Yanayin gari">Website</label><input id="request-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>

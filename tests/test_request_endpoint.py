@@ -8,7 +8,7 @@ real generated Code.gs with the Apps Script globals stubbed and runs the real do
 not a mock of the endpoint; it is the endpoint, with only the platform objects faked.
 
 This matters more here than for the poll. The poll stores no direct identity. This form
-stores a name, a phone number, an email address and a street address, so the endpoint
+stores a name, an email address for correspondence and a street address, so the endpoint
 decides what a member of the public can write into the campaign's private records and what
 gets logged about it.
 
@@ -20,8 +20,8 @@ Two rules the tests here exist to enforce:
    other is a member of the public turned away with no error shown.
 
 2. **The audit tab cannot hold a contact field.** Three narrow columns, and both the
-   harness and this file assert that a rejected request -- which carries a name, phone,
-   email, address and details -- leaves only a stable rejection code behind.
+   harness and this file assert that a rejected request -- which carries a name, an email
+   and a street address -- leaves only a stable rejection code behind.
 """
 import csv
 import re
@@ -314,7 +314,7 @@ class RequestEndpointScriptTests(unittest.TestCase):
         for column in columns:
             with self.subTest(column=column):
                 self.assertIn(column, guide)
-        self.assertEqual(len(columns), 14)
+        self.assertEqual(len(columns), 13)
 
 
 if __name__ == "__main__":

@@ -19,19 +19,19 @@
  * THIS IS NOT THE POLL, AND THE DIFFERENCE IS THE WHOLE DESIGN
  * ============================================================================
  * The opinion poll stores no direct identity at all. This request form DOES: a name, a
- * phone number, an email address and a street address are the point of it. Staff have to
- * be able to find the place and reach the person.
+ * an email address for correspondence and a street address. Staff have to be able to
+ * find the place, and to write back to anyone who asks to be replied to.
  *
  * That makes this file the highest-risk thing in the repository, and the rules below
  * follow from that rather than from the poll's:
  *
  *  - Never log a name, phone, email, address, detail or payload. Log the rejection CODE
  *    and nothing else. The Audit tab has three columns and cannot hold a fourth.
- *  - Never return anything except { request_id }. Echoing a respondent's own phone number
- *    back into their browser is pointless and puts it in their history.
+ *  - Never return anything except { request_id }. Echoing a respondent's own email back
+ *    into their browser is pointless and puts it in their history.
  *  - Never accept a request_id from the client. It is allocated here, sequentially, and
- *    never derived from the content: a hash of a name and a phone number is a stable
- *    fingerprint that anyone able to guess the person can confirm.
+ *    never derived from the content: a hash of a name, an email and an address is a
+ *    stable fingerprint that anyone able to guess the person can confirm.
  *  - Do not widen sharing of this Sheet. It is private data with a retention obligation,
  *    unlike the poll's aggregate Sheet.
  *
@@ -57,16 +57,16 @@ var REQUIRED_FIELDS = [
 /* Optional contact fields. Unlike the poll, storing these is the intended behaviour here,
  * so there is no forbidden-identity list: the list of what we REFUSE is the unknown-field
  * list, and the contract's allowed-field list is mirrored below. */
-var OPTIONAL_PRIVATE_FIELDS = ['name', 'phone', 'email'];
+var OPTIONAL_PRIVATE_FIELDS = ['name', 'email'];
 
 var ALLOWED_PAYLOAD_FIELDS = [
   'lga', 'ward_code', 'address', 'category', 'details', 'consent',
-  'name', 'phone', 'email', 'website', 'submitted_at'
+  'name', 'email', 'website', 'submitted_at'
 ];
 
 var MAX_LENGTHS = {
   lga: 80, ward_code: 40, category: 32, address: 300, details: 1000,
-  name: 120, phone: 40, email: 254
+  name: 120, email: 254
 };
 
 var MAX_SUBMITTED_AGE_MINUTES = 24 * 60;
@@ -78,8 +78,8 @@ var AUDIT_SHEET_NAME = 'Audit';
 /** Column order, asserted by index in test_endpoint.mjs. Matches GOOGLE_SHEETS_SETUP.md
  *  section 1 exactly, so the owner's hand-built Sheet and this writer cannot disagree:
  *   0 request_id 1 created_at 2 lga 3 ward_code 4 address 5 category 6 details
- *   7 name 8 phone 9 email 10 consent 11 validation_status 12 validation_warnings
- *   13 submitted_at */
+ *   7 name 8 email 9 consent 10 validation_status 11 validation_warnings
+ *  12 submitted_at */
 var COLUMN_REQUEST_ID = 0;
 var COLUMN_CREATED_AT = 1;
 var COLUMN_LGA = 2;
@@ -88,13 +88,12 @@ var COLUMN_ADDRESS = 4;
 var COLUMN_CATEGORY = 5;
 var COLUMN_DETAILS = 6;
 var COLUMN_NAME = 7;
-var COLUMN_PHONE = 8;
-var COLUMN_EMAIL = 9;
-var COLUMN_CONSENT = 10;
-var COLUMN_VALIDATION_STATUS = 11;
-var COLUMN_VALIDATION_WARNINGS = 12;
-var COLUMN_SUBMITTED_AT = 13;
-var COLUMN_COUNT = 14;
+var COLUMN_EMAIL = 8;
+var COLUMN_CONSENT = 9;
+var COLUMN_VALIDATION_STATUS = 10;
+var COLUMN_VALIDATION_WARNINGS = 11;
+var COLUMN_SUBMITTED_AT = 12;
+var COLUMN_COUNT = 13;
 
 var _wardMap = null;
 
@@ -246,25 +245,6 @@ function validateWardCode_(value, lga) {
   reject_('invalid_ward', 'ward_code');
 }
 
-var PHONE_SHAPE = new RegExp(
-  '^\\+?[0-9](?:[0-9 ().-]*[0-9])?$'
-);
-
-function normalizePhone_(value) {
-  var cleaned = requireText_(value, 'phone', false);
-  if (!cleaned) { return ''; }
-  if (!PHONE_SHAPE.test(cleaned)
-      || cleaned.split('(').length !== cleaned.split(')').length
-      || cleaned.indexOf('()') !== -1) {
-    reject_('invalid_phone', 'phone');
-  }
-  var digits = cleaned.replace(/\D/g, '');
-  if (digits.length < 7 || digits.length > 15) {
-    reject_('invalid_phone', 'phone');
-  }
-  return cleaned.charAt(0) === '+' ? '+' + digits : digits;
-}
-
 /** The local part is a dot-atom and MAY contain dots, so "." is in this class and "-" is
  *  kept last so it stays a literal rather than a range. The class originally omitted ".",
  *  which rejected every address shaped `first.last@example.com`; the mirror in
@@ -304,7 +284,7 @@ function normalizeEmail_(value) {
 /** A tracking reference for one request. NOT a voter ID, and never described as one.
  *
  *  Sequential, never derived from the content. This matters MORE here than it does for the
- *  poll: a content hash of a name, a phone number and an address is a stable fingerprint
+ *  poll: a content hash of a name, an email and an address is a stable fingerprint
  *  that anyone who can guess the person can confirm, and the reference is returned to the
  *  respondent in their browser.
  *
@@ -338,7 +318,7 @@ function doPost(e) {
   try {
     payload = parseBody_(e);
     // The validated record, NOT the raw payload. validate_ returns a new normalised
-    // object -- canonical LGA spelling, a stripped phone, a lowercased email domain,
+    // object -- canonical LGA spelling, a lowercased email domain,
     // trimmed and length-capped text -- and persisting `payload` instead would throw all
     // of that away and write whatever the client sent.
     var record = validate_(payload, receivedAt);
@@ -410,7 +390,6 @@ function validate_(payload, now) {
   var details = requireText_(payload.details, 'details', true);
 
   var name = requireText_(payload.name, 'name', false);
-  var phone = normalizePhone_(payload.phone);
   var email = normalizeEmail_(payload.email);
 
   var submittedAt = '';
@@ -425,7 +404,6 @@ function validate_(payload, now) {
     category: category,
     details: details,
     name: name,
-    phone: phone,
     email: email,
     submitted_at: submittedAt
   };
@@ -475,7 +453,6 @@ function persist_(requestId, record, receivedAt) {
   row[COLUMN_CATEGORY] = record.category;
   row[COLUMN_DETAILS] = record.details;
   row[COLUMN_NAME] = record.name;
-  row[COLUMN_PHONE] = record.phone;
   row[COLUMN_EMAIL] = record.email;
   row[COLUMN_CONSENT] = true;
   // The endpoint never writes `ward_map_missing`: requireWardMap_() has already refused
@@ -533,10 +510,10 @@ function setupSheets() {
   var requests = book.getSheetByName(SHEET_NAME);
   if (!requests) {
     requests = book.insertSheet(SHEET_NAME);
-    // request_id, created_at, lga, ward_code, address, category, details, name, phone,
+    // request_id, created_at, lga, ward_code, address, category, details, name,
     // email, consent, validation_status, validation_warnings, submitted_at
     requests.appendRow(['request_id', 'created_at', 'lga', 'ward_code', 'address',
-                        'category', 'details', 'name', 'phone', 'email', 'consent',
+                        'category', 'details', 'name', 'email', 'consent',
                         'validation_status', 'validation_warnings', 'submitted_at']);
   }
   var audit = book.getSheetByName(AUDIT_SHEET_NAME);
