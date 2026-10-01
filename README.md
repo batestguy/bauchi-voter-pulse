@@ -17,13 +17,15 @@ The site is **seven flat pages** generated from one renderer:
 | `docs/index.html` | Hero, four-step story, sector filter, continuity framing, cards into every subpage |
 | `docs/achievements.html` | Featured carousel, all 25 achievement records, measurement ledger |
 | `docs/atlas.html` | The 20-LGA map — the page's only area selector — the selected-area evidence panel and the not-geo-located registration-area list |
-| `docs/poll.html` | The bilingual need-request form (the poll arrives in S5) |
+| `docs/poll.html` | **Both public forms are live here**: the opinion poll with its results dashboard, and the need-request form |
 | `docs/agenda.html` | The published campaign commitments |
 | `docs/about.html` | About the candidate, and who built this site |
 | `docs/sources.html` | Source register, grading legend, build method |
 - `src/dashboard/render.py` — static generator/validator for delivery data, carousel, LGA map, bilingual request form
 - `data/delivery/` — sources, needs, achievements, promises, indicators, featured achievements, provisional electoral RAs, LGA queue, asset register, source snapshots and review queue
 - `src/requests/` — private request validation and privacy-safe aggregation contracts
+- `src/poll/` — the poll contract, and `build_snapshot.py`, which turns an exported `Responses` tab into the committed snapshot the dashboard renders. **This step is manual and nothing runs it automatically** — see `docs/POLL_SETUP.md` §5
+- `docs/apps-script/` — the poll Apps Script endpoint, generated from `Code.gs.template`; `docs/requests-script/` — the request endpoint. Never edit a generated `Code.gs`
 - `src/ingestion/delivery_sources.py` — official-source discovery, archival and candidate intake
 - `src/ingestion/lga_boundaries.py` — one-time fetch and cache of the GRID3 LGA boundaries (CC BY 4.0)
 - `src/derived/lga_paths.py` — pure-stdlib simplification and projection into `data/derived/lga_paths.json`
@@ -106,9 +108,11 @@ It is the only thing that measures real horizontal overflow at 375px and confirm
 no-JS `<details>` menu opens. `tests/test_site_structure.py` carries static guards for the
 same regressions so they cannot return unnoticed in CI.
 
-The local page includes the interactive in-page carousel and bilingual request
-form. The form's submit control is disabled until an approved HTTPS Google Apps
-Script endpoint is configured; no request data is sent in the local preview.
+The page includes the interactive in-page carousel and both bilingual forms. Both are
+connected to live Google Apps Script web apps, so a submission from the local preview
+reaches the real Sheet. That is deliberate for this site: the forms are the product, and a
+local preview that silently discards them would not be testing the thing that ships.
+Credentials live only in the gitignored `.clasp.json` files.
 
 ## Evidence rules
 
@@ -169,9 +173,13 @@ cleared.
 
 ## Next implementation phase
 
-The six-page split (S0–S3) and the Bauchi map (S4) have shipped. **S5, the opinion poll,
-is built and ships disabled** — connecting it is an owner decision, documented in
-`docs/POLL_SETUP.md`. Next is S6 (CI and release gate) and S7 (documentation).
+The six-page split (S0–S3), the Bauchi map (S4) and the opinion poll (S5) have shipped, and
+**both public forms are live** — the poll and the need-request form, each on its own Sheet,
+each verified by submitting from a real browser. The About page shipped on 1 October 2026,
+making seven pages.
+
+Three owner actions remain, in `HANDOFF.md`: publishing the first poll snapshot, deciding a
+retention period for the request Sheet's personal data, and the native-Hausa review.
 
 ℹ️ Four release traps are closed and test-guarded. The weekly cron stages `docs/*.html`
 and fails if any page is missing; the staging allowlist in `HANDOFF.md` §18 names all six;
@@ -204,13 +212,22 @@ an `approved_at` date, and `validate_data()` hashes it on every build.
 ## The opinion poll (phase S5)
 
 `poll.html` carries a one-question poll — which sector should APM prioritise first — plus
-its results panel. **It ships disabled.** `POLL_ENDPOINT` is `""`, the vote button renders
-`disabled`, and a test asserts no code path in `POLL_SCRIPT` can send before the endpoint
-guard. `docs/POLL_SETUP.md` is the owner guide for connecting it via Google Sheets and
-Apps Script.
+its results panel. **The poll is connected and live** (since 1 October 2026): `POLL_ENDPOINT`
+holds the `/exec` URL of a script bound to the `APM poll responses` Sheet, and a vote
+submitted from a real browser returned `APM-POLL-2026-000009`. The endpoint's guard is still
+tested: with an empty endpoint the button renders `disabled` and no code path in
+`POLL_SCRIPT` can send.
 
 The page carries a **public dashboard**: two charts (sector priorities, responses by LGA),
-an LGA dropdown that filters both, and an exact-count table.
+an LGA dropdown that filters both, and an exact-count table. With no responses recorded it
+renders its **whole layout at zero** — every control live, every figure an explicit `0` —
+with a line above them saying so. A zero here is a true statement: nobody has answered yet.
+It is not a demonstration-data mode.
+
+**Publishing results is a manual step.** The site is static and reads a committed
+`data/delivery/poll_snapshot.json`; nothing reads the Sheet automatically. Export the
+`Responses` tab and run `python src/poll/build_snapshot.py <file.csv>`. See
+`docs/POLL_SETUP.md` §5.
 
 Four properties are enforced rather than merely intended:
 

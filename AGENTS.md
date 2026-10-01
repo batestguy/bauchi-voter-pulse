@@ -397,8 +397,40 @@ These are enforced in code; keep them enforced.
   directory and runs `render.py` there; keep it.
 - **A duplicate `const` in a page's inline script silently disables every script on that page** while the HTML still renders. Guarded by a `node --check` parse in `tests/test_header_brand.py`. Run it.
 
+- **The dashboard renders its whole layout at zero, and that is not a demo mode.** A zero
+  is a true statement — nobody has answered yet — so every control ships live and the same
+  markup fills in as real responses arrive. Fabricating non-zero counts is refused: it is a
+  claim about what Bauchi residents want, and a snapshot is downloadable, so anyone can
+  check. `POLL_SHOW_EMPTY_SCAFFOLD` renders the zero state; `test_the_zero_dashboard_never_
+  shows_a_bar_width` asserts every fill is 0% and every value is 0.
+- **An explicit zero and a withheld cell are different facts.** Zero means "nobody chose
+  this"; withheld means "too few to say". Never draw one as the other — a zero-width bar
+  reads as a measured nothing. Zero rows get a hatched, dashed track for exactly this
+  reason.
+- **Names and titles are retained, not placeholdered.** "Dr." stays in public copy, and
+  `Abdulkadir Ahmad (Hammayo)` remains the named contributor with his existing role line.
+  The anti-fabrication rules under "Contributor credit rules" are unchanged: nothing around
+  his name may be invented.
+
 ## Legal / ethics
 Public sources only; anonymize; disclose outputs are social/news analysis, not private polling. Version everything so any dashboard cell traces to schema + model + data.
+
+**The request form holds real personal data — names, email addresses and street addresses —
+and nothing deletes it.** The poll has a retention default, a 365-day ceiling, a daily
+trigger and a purge; the request form has none of that, by an owner decision that is stated
+in `docs/GOOGLE_SHEETS_SETUP.md` rather than left to look forgotten. **That decision is still
+open and is the one item here with legal weight rather than quality weight.** Blanking a
+cell does not remove it from Sheet version history; an expired request stays recoverable
+until the owner prunes it, and that is an owner action no code can reach.
+
+**Both public forms are deployed and live.** `POLL_ENDPOINT` and `REQUEST_ENDPOINT` in
+`src/dashboard/render.py` hold `/exec` URLs. Those URLs are public by construction — they are
+in the served HTML and in a public repository — so the protection is the validation
+contract, not the secrecy of the string. Neither endpoint inspects `e.contentType`: both read
+`e.postData.contents`, which is why the forms may send `text/plain` and avoid the CORS
+preflight that Apps Script cannot satisfy. **Never send `Content-Type: application/json`
+from a browser to an Apps Script `/exec` endpoint** — it fails with a bare `Failed to fetch`,
+no console error, and a user who is told their vote was not sent.
 
 **129** Hausa strings added in September 2026 are AI-drafted and not native-speaker reviewed — 53 from S1/S2, 6 from S4, 4 in the footer contributor credit, and 66 in the S5 poll (counted across both dashboard states, which ship different strings). Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler. **The owner reviewed and accepted the S1–S4 set as written on 29 September 2026**; the poll strings are new and **not yet reviewed**. The disclosure stays, because they are still AI-drafted rather than native-speaker translated.
 

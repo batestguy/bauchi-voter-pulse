@@ -1,223 +1,54 @@
 # APM Bauchi Progress & Delivery — Project Handoff
 
-**Handoff date:** 30 September 2026, end of session
+**Handoff date:** 1 October 2026, end of session
 **Repository:** `batestguy/bauchi-voter-pulse`
-**Branch:** `main`
-**Current release:** S5 plus the interactive poll dashboard, the Hausa review, and the Apps Script endpoint — all **committed on `main` but NOT pushed**. Pushing was authorised once, on 26 September 2026, and is not a standing authorisation; the owner has not asked for it this session. See "What is NOT deployed" below.
-**Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/) — note the live site does **not** yet have the new dashboard.
+**Branch:** `main` — **in sync with `origin/main`**, nothing unpushed
+**Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
+**Current release:** seven pages, **both public forms live**, 402 tests passing
 **Governing plan for the next work:** [`SITE_EXPANSION_PLAN.md`](SITE_EXPANSION_PLAN.md)
 
-> ✅ **S0–S4 are live.** `atlas.html` carries a real 20-LGA map and the footer names the
-> contributor. `docs/` is a tracked tree, so a push publishes; the weekly cron is a
-> *regeneration* safety net.
+> ### ✅ Both intake endpoints are deployed and taking real submissions
 >
-> **S5, the opinion poll, is built and ships disabled.** `POLL_ENDPOINT` is `""`, the vote
-> button renders `disabled`, and no code path in `POLL_SCRIPT` can send.
+> This is the single biggest change since the last handoff. Both forms on `poll.html` are
+> live and were verified by submitting from a real browser, not only by server-side probe.
+>
+> | | Poll | Request |
+> |---|---|---|
+> | Sheet | `APM poll responses` `1uvtVDgg…` | `APM requests` `1Uw93Cd…` |
+> | Bound script | `APM poll endpoint` `1dJTeFKE…` | `APM requests endpoint` `1hoBdGyY…` |
+> | Tabs created | Responses, Comments, Audit, Retention | Requests, Audit |
+> | `setupSheets` run | yes | yes |
+> | Retention trigger | installed (`installRetention`) | n/a — no auto-purge, by decision |
+> | Live receipt | `APM-POLL-2026-000009` | `APM-2026-000003` |
+>
+> Both scripts were pushed with `clasp push --force`. `.clasp.json` is gitignored for both
+> folders. Verification rows from the deployment session were deleted from all four data
+> tabs and all four `Audit` tabs; the headers are intact.
 >
 > ### ⏭ Start here next session
 >
-> **One thing to hand over:** the poll `/exec` URL. The owner was mid-way through
-> `docs/apps-script/DEPLOY.md` when the session ended — **`Code.gs` is pasted into the
-> bound script and working** (the dropdown lists `doPost`). Seven steps remain, listed in
-> full under "Where the connection stands" below. Steps 3–7 are all in the owner's browser;
-> steps 1–2 and 8 are mechanical.
+> **Three owner actions remain, in this order:**
 >
-> **Two open owner decisions**, neither blocking: the **retention period for the comment
-> column**, and **a native Hausa speaker** to review `docs/HAUSA_REVIEW.md`.
+> 1. **Publish the poll results.** The dashboard renders its full layout at zero, and will
+>    stay that way until a snapshot is committed. This is the one gap between "the poll
+>    works" and "the poll reports" — see §24.
+> 2. **Decide retention for the request Sheet.** It now holds real names, email addresses
+>    and street addresses, and nothing deletes them. This is the only open item with legal
+>    weight rather than quality weight. See §25.
+> 3. **Get a native Hausa speaker** over `docs/HAUSA_REVIEW.md` plus everything added on
+>    1 October. Still the launch gate.
 >
-> ### New on 30 September 2026: the poll dashboard can now be explored by area and group
+> **Done and closed this session:** the About page (§23), the CORS defect that stopped both
+> forms working at all (§21), the LGA/area constraint that was never enforced in the UI
+> (§22), the snapshot builder (§24), and the zero-state dashboard (§26).
 >
-> `poll.html` carries **three scope controls** — LGA, registration area, and one
-> mutually-exclusive Group lens (Woman, Man, or an age band) — over one sector chart and
-> one exact-counts table. The tally gained five crosses to make this possible:
-> `by_ward_sector`, `by_lga_gender_sector`, `by_lga_age_band_sector`, `by_gender_sector`,
-> `by_age_band_sector`. **279 tests pass** (1 skip: Playwright), plus **64/64** endpoint
-> checks in `docs/apps-script/test_endpoint.mjs`.
+> ### The one thing to understand before touching the poll
 >
-> **Two rules make it safe, and both are enforced:**
-> - A registration area and a demographic are **never** published in the same figure. The
->   Group control is disabled and cleared the moment an area is chosen, so the refused
->   cross is unreachable rather than merely discouraged. See `AGENTS.md` and
->   `aggregate.FORBIDDEN_CROSSINGS`.
-> - A **share is printed only when it is exact.** If any cell in the scope was suppressed
->   the denominator is unknown, so the count still shows and the share becomes a dash with
->   the reason on the page. Group size has three states: *N answers* / *at least N answers*
->   / *too few to show*.
->
-> **What the arithmetic actually permits**, measured on a 1,129-response local fixture:
->
-> | View | Publishable | Withheld |
-> |---|---|---|
-> | Gender × sector, statewide | **18 / 18** | 0 |
-> | Ward × sector | 63 | 44 |
-> | LGA × gender × sector | 93 | 50 |
-> | LGA × age × sector | **48** | **297** |
->
-> Statewide gender is the view that will carry signal. Age × LGA × sector mostly will not,
-> because 6 bands × 8 sectors is 48 cells per LGA and most clear a floor of 5 only in
-> high-volume LGAs. That is the floor working, not a bug.
->
-> ### The Hausa review of 30 September 2026
->
-> An **independent AI agent** reviewed the Hausa strings. It found **20 defects**, all
-> corrected. The most serious was a **privacy warning that had inverted** — "do not include
-> your name, phone number, address…" had lost its negation and read as an instruction to
-> include them. Also: "never an exact age" had become "never an age"; the map's licensing
-> caveat said *colours* where it meant *boundaries*; `Gwaji` (test) was the Group filter's
-> label; `maƙai` (straw) stood in for "endpoint" at 10 sites. Full record, including the
-> ~11 strings deliberately **left alone** as merely questionable, is
-> **`docs/HAUSA_REVIEW.md`**.
->
-> **This does not close the native-speaker gate.** An AI reviewed AI-drafted Hausa, so every
-> correction is a candidate. A native speaker must still confirm them and the disclosure
-> stays.
->
-> ### The poll endpoint is BUILT and TESTED; clasp is installed; only Google account steps remain
->
-> `docs/apps-script/` contains the complete Apps Script intake endpoint, a manifest, a
-> click-by-click deployment guide, and **a 64-check harness that runs the real `doPost`
-> against test payloads** with the platform objects stubbed. It is not a mock of the
-> endpoint — it is the endpoint.
->
-> **Why that harness exists.** An agent cannot reach a Google account, so the endpoint is
-> the one piece of code that would otherwise ship without anything able to execute it. It
-> found three real bugs before deployment, the worst being that `doPost` persisted the
-> **raw request body** instead of the validated record — so the Sheet would have stored
-> `bAUcHi` as an LGA name and `age_unspecified` as a *published demographic*. A second was a
-> decline marker matched at a fixed offset that never matched, with the same effect. Both
-> are fixed and both are break-tested.
->
-> **`clasp` 3.4.1 is installed globally** (`npm i -g @google/clasp`; the first attempt
-> failed with a transient `ERR_SSL_CIPHER_OPERATION_FAILED` and succeeded on retry). Use it
-> instead of pasting into the editor. `docs/apps-script/.claspignore` keeps the generator,
-> harness, guide and template out of the deployment, and `clasp status` confirms only
-> `Code.gs` and `appsscript.json` are tracked.
->
-> ### Where the connection stands: stopped partway on 30 September 2026
->
-> The owner created a Sheet and a **bound** script, and **`Code.gs` is pasted in and working**
-> — the function dropdown lists `doPost`. The work then paused for the session.
->
-> **Still to do, in order:**
-> 1. **Copy the Script ID** — Apps Script → gear in the left sidebar → Project Settings →
->    Script ID. Take it from the *bound* project. Then copy `.clasp.json.example` to
->    `.clasp.json` in `docs/apps-script/` and paste the ID in.
-> 2. **`clasp login`** from `docs/apps-script/` — one Google consent screen in the owner's
->    browser; this has NOT been done yet (an attempt on 30 September was aborted before
->    the consent screen was approved). Then `clasp push` replaces any further manual
->    pasting. It also replaces the manifest step below, since `clasp push` uploads
->    `appsscript.json` too.
-> 3. **Paste the manifest** if not already done: Project Settings → tick *Show
->    "appsscript.json" manifest file in editor*, then replace its contents with
->    `docs/apps-script/appsscript.json`. `clasp push` does this automatically. The default
->    manifest requests access to **all** the owner's spreadsheets; ours restricts it to
->    `spreadsheets.currentonly`.
-> 4. **Run `setupSheets`** — dropdown → `setupSheets` → Run → approve. Execution log must
->    read `setup complete: 0 response row(s)`. Creates `Responses` and `Audit`.
-> 5. **Deploy → New deployment → Web app**, Execute as **Me**, access **Only myself**, then
->    approve the authorisation screen and copy the `/exec` URL.
-> 6. **Hand the `/exec` URL to an agent**, who sets `POLL_ENDPOINT`, re-renders and runs the
->    suite. It is still `""`.
-> 7. **Cast one real vote from the page and check the browser console.** This is the step
->    that gets skipped and it is the one that catches CORS — see `DEPLOY.md` step 5.
->
-> ### Two things learned the hard way about the Apps Script editor
->
-> - **A paste that lands *inside* the default `myFunction()` stub looks fine and breaks
->   silently.** The file compiles, but `doPost` is no longer top-level, so Apps Script
->   exposes no entry points and the dropdown still reads "No functions". Ctrl+A in that
->   CodeMirror instance was also unreliable. **The reliable path is to delete the file and
->   add a fresh one named `Code.gs`**, then paste into a genuinely empty editor.
-> - **Playwright cannot reach the owner's browser.** The agent's browser is headless and a
->   separate profile, and the owner uses Brave. Driving the account from the agent side is
->   therefore not possible at all, which is why clasp exists in this workflow and why the
->   two Authorise-type screens are the owner's to click.
->
-> ### What is NOT deployed, and why
->
-> - **The poll is still not connected**, because connecting needs a Sheet, a bound Apps
->   Script deployment and its deployment ID, all on the owner's Google account. Setting a
->   guessed URL would make the build *look* connected while silently discarding every vote,
->   so `POLL_ENDPOINT` is deliberately still `""`.
-> - **No snapshot exists**, so the page renders the honest empty state. Connecting the poll
->   does not publish results; a separate owner-controlled job must build
->   `data/delivery/poll_snapshot.json` (see `POLL_SETUP.md` §5, field list now corrected).
-> - **The dashboard and the endpoint are committed but not pushed.** The standing
->   instruction is that pushing was authorised once, on 26 September 2026, and is not a
->   standing authorisation.
->
-> **One housekeeping item for the owner:** a Google account password was written to
-> `C:\Users\TOSHIBA\Desktop\googlepass.txt` in plaintext during this session so the agent
-> could have used it. The agent declined to read it — a password read into a conversation is
-> exposed permanently, unlike one typed into a form field — and the owner then completed
-> the steps by hand. **That file should be deleted**, and the password changed if there is
-> any doubt about where the machine has been.
->
-> **Owner gates:** the `services3.arcgis.com` robots exemption (§21) was ratified on
-> 29 September 2026, and 69 AI-drafted Hausa strings were reviewed and accepted as written
-> the same day. **S5 and the 30 September dashboard added more.** All are AI-drafted; the
-> disclosure stays, and a native speaker must still review the corrections in
-> `docs/HAUSA_REVIEW.md` before connection.
-
----
-
-## Start here next session
-
-**1. Read in this order:** `SITE_EXPANSION_PLAN.md` (§9 progress log — the S4 entry
-records what actually happened and why the plan's seam fix had to be abandoned — then
-§10) → this file's §13 priorities and §20 release traps → `AGENTS.md`.
-
-**2. Verify the baseline before changing anything:**
-
-```bash
-cd D:\APMdeliverable
-python -m unittest discover -s tests -q     # expect 279 OK (1 skip)
-python src/dashboard/render.py              # expect seven page sizes
-```
-
-If the test count is not 279, something has regressed. Investigate before proceeding.
-
-**3. Do not touch the preserved local work.** It must still be untracked or modified:
-
-```text
-src/aggregation/aggregate.py      modified, legacy track
-.evals/                            untracked, local-only
-data/human_review/filled/         untracked, local-only
-.playwright-mcp/                   untracked, browser artifacts
-```
-
-Never `git reset`, `git clean`, permanent `git stash`, or stage these.
-
-**4. S4's owner gates are closed.** The `services3.arcgis.com` robots exemption (§21) was
-ratified by the owner on 29 September 2026, and the AI-drafted Hausa strings were reviewed
-and accepted as written the same day. Both are no longer open questions; the Hausa
-disclosure stays because the strings are still not native-speaker translated. **S5's and the
-30 September dashboard's new Hausa strings are still unreviewed**, and the independent AI
-pass of 30 September corrected 20 of them without closing the gate — see `docs/HAUSA_REVIEW.md`.
-
-**5. S5 is built and ships disabled. Next task: connect the poll (owner) or start S6.**
-**The endpoint code is already written and tested** — see `docs/apps-script/DEPLOY.md` for the
-ten minutes of clicking that remain. The one-line `POLL_ENDPOINT` change is the LAST step,
-not the first, and the CORS check in DEPLOY.md step 5 is the one people skip.
-The sharpest open owner question is the **retention period for the comment column** — a
-300-char free-text field held indefinitely is not anonymous in any meaningful sense.
-**Also: a native Hausa speaker must review the corrected strings before connection.**
-
-**6. If you only have time for one thing:**
-
-```bash
-python -m unittest tests.test_bilingual tests.test_header_brand tests.test_site_structure tests.test_atlas_map tests.test_poll -v
-```
-
-These cover the defects a visual check cannot see: untranslated strings, Hausa pasted
-into an English column, a missing asset hash, an invert filter creeping back, invented
-contributor content, a placeholder creeping back into the filled credit, an English-only
-`alt` on the contributor's portrait, a duplicate `const` that would disable every script
-on a page, a nav link pointing at a page that was never generated, a cron that would
-publish stale subpages, a tearing seam between LGAs, quantization below the 3 dp floor, a
-language switch that empties the map, a poll that can send with no endpoint, an identity
-field that slips into a poll payload, a comment that changes a published number, and a
-single vote rendering as 100%.
+> The published dashboard is a **committed static file**, not a live feed, and
+> **nothing reads the Sheet automatically**. `POLL_SETUP.md` claimed a "scheduled,
+> owner-controlled job" for months with no job behind it. Votes arrived correctly the whole
+> time and the page said "no responses" forever, with no error anywhere. That is fixed and
+> tested, but it is manual by choice — see §24.
 
 ## 1. Handoff Summary
 
@@ -1967,8 +1798,8 @@ A new maintainer should be able to answer “yes” to each question:
 - [ ] Do I know which outcome claims still require measurement?
 - [ ] Do I know which **129** Hausa strings are AI-drafted, that the owner accepted the
       first 69 as written, and that the 66 poll strings are still unreviewed?
-- [ ] Do I know the poll ships disabled, that it collects no *direct* identity, and that
-      the comment can never move a published number?
+- [ ] Do I know the poll collects no *direct* identity, and that the comment can never move
+      a published number? (It is **connected** as of 1 October 2026 — see §21.)
 - [ ] Do I know that area and demographics **are** collected, that this reversed the
       original design, and that small-cell suppression is the only thing making it safe to
       publish?
@@ -1996,6 +1827,20 @@ A new maintainer should be able to answer “yes” to each question:
       the weekly cron fail on its first run?
 - [ ] Do I have a next-step list that does not mix current-product work with
       legacy evaluation work?
+- [ ] Do I know that **both forms are live** and that a vote and a request were each
+      verified end-to-end from a real browser (§21)?
+- [ ] Can I explain why `application/json` broke both forms, and that `text/plain` is
+      load-bearing rather than sloppy (§21)?
+- [ ] Can I explain why the area dropdown needed `disabled` and not `hidden` (§22)?
+- [ ] Do I know that **nothing reads the Sheet automatically**, and that
+      `build_snapshot.py` is a manual step (§24)?
+- [ ] Do I know the dashboard renders a full zero-state, and that it is **not** a
+      demonstration-data mode (§26)?
+- [ ] Do I know that a standalone Apps Script project returns a null spreadsheet and fails
+      confusingly (§27)?
+- [ ] Do I know `build_code_gs.py` emits CRLF on Windows and must be normalised (§27)?
+- [ ] Can I name the recurring failure this session: a hand-written statement disagreeing
+      with the data beside it, four times, each fixed by deriving instead (§28)?
 
 ## 22. S6, the About Page - Candidate Portrait and Contributor Credit
 
@@ -2033,6 +1878,268 @@ behind the record is listed on `sources.html`. **Verify that it actually is** be
 is pushed. `data/delivery/source_register.csv` is the record, and a source note that
 points at a list the source is not on is a citation that does not resolve.
 
+## 23. S6, the About Page — Shipped
+
+`about.html` is the seventh flat page, generated by the same renderer and sharing the same
+header, footer and language control as the other six.
+
+**The portrait is campaign-owned.** `yakubu-adamu-single.png` was taken from the candidate's
+own campaign site and used unmodified, so no third-party photographer's copyright is in
+play. It is registered in `asset_register.csv` with SHA-256 `2f68e2b9c140`, `usage_status`
+`campaign approved` and `approved_at` 2026-09-29, listed in `ASSET_FILES`, and hashed by
+`validate_data()` on every build.
+
+**The commitments are linked, not restated.** Five (then eight) chips deep-link into
+`agenda.html#promise-<sector>`; each agenda card now carries that `id`. The full text lives
+in exactly one place, so the two pages cannot drift. `test_agenda_renders_each_promise_once`
+was widened from matching `<article class="agenda-card">` literally to matching the class,
+because adding the anchor broke it and the test was asserting that the tag carried no other
+attribute — not that one card exists per promise.
+
+### The page shipped with no CSS of its own
+
+Worth recording because eleven string-assertion tests passed while it was broken. The
+portrait rendered at its natural 720px, and the commitments section was a heading, a
+paragraph and a button stranded in about 200px of nothing. Nothing about a missing
+stylesheet is visible in markup, and nothing about it is visible to a test that asserts
+strings exist. `test_the_page_carries_its_own_css` now checks that every class the markup
+uses is actually present in the inline stylesheet.
+
+### The commitment count was wrong, and the fix was structural
+
+The page claimed **"Five commitments"** over an eight-row `promises.csv`, and enumerated
+five sectors that were not the five in it — health, water, livelihoods and governance were
+missing from the sentence. A visitor reading About and then the agenda saw two different
+campaigns. The heading count and the chip links now derive from the data via
+`ABOUT_COMMITMENT_COUNT`, so they cannot disagree. The hand-written enumeration was deleted
+rather than corrected, because a hand-written list is the thing that drifts.
+
+**Owner decision, recorded:** "Dr." is retained in the copy. No credential claims, no
+allegations, no sentiment figures on this page.
+
+## 21. The CORS Defect That Stopped Both Forms Working
+
+**This is the most important thing in this handoff.** Both endpoints were deployed,
+`setupSheets` had run, both were returning correct receipts to a server-side probe — and
+neither form worked from a browser at all.
+
+The cause: the forms sent `Content-Type: application/json`. That is not a CORS-safelisted
+request content type, so the browser sends an `OPTIONS` preflight before the `POST`. Google
+Apps Script answers that preflight with `200 OK` and **no `Access-Control-Allow-*` headers
+at all**, so the browser blocks the exchange and `fetch` rejects with a bare
+`TypeError: Failed to fetch`.
+
+Measured against the live poll deployment on 1 October 2026, from the page itself:
+
+| Content-Type | Result |
+|---|---|
+| `application/json` | `TypeError: Failed to fetch` |
+| `text/plain;charset=utf-8` | `200 {"response_id":"APM-POLL-2026-000008"}` |
+
+Both scripts now send `text/plain;charset=utf-8`. This is safe because **neither endpoint
+inspects `e.contentType`** — both read `e.postData.contents` and `JSON.parse` it, so the
+body is identical. `ContentTypePreflightTests` pins all of it, including that neither
+endpoint has started *requiring* a JSON content type, which is what would make this
+workaround unsafe later.
+
+**Why it survived so long, and why that matters.** Every server-side check passed. Python
+and curl probes followed the redirect and read the response happily. The failure only exists
+in a real browser talking to a real Google deployment, it produced no console error, no
+status code, and a visitor-facing message saying only "we could not send your vote".
+
+## 22. The LGA/Area Constraint Was Never Enforced in the UI
+
+`updateRequestRas` set `option.hidden` and nothing else, which reads like it filters and
+does nothing: **Chromium ignores the `hidden` attribute on `<option>`**. All 212
+registration areas stayed selectable whatever LGA was chosen.
+
+A visitor picking Bauchi and then the first area in the list sent `RA-001`, which is
+**Alkaleri's**, and the endpoint correctly refused it as `invalid_ward` — surfacing only as
+"we could not send your request", with nothing in the console. The server-side check was
+doing its job perfectly; the UI was lying about what it offered. Playwright now cannot
+select a cross-LGA area at all, which is how it was caught.
+
+Fixed by setting `option.disabled`, which a native select does honour, and
+`test_area_options_are_disabled_not_merely_hidden` stops it regressing to hidden-only.
+
+## 24. Publishing Results — the Last Gap in the Poll
+
+**The dashboard is a committed static file and nothing read the Sheet.** `POLL_SETUP.md` had
+said "a scheduled, owner-controlled job reads the `Responses` tab" for months, with no job
+behind it. Votes arrived and were stored correctly; the page said "no responses" forever; no
+test failed, because the endpoint was correct and the dashboard was honest and the gap
+between those two facts was invisible from either side.
+
+`src/poll/build_snapshot.py` closes it:
+
+```bash
+# File > Download > Comma-separated values on the Responses tab
+python src/poll/build_snapshot.py ~/Downloads/Sheet1.csv
+python src/dashboard/render.py
+git add data/delivery/poll_snapshot.json docs/*.html
+git commit -m "data(poll): publish the weekly aggregate" && git push
+```
+
+It calls `build_public_snapshot`, so the field set matches `PUBLIC_SNAPSHOT_FIELDS` by
+construction, suppression is identical to the live path, and no comment or response ID can
+reach the file because neither is ever read.
+
+### Two column names that do not match
+
+The `Responses` tab header says **`received_at`**; the aggregator reads **`created_at`**
+(`Code.gs.template:578` vs `aggregate.py:277`). One letter apart, nothing upstream checks
+it. Passing the Sheet's own name through tallied **zero from twelve good rows** and printed
+`counted 0` with no error — a dashboard of nothing, built from real data. CSV also has no
+booleans, so `consent` arrives as the string `"TRUE"` where the tally needs the JSON boolean
+`true`. Both mappings are explicit in the builder and asserted against the real aggregator.
+
+**An empty export exits non-zero and writes nothing.** The page's own empty state is the
+honest answer, and a committed snapshot of zeroes would replace it with a chart of nothing.
+
+### Why this is manual, not automated
+
+A workflow that reads the Sheet needs a Google service-account key committed as a
+repository secret. On a public repository that is a real increase in attack surface, and
+exporting the tab keeps every credential out of git entirely. At campaign volumes that is
+the better trade. Revisit only if the weekly ritual becomes the bottleneck.
+
+## 25. Open: Retention for the Request Sheet
+
+**This is the one item left with legal weight rather than quality weight.**
+
+The request form collects a name, an optional email address and a street address. That is
+real personal data, unlike the poll, and **nothing deletes it**. The poll has a retention
+ceiling, a default, a daily trigger and a purge; the request form has none of that.
+
+The decision was left with the owner and has not been made. "We chose not to automate this"
+is defensible and is what `docs/GOOGLE_SHEETS_SETUP.md` currently says. "We never picked a
+date" is how a spreadsheet ends up holding a supporter's home address indefinitely.
+
+Worth noting for whoever decides: **blanking a cell does not remove it from Sheet version
+history.** An expired request stays recoverable until the owner prunes it, which is an
+owner action no code can reach. That is stated in both guides rather than left to be
+discovered.
+
+## 26. The Dashboard at Zero — and What It Is Not
+
+The dashboard renders its **complete control surface** while the poll has no responses:
+both charts, the LGA dropdown, the registration-area dropdown, the Group lens, the scope
+summary and the exact-counts table, with all 9 sectors, all 20 LGAs and every cell at an
+explicit `0`.
+
+**This is not a demonstration-data mode, and the distinction is the point.** A zero is a
+true statement: nobody has answered yet. Every control is live and the same markup fills in
+as real responses arrive, so nothing has to be removed later and nothing can later be
+mistaken for a result. Fabricating non-zero counts would be a claim about what Bauchi
+residents want; a zero makes no claim at all.
+
+The line above the figures says so in words:
+
+> Waiting for the first response. Every figure below reads zero because nobody has answered
+> yet, not because the answer was no.
+
+That is the same distinction the suppression floor depends on: an explicit zero means "nobody
+chose this", a withheld cell means "too few to say", and the two are never drawn the same
+way. Zero rows get a **hatched, dashed track** rather than a bare zero-width bar, because a
+0-width bar beside a 0 reads as a *measured* nothing.
+
+**A request to publish fabricated numbers was declined**, on the grounds that a chart of
+invented counts on a live campaign site is indistinguishable from a real one and would be
+visibly false to anyone who downloaded the Sheet and tallied it. The zero scaffold was built
+instead: it satisfies "show the dashboard at full capacity" without asserting a single
+response that did not happen.
+
+### Two defects in the first render
+
+The `snapshot is None` branch and the `total <= 0` branch described the same state in two
+different ways, so the page's own description depended on which code path ran. They are now
+one function. And the zero bars nested the label inside a wrapper, which collapsed the
+existing three-column `.poll-bar` grid and printed `Water0`, `Roads0` — the JS-built chart
+uses label/track/value as direct children, so the scaffold now mirrors that structure.
+
+### Two tests were replaced, not deleted
+
+One asserted the empty poll contained **no bars at all**. It was protecting the right
+property — no seeded or placeholder results — by forbidding the whole surface, and that is
+exactly what made the site look like it had no dashboard. It now asserts what actually
+matters: every bar fill is `0%` wide, every published value is `0`, and no reporting date is
+fabricated. The other now asserts the zero scaffold never claims a response exists.
+
+## 27. Deployment Session Notes — 1 October 2026
+
+Procedural, because both were non-obvious and each cost a wrong turn.
+
+**A standalone Apps Script project cannot work.** Both endpoints call
+`SpreadsheetApp.getActiveSpreadsheet()`, which returns `null` outside a script *bound* to a
+Sheet — and it fails as a bare `null` error that looks like a code bug. Create the Sheet
+first, then **Extensions → Apps Script from inside it**.
+
+A standalone `APM Poll` project created before this was understood sat on the account for
+part of the session; the **owner removed it**. The two live scripts are `APM poll endpoint`
+(`1dJTeFKEompj7tD0MXlLi7BqMO9c_vZLr3FPnMBhAf-DvqIdq2pMLcTTv`) and
+`APM requests endpoint` (`1hoBdGyYHQCxTfqN7AmzuUvJZ6l61apfvUnidO2hDmbfjtq5qZS2UKHPI`).
+Their `/exec` URLs are in `src/dashboard/render.py` as `POLL_ENDPOINT` and
+`REQUEST_ENDPOINT`, and in the rendered pages. **Target any future run by project ID, never
+by "the first script.google.com tab"** — doing that ran `setupSheets` against the wrong
+project during this session.
+
+**`clasp push` refuses until the Apps Script API is enabled** at
+`script.google.com/home/usersettings`, with the error naming the URL. That toggle is an
+account-level setting; the owner clicks it.
+
+**`.gitignore` named only one endpoint folder.** It listed
+`docs/apps-script/.clasp.json` but not `docs/requests-script/.clasp.json`, so the request
+endpoint's script ID was untracked-but-not-ignored — one `git add .` from committing a live
+deployment ID to a public repository. Replaced with a `**/.clasp.json` glob and an explicit
+negation for the committed examples, so a third endpoint folder cannot repeat it.
+
+**The generator writes CRLF on Windows.** `build_code_gs.py` emitted 554 CRLF lines against a
+committed LF blob — identical content, permanently "modified", and a push of bytes nobody
+reviewed. This is the same class as the source-snapshot manifest mismatch in §20. **It is
+still unfixed at source**: normalise after regenerating, or make the generator write LF.
+
+**Clear data through the Name Box, not by clicking.** An automated click computed from a
+wrong bounding box cleared cell `A1` — the `response_id` header — instead of the data rows.
+Caught on a screenshot and restored. Select the range by typing `A2:I9` into
+`input.waffle-name-box`; the sheet tab strip is `div.docs-sheet-tab`.
+
+**Selecting the wrong Apps Script project is easy** and runs the function against the wrong
+Sheet. Always target by project ID, never "the first script.google.com tab".
+
+**For driving a visible browser:** this session's Playwright MCP runs `--headless`
+(`~/.config/opencode/opencode.json`), so its window is invisible and cannot be pointed at an
+already-running Brave — the remote-debugging flag is only read at launch. A second Brave on
+`--remote-debugging-port=9222` attached over CDP with `playwright-core` worked and was what
+drove the Sheets and Apps Script UI.
+
+## 28. Session Commit Log
+
+```text
+8a530ba  feat(site): About page, live poll endpoint, and the CORS fix that made it work
+0197366  feat(requests): connect the request endpoint, and enforce the LGA/area pair in the UI
+9ad3d82  chore(pages): rebuild after clearing the verification rows from both Sheets
+643443f  fix(index): list the About page on the landing page, and derive the page count
+a80078b  feat(poll): build the published snapshot from the poll Sheet
+6925f7f  feat(poll): render the full dashboard at zero before anyone has answered
+```
+
+All six are **pushed**; `main` is in sync with `origin/main`.
+
+### The recurring lesson
+
+Four of these were the same failure in different clothes: **something true of the data
+disagreed with something written beside it, and nothing compared the two.**
+
+- "Five commitments" over eight rows; five listed sectors, four of which were not in the file
+- "Five pages, one record" beside a nav of seven
+- `received_at` vs `created_at` tallying zero from twelve good rows
+- a `.gitignore` that named one of two script IDs
+
+In every case the fix was to **derive the statement from the data** and add a test that
+compares the two. Writing the number again next time is what reintroduces it.
+
+---
+
 ## Restart and Resume Procedure
 
 1. Start a new session from `D:\APMdeliverable` and follow **Start here next session**
@@ -2040,34 +2147,43 @@ points at a list the source is not on is a citation that does not resolve.
 2. **Verify the baseline before changing anything:**
    ```bash
    cd D:\APMdeliverable
-   python -m unittest discover -s tests -q   # expect 279 OK (1 skip: Playwright)
-   node docs/apps-script/test_endpoint.mjs  # expect 64/64 checks passed
-   python src/dashboard/render.py            # expect seven page sizes
+   python -m unittest discover -s tests -q        # expect 402 OK (1 skip: Playwright)
+   node docs/apps-script/test_endpoint.mjs        # expect 111/111 checks passed
+   node docs/requests-script/test_endpoint.mjs    # expect 215/215 checks passed
+   python src/dashboard/render.py                 # expect seven page sizes
    ```
-   A drop in either suite means something regressed. Investigate before proceeding. The
-   endpoint harness is wired into the Python suite as well, so `unittest discover` runs it
-   too — but run it directly when you have touched `Code.gs`.
+   A drop in any suite means something regressed. Investigate before proceeding. Both
+   endpoint harnesses are wired into the Python suite as well, so `unittest discover` runs
+   them too — but run each directly when you have touched its `Code.gs`.
 3. **Confirm the preserved local work is still untracked/modified, and do not touch it:**
    `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`,
    `.playwright-mcp/`. Never `git reset`, `git clean`, permanent `git stash`, or stage them.
-4. **The one thing to pick up: the poll `/exec` URL.** The endpoint is written and tested;
-   only the owner's Google account steps remain. See "Where the connection stands" in the
-   header block, and `docs/apps-script/DEPLOY.md` for the clicks. Once you have the URL:
-   set `POLL_ENDPOINT` in `src/dashboard/render.py`, re-render, run the suite, and tell the
-   owner to cast one real vote from the page and check the browser console for CORS.
+4. **The one thing to pick up: publish the poll snapshot.** Both endpoints are deployed and
+   verified (§21); the dashboard renders its full layout at zero (§26) and will stay that
+   way until a snapshot is committed. See §24 for the three commands. Everything else about
+   the poll is done.
 5. **To change the endpoint code, edit `Code.gs.template` and regenerate** — never `Code.gs`
    directly, or the next build discards the change:
    ```bash
    python docs/apps-script/build_code_gs.py   # template + lga_wards.csv -> Code.gs
    clasp push                                 # from docs/apps-script/
    ```
-   Then re-run both suites in step 2. `clasp` 3.4.1 is installed globally; `clasp login` is
-   not yet authorised, so the first push needs one Google consent screen from the owner.
-6. **Commit only after the owner explicitly asks.** Push was authorised once, on
-   26 September 2026; it is **not** standing authorisation, and the two commits from
-   30 September 2026 (`49b828b`, `3b33146`) are still unpushed. Ask.
-7. Do not deploy the request form or the poll until an approved HTTPS Apps Script endpoint
-   is configured; both ship disabled until then, and a guessed URL is worse than a disabled
+   Then re-run every suite in step 2. `clasp` 3.4.1 is installed globally and `clasp login`
+   is authorised for `batesthommie@gmail.com` as of 1 October 2026. **After regenerating,
+   normalise the line endings** — the generator writes CRLF on Windows and the committed
+   blob is LF (§27):
+   ```bash
+   python -c "import pathlib,sys; [pathlib.Path(p).write_bytes(pathlib.Path(p).read_bytes().replace(b'\r\n', b'\n')) for p in sys.argv[1:]]" docs/apps-script/Code.gs
+   ```
+   Then confirm `git status docs/*/Code.gs` is silent before pushing.
+6. **Commit only after the owner explicitly asks.** Push was authorised on 26 September
+   2026 and again on 1 October 2026, when the owner asked for both endpoints to go live and
+   for the session's work to be committed ahead of the next one. It is still **not**
+   standing authorisation. `main` is currently in sync with `origin/main` (§28).
+7. Both endpoints are deployed and live. Do not change a bound script in place: edit the
+   template, regenerate, `clasp push --force`, then re-run `setupSheets` only if the tab
+   layout changed. A wrong `/exec` URL is worse than a disabled build, because it discards
+   submissions silently.
    build because it discards votes silently.
 8. If the boundary snapshot ever needs re-fetching, note that
    `python -m src.ingestion.lga_boundaries` refuses to overwrite an existing snapshot
@@ -2075,13 +2191,34 @@ points at a list the source is not on is a citation that does not resolve.
    `source_register.csv` and `data/derived/lga_paths.json` - re-fetching changes the hash
    and both records must be regenerated together.
 
-### Two things the owner still has to decide
+### Three things the owner still has to decide
 
-- **Retention for the comment column.** 300 characters of free text, never counted and never
-  published, but held indefinitely it is not anonymous in any meaningful sense. Google also
-  retains IP addresses in Apps Script execution logs regardless of what the Sheet stores.
-- **A native Hausa speaker** to review `docs/HAUSA_REVIEW.md`: 22 corrected strings plus ~11
-  deliberately left alone. An AI reviewing AI-drafted Hausa does not close that gate.
+- **Retention for the request Sheet.** This is the one that now matters: the request form
+  holds real names, email addresses and street addresses and nothing deletes them. See §25.
+  The poll's comment column is already handled — default 180 days, 365-day ceiling, daily
+  purge trigger installed. Google retains IP addresses in Apps Script execution logs
+  regardless of what either Sheet stores.
+- **Whether to publish poll results at all, and when.** The machinery is built and tested
+  (§24). The first snapshot should be taken once there are enough real responses that the
+  charts are worth showing, and it will be almost entirely suppressed below a floor of 5.
+- **A native Hausa speaker** to review `docs/HAUSA_REVIEW.md` plus everything added on
+  1 October 2026: 22 corrected strings, ~11 deliberately left alone, and the new About page
+  and zero-state dashboard copy. An AI reviewing AI-drafted Hausa does not close that gate.
+
+### Names and titles are retained
+
+The owner confirmed on 1 October 2026 that **"Dr." stays** in all public copy, and that
+`Abdulkadir Ahmad (Hammayo)` remains the named contributor with his existing role line. No
+placeholder, no invented sponsor content, no added amounts or numbers — the rules in
+`AGENTS.md` under "Contributor credit rules" are unchanged and still enforced.
+
+### Closed out this session
+
+- The stray standalone `APM Poll` project on the Google account has been **removed by the
+  owner**. It could never have worked: `getActiveSpreadsheet()` returns `null` outside a
+  Sheet-bound script (§27).
+- All verification rows and probe rejections were deleted from the poll and request
+  Sheets, and from all four `Audit` tabs. Headers are intact.
 
 ### If you only have time for one thing
 
