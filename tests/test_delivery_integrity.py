@@ -183,6 +183,90 @@ class ReadmeInventoryTests(unittest.TestCase):
                 self.assertIn(local.name, registered,
                               f"{local.name} is offered for download but not registered")
 
+    def test_the_brief_is_downloadable_from_the_repo_and_is_not_published_on_the_site(self):
+        """The five-page brief is a repository download, and must stay one.
+
+        The README offers it as a raw URL, so the file has to be committed for that link
+        to resolve. It was also explicitly NOT to be published on the site, and the only
+        thing separating the two states is where the file sits: GitHub Pages serves
+        `docs/`, so a copy under `docs/` would put a five-page PDF in front of every
+        visitor while looking, in the repository, like nothing had changed. Nothing else
+        in the build would notice.
+
+        So both halves are asserted: the README link resolves to a committed file, and
+        that file is outside `docs/`.
+        """
+        readme = Path("README.md").read_text(encoding="utf-8")
+        urls = re.findall(
+            r"https://raw\.githubusercontent\.com/[^/]+/[^/]+/[^/]+/(brief/[^\s)\"']+)", readme
+        )
+        self.assertTrue(urls, "the README offers no brief download link")
+
+        for url_path in urls:
+            with self.subTest(url=url_path):
+                local = Path(url_path)
+                self.assertTrue(local.is_file(), f"{local} is offered for download but is not committed")
+                self.assertGreater(local.stat().st_size, 20_000,
+                                   "the committed brief is implausibly small; was it truncated?")
+
+                # The whole point of the rule, asserted rather than assumed.
+                self.assertFalse(local.is_relative_to(Path("docs")),
+                                 "the brief must not live under docs/, which Pages serves")
+                self.assertFalse(
+                    list(Path("docs").rglob(local.name)),
+                    f"a copy of the brief was published under docs/; it was explicitly not to be")
+
+    def test_the_brief_states_the_contributor_and_offers_the_demo_video(self):
+        """The brief is generated, so its content is a build product and not a promise.
+
+        Two things must survive every rebuild, because both are commitments rather than
+        layout: the contributor is credited by name with the role the campaign supplied,
+        and the recording is downloadable from inside the document -- a brief that says
+        "watch it work" and then offers no way to watch it is worse than one that does
+        not mention it.
+        """
+        brief = Path("brief/apm-brief.pdf")
+        self.assertTrue(brief.is_file(), "brief/apm-brief.pdf has not been built")
+
+        import pypdf
+
+        reader = pypdf.PdfReader(str(brief))
+        raw = "\n".join(page.extract_text() for page in reader.pages)
+        # The text layer carries the visual line breaks, so "his campaign team." is
+        # split across two lines on the page. Collapsing whitespace asserts the
+        # content rather than the wrapping, which is not what this test is about.
+        text = " ".join(raw.split())
+        links = set()
+        for page in reader.pages:
+            for annot in page.get("/Annots", []) or []:
+                action = annot.get_object().get("/A")
+                if action is not None and action.get("/S") == "/URI":
+                    links.add(str(action.get("/URI")))
+
+        self.assertEqual(len(reader.pages), 5, "the brief is a five-page document")
+        self.assertIn("Abdulkadir Ahmad (Hammayo)", text)
+        self.assertIn("A dedicated member of his campaign team.", text)
+        self.assertIn(
+            "https://raw.githubusercontent.com/batestguy/bauchi-voter-pulse/main/assets/brand/demo-16x9.mp4",
+            links,
+            "the brief does not offer the widescreen recording for download",
+        )
+        self.assertIn(
+            "https://raw.githubusercontent.com/batestguy/bauchi-voter-pulse/main/assets/brand/demo-9x16.mp4",
+            links,
+            "the brief does not offer the phone-cut recording for download",
+        )
+        # Every link must resolve to something, or the document only looks interactive.
+        dead = [
+            annot
+            for page in reader.pages
+            for annot in (page.get("/Annots") or [])
+            if annot.get_object().get("/Subtype") == "/Link"
+            and annot.get_object().get("/A") is None
+            and not annot.get_object().get("/Dest")
+        ]
+        self.assertEqual(dead, [], f"{len(dead)} link annotations resolve nowhere")
+
 
 if __name__ == "__main__":
     unittest.main()

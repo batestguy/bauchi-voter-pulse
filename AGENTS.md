@@ -489,3 +489,31 @@ Enforced in code; keep them enforced.
 - **New assets need a register row before they render.** `validate_data()` hashes every
   `asset_register.csv` row against the file on disk, and the file must also be added to
   `ASSET_FILES` or it never reaches `docs/assets/brand/`.
+
+## Printable brief rules (phase SB)
+`brief/apm-brief.pdf` is a **repository download, not a page of the site**, and these are
+enforced in code.
+- **It must never live under `docs/`.** Pages serves `docs/`, so a copy placed there would
+  publish a five-page PDF to every visitor while looking, in the repository, like nothing had
+  changed. `test_the_brief_is_downloadable_from_the_repo_and_is_not_published_on_the_site`
+  asserts both halves: the README raw link resolves to a committed file, and no copy exists
+  anywhere under `docs/`. Verified by breaking it.
+- **Every figure is read from `data/delivery/*.csv` at build time.** Never type one into
+  `tools/make_brief.py` — there is nowhere to type a number, which is the whole point, and it
+  is the same lesson as the About page's two hand-typed counts that disagreed by one.
+- **The build fails rather than shipping an inert document.** `tools/make_brief.py` refuses a
+  result that is not 5 pages, has fewer than 40 link annotations, has any annotation resolving
+  nowhere, or has a measured page-to-page link that does not reach the sheet it was aimed at.
+- **Chrome writes same-document links as `/Dest`, not `/A`.** An audit that counts only `/A`
+  reports working navigation as 29 dead links — which is what happened here first. Check both.
+- **A measurement filter must be checked against the HTML.** `print_pdf.mjs` measures internal
+  links; if that filter drops any, the remaining checks pass vacuously. The count is asserted
+  against the declared anchors.
+- **`tools/_negative_control_brief.py` must keep firing.** It breaks the document on purpose
+  and requires the verifier's own `FAILED` message — a non-zero exit alone once passed for an
+  unrelated reason.
+- **The brief is English-only, knowingly.** The site is bilingual; a Hausa edition would add
+  unreviewed AI-drafted strings to the disclosure above. If one is ever made, it needs a native
+  speaker and the disclosure must ship with it.
+- **Three documents state `0 responses` and expire together:** the dashboard snapshot, the demo
+  caption, and the brief. When the first response lands, all three must be rebuilt or re-shot.

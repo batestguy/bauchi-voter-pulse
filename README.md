@@ -4,6 +4,18 @@
 
 ### ➡️ **[Open the live site →](https://batestguy.github.io/bauchi-voter-pulse/)**
 
+**📄 Download the five-page brief** — the whole project in five printable pages, with
+[clickable links, page-to-page navigation and QR codes](https://raw.githubusercontent.com/batestguy/bauchi-voter-pulse/main/brief/apm-brief.pdf):
+
+| Document | Download | What it is |
+|---|---|---|
+| Five-page brief | [`apm-brief.pdf`](https://raw.githubusercontent.com/batestguy/bauchi-voter-pulse/main/brief/apm-brief.pdf) | What this is, why it was built, what each of the seven pages does for a voter, how to take part, and how to put it on a domain. A4, 5 pages, English. |
+
+It is committed at `brief/apm-brief.pdf` and is **deliberately not published on the site** —
+it lives outside `docs/`, which is what GitHub Pages serves. Every figure in it is read from
+`data/delivery/*.csv` at build time, so it cannot drift from the site; see
+[`tools/make_brief.py`](tools/make_brief.py).
+
 **📥 Download the 30-second demo** — captioned, English and Hausa, about 4 MB each:
 
 | Cut | Download | For |

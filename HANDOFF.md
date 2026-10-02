@@ -2450,6 +2450,102 @@ placeholder, no invented sponsor content, no added amounts or numbers — the ru
 - All verification rows and probe rejections were deleted from the poll and request
   Sheets, and from all four `Audit` tabs. Headers are intact.
 
+---
+
+## §31 The five-page brief — built, and the project closed
+
+**Added 2 October 2026. `brief/apm-brief.pdf`, 5 A4 pages, generated — not hand-written.**
+
+### What it is for
+
+The site answers a voter's question on the web. The brief answers it on paper, for two cases
+the site cannot cover: a phone with no data, and a conversation where somebody needs the
+shape of the whole thing in one sitting. Five pages, one job each:
+
+1. **Cover** — the contributor's portrait and name first, a QR code to the live site, five
+   headline figures, a contents strip, and the demo-video downloads.
+2. **What it is and why** — the need → achievement → promise → result chain, the source
+   grading, how many source documents were read and how many were rejected, and an explicit
+   "what it is not" panel.
+3. **The seven parts** — each of the site's seven pages as the voter's own question, each
+   linked to the live page.
+4. **How a voter is heard** — the poll and the request form side by side, the privacy
+   contract in plain language, and the honest zero state.
+5. **Publishing on a domain** — how it is published today, and the four steps to put it on
+   an address of its own.
+
+### It is generated, and that is the point
+
+`tools/make_brief.py` reads `data/delivery/*.csv` at build time and interpolates every figure.
+This is the same lesson as the About page, where two hand-typed counts disagreed by one and
+nothing compared them. There is nowhere in this file to type a number, so the brief cannot go
+stale. `tools/print_pdf.mjs` renders it through installed Chrome — the same engine that
+records the demo video — and `build/pdf/` holds the intermediates.
+
+```text
+set NODE_PATH=%LOCALAPPDATA%\npm-cache\_npx\9833c18b2d85bc59\node_modules
+python tools/make_brief.py
+```
+
+The build **fails** unless the document is exactly 5 pages, carries at least 40 link
+annotations, has none that resolve nowhere, and has every measured page-to-page link
+resolving through the PDF's own name tree to the sheet it was aimed at.
+
+### Where it lives, and where it must not
+
+`brief/apm-brief.pdf`, offered from the README as a raw URL. **It is deliberately not on the
+site.** GitHub Pages serves `docs/`, so a copy placed there would publish a five-page PDF to
+every visitor while looking, in the repository, like nothing had changed. Two tests hold that
+line: the README link must resolve to a committed file, and no copy may exist under `docs/`.
+Both were verified by breaking them.
+
+### Two claims the document refuses to make
+
+Checked against the data before writing either, and both would have been easy to get wrong:
+
+- **None of the 8 commitments carries a target date.** The campaign has published none. Each
+  carries a success indicator, and the brief says the absence rather than filling it in.
+- **No beneficiary total appears anywhere.** `achievements.csv` holds `beneficiaries` as free
+  text ("Caregivers and children in Bauchi"), so it cannot be summed. Nothing was estimated.
+
+### Interactivity, and a correction
+
+It carries 46 link annotations: 15 external, 29 page-to-page jumps plus a contents strip,
+and all 29 are verified to resolve to the right sheet. Three QR codes were decoded back out
+of the finished PDF and match their URLs exactly.
+
+**I reported 29 dead links in the first build, and that was wrong.** Chrome writes
+same-document links as `/Dest` named destinations, not `/A` actions, and the audit looked
+only for `/A`. Chasing it found two real bugs — both in the checker: a containment filter
+that measured only 5 of 29 links, so the check passed vacuously, and `left + width * scale`
+written without the parentheses around the sum. `tools/_negative_control_brief.py` breaks the
+document deliberately and requires the verifier's own failure message, because a non-zero
+exit alone once "passed" for an unrelated reason.
+
+### English only, deliberately
+
+The site is bilingual; this document is not. Writing five pages of new Hausa would add another
+block of AI-drafted strings to the disclosure list in `AGENTS.md`, and nobody has reviewed
+them. That trade was taken knowingly. **If a Hausa edition is ever wanted, it needs a native
+speaker, and the disclosure must ship with it.**
+
+### Re-shoot and rebuild triggers
+
+The brief and the video both state that the poll has 0 responses **as at 2 October 2026**.
+When the first response lands, all three of these are required, not optional:
+
+1. Rebuild the dashboard snapshot from the exported sheet and commit it (§28).
+2. Re-shoot the demo — its caption claims the poll is empty.
+3. Re-run `python tools/make_brief.py` so the brief's zero stops being true.
+
+### Project status: closed
+
+Everything specified in `IMPLEMENTATION_PLAN.md` phases S0–S4 has shipped, plus S5 (the
+poll, live and disabled) and this brief. 408 tests pass, 1 skipped. The remaining open items
+are owner actions that no code can reach, and they are listed above under "Open items":
+pruning retained request data, and recording any change the native Hausa reviewer made to
+the strings the AI pass flagged as questionable.
+
 ### If you only have time for one thing
 
 Run S1's, S2's, S3's and S4's guards against a change you made:
