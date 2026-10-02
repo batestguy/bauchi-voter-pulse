@@ -95,7 +95,11 @@ REQUEST_CATEGORIES = (
 
 ASSET_FILES = [
     "apm-logo.png", "apm-emblem.png", "yakubu-adamu-hero.png", "yakubu-adamu-portrait.png",
-    "yakubu-adamu-single.png", "bala-mohammed.png", "abdulkadir-ahmad-hammayo.png"
+    "yakubu-adamu-single.png", "bala-mohammed.png", "abdulkadir-ahmad-hammayo.png",
+    # The demo recording is a registered asset like any other: hashed on every build and
+    # published through the same copy step, so the weekly cron's `git add docs/assets/`
+    # ships it without knowing that video exists.
+    "demo-16x9.mp4", "demo-9x16.mp4"
 ]
 
 FEATURED_ACHIEVEMENTS_FILE = "featured_achievements.csv"
@@ -2649,8 +2653,15 @@ a{color:inherit}
 .about-chip{display:inline-flex;align-items:center;padding:11px 18px;border:1px solid var(--line);border-radius:999px;background:var(--white);color:var(--ink);font-size:13px;font-weight:600;text-decoration:none;transition:border-color .2s,transform .2s,box-shadow .2s}
 .about-chip:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 10px 22px rgba(11,38,60,.1)}
 .about-cta{margin:30px 0 0}
+.demo-downloads{list-style:none;margin:26px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;max-width:900px}
+.demo-download{margin:0}
+.demo-download-link{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:18px 22px;border:1px solid var(--line);border-radius:4px;background:var(--white);color:var(--ink);font-size:14px;font-weight:600;text-decoration:none;transition:border-color .2s,transform .2s,box-shadow .2s}
+.demo-download-link:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 10px 22px rgba(11,38,60,.1)}
+.demo-download-meta{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;white-space:nowrap}
+.demo-download-note{margin:9px 2px 0;font-size:12.5px;line-height:1.55;color:var(--muted)}
+#demo-video .note-box{margin-top:26px}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
-@media (max-width:1050px){.about-grid{grid-template-columns:1fr;gap:30px}.about-portrait{max-width:520px}.about-portrait--credit{max-width:190px}}
+@media (max-width:1050px){.about-grid{grid-template-columns:1fr;gap:30px}.about-portrait{max-width:520px}.about-portrait--credit{max-width:190px}.demo-downloads{grid-template-columns:1fr;max-width:520px}}
 @media (max-width:1050px){.indicator-grid{grid-template-columns:repeat(2,1fr)}.featured-slide{grid-template-columns:1fr}.request-layout{grid-template-columns:1fr}.request-aside{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:8px 24px}.request-aside>div{padding:20px 0;border-bottom:0}}
 @media (max-width:760px){.indicator-section{padding:70px 0}.indicator-grid{grid-template-columns:1fr}.featured-section{padding:70px 0}.featured-carousel{padding:12px}.featured-toolbar{align-items:flex-start;flex-direction:column}.featured-scope-filters{width:100%}.featured-slide{padding:14px}.featured-media img{height:240px}.request-grid{grid-template-columns:1fr}.request-field-wide{grid-column:auto}.request-aside{grid-template-columns:1fr;padding:8px 20px}.request-form{padding:18px}.request-field input,.request-field select,.request-field textarea{font-size:16px}.poll-form{padding:18px}.poll-grid{grid-template-columns:1fr}.poll-bar{grid-template-columns:1fr;gap:5px}.poll-bar-track{height:12px}.poll-chart{padding:18px}.poll-controls select{min-width:0;width:100%}.poll-two{grid-template-columns:1fr;gap:18px}.poll-stats{grid-template-columns:1fr 1fr}.poll-scope{padding:16px}.poll-scope-count{margin-left:0;flex-basis:100%}}
 @media (max-width:1050px){.nav{display:none}.hero-grid{grid-template-columns:1fr .8fr;gap:20px}.portrait-wrap{min-height:470px}.lga-map-layout{grid-template-columns:1fr;gap:22px}.lga-map-column{position:static}.agenda-grid{grid-template-columns:repeat(3,1fr)}.arrow-path{grid-template-columns:1fr 20px 1.4fr 20px 1.2fr 20px 1.1fr;padding:14px}}
@@ -3293,7 +3304,7 @@ def body_about(ctx):
             "hankali na hukumar sa.")
         + '</p></div></div></div></section>')
 
-    return (header + hero + story + commitments + contributor
+    return (header + hero + story + commitments + contributor + demo_video_section()
             + '<section class="section" id="about-source-note"><div class="shell">'
             + '<p class="note-box">' + copy(
         "Sources: the candidate\u2019s own published campaign materials and Bauchi State "
@@ -3303,6 +3314,74 @@ def body_about(ctx):
         "Bauchi, da aka lissafi a kan shafin bayane. Hotuna an yi amfani da su tare da "
         "permission daga mai shi.")
         + '</p></div></section>')
+
+def file_size_label(path: pathlib.Path) -> str:
+    """A download size read off the file, not typed into the markup.
+
+    The page used to carry prose where a number could disagree with the thing it
+    described. This one is measured at build time, so re-encoding the video cannot leave
+    a "4.2 MB" label sitting under a 4.14 MB file.
+    """
+    if not path.exists():
+        return ""
+    mb = path.stat().st_size / 1_000_000
+    return f"{mb:.1f} MB" if mb < 10 else f"{mb:.0f} MB"
+
+
+def demo_video_section():
+    """The demo recording, offered for download on the one page that talks about the site.
+
+    Two cuts, because a campaign video is watched on a phone far more often than on a
+    desktop, and a 16:9 file letterboxed into a phone feed loses half its width. Both are
+    recorded separately rather than cropped: cropping 1920x1080 to 9:16 keeps the middle
+    607 pixels and the captions die with it.
+
+    The section states when the recording was made and what the poll figures were at that
+    moment. Without that line the page would keep serving a video whose caption reads
+    "nobody has answered yet" long after responses exist, which is a false claim made on
+    the owner's behalf.
+    """
+    cuts = [
+        ("demo-16x9.mp4", "MP4, 16:9 desktop", "MP4, tebur 16:9",
+         "Wide cut for desktop, Facebook and YouTube.",
+         "Babban cuts don tebur, Facebook da YouTube."),
+        ("demo-9x16.mp4", "MP4, 9:16 phone", "MP4, waya 9:16",
+         "Vertical cut for WhatsApp Status and phone feeds.",
+         "Tsayawa don WhatsApp Status da waya."),
+    ]
+    cards = []
+    for filename, label_en, label_ha, desc_en, desc_ha in cuts:
+        source = ASSETS / filename
+        size = file_size_label(source)
+        meta = f" \u00b7 {esc(size)}" if size else ""
+        cards.append(
+            f'<li class="demo-download"><a class="demo-download-link" '
+            f'href="assets/brand/{esc(filename)}" download>'
+            + copy(label_en, label_ha)
+            + f'<span class="demo-download-meta">{esc("H.264" + meta)}</span></a>'
+            + f'<p class="demo-download-note">{copy(desc_en, desc_ha)}</p></li>')
+
+    return (
+        '<section class="section" id="demo-video"><div class="shell">'
+        + '<div class="section-head"><div>'
+        + f'<div class="eyebrow">{copy("Watch", "Duba")}</div>'
+        + f'<h2>{copy("A short tour of the site.", "Rukumen daƙiƙin kwanaki na 30 na shafi.")}</h2>'
+        + '</div><p>' + copy(
+            "A captioned recording of these pages, in English and Hausa. Nothing was "
+            "submitted to the poll or the request form to make it.",
+            "Rukumen daƙiƙin kwanaki na 30 na shafihancan, tare da rubutanni, a cikin "
+            "Tayi da Hausa. Babu komi da aka aika zuwa zance ko fom ɗin buƙatar al'umma.")
+        + '</p></div>'
+        + '<ul class="demo-downloads">' + "".join(cards) + '</ul>'
+        + '<p class="note-box">' + copy(
+            "Recorded on 2 October 2026, before any poll response had arrived, so the "
+            "figures in it read zero because nobody had answered yet. The audio is an "
+            "instrumental generated for this site and carries no third-party licence.",
+            "An ƙirƙira a ran 2 Oktobar 2026, kafin wani amsa ya zo, saboda haka adadin da "
+            "ke ciki suna nuna sifiri. Saƙo mai kusicciya ne da aka ƙirƙira don wannan shafi, "
+            "kuma babu lasifi na wani dan da ba mu.")
+        + '</p></div></section>')
+
 
 def body_sources(ctx):
     header = subpage_open("sources")

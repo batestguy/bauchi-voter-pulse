@@ -8,6 +8,7 @@ Two release-breaking traps motivated this file:
    every handler on that page while the HTML still renders. Each generated page
    is parsed with `node --check`.
 """
+import csv
 import os
 import re
 import shutil
@@ -99,12 +100,59 @@ class GeneratedPageTests(unittest.TestCase):
             'id="indicators"': ("achievements",),
             'id="atlas"': ("atlas",),
             'data-featured-carousel': ("achievements",),
+            'id="demo-video"': ("about",),
         }
         for needle, expected in expectations.items():
             with self.subTest(needle=needle):
                 carriers = [s for s in PAGE_SLUGS if needle in read(s)]
                 self.assertEqual(carriers, list(expected),
                                  f"{needle} should be on {expected}, found on {carriers}")
+
+    def test_a_download_link_points_at_a_file_that_exists_and_is_registered(self):
+        """A link to a missing file is a 404 that no test would ever see.
+
+        The demo video is offered as two downloads from the About page. Nothing else
+        on the site links to a binary, so this is the only place a stale path can hide:
+        the renderer writes the href from a filename, the register holds a hash, and
+        nothing in the ordinary build compares the three. `ASSET_FILES` copies the file
+        into `docs/assets/brand/`, so the href, the copy and the register row have to
+        agree -- which is exactly what this asserts, and what the repository keeps
+        rediscovering the hard way elsewhere.
+        """
+        html = read("about")
+        hrefs = re.findall(r'href="(assets/brand/[^"]+\.(?:mp4|webm|gif))"', html)
+        self.assertTrue(hrefs, "the About page should offer at least one download")
+
+        with open("data/delivery/asset_register.csv", encoding="utf-8", newline="") as fh:
+            registered = {row["file"] for row in csv.DictReader(fh)}
+
+        for href in hrefs:
+            with self.subTest(href=href):
+                published = DOCS / href
+                source = Path("assets/brand") / Path(href).name
+                self.assertTrue(source.exists(), f"{href} has nothing in assets/brand/")
+                self.assertTrue(published.exists(),
+                                f"{href} was never copied into docs/, so the link 404s")
+                self.assertEqual(source.read_bytes(), published.read_bytes(),
+                                 "the published copy differs from the registered source")
+                self.assertIn(source.name, registered,
+                              f"{source.name} is published but absent from asset_register.csv")
+                self.assertIn(source.name, render.ASSET_FILES,
+                              f"{source.name} is registered but would never be published")
+
+    def test_the_demo_video_states_when_it_was_recorded(self):
+        """The caption says "nobody has answered yet". That is a claim with an expiry.
+
+        Once the poll has responses the video is asserting something false, on the
+        owner's behalf, in every feed it is shared into. The page carries the recording
+        date and the state of the poll at that moment, so the claim is bounded on the
+        page rather than only in a commit message nobody rereads.
+        """
+        html = read("about")
+        self.assertIn('id="demo-video"', html)
+        section = html.split('id="demo-video"', 1)[1].split("</section>", 1)[0]
+        self.assertIn("2 October 2026", section)
+        self.assertIn("before any poll response", section)
 
 
 class NavigationTests(unittest.TestCase):

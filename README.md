@@ -115,7 +115,7 @@ Counts below are derived from the committed CSVs, not written by hand.
 | Bauchi LGAs | 20 | `data/delivery/lga_delivery.csv` |
 | Registration areas (provisional INEC RAs) | 212 | `data/delivery/lga_wards.csv` |
 | Registered sources | 28 | `data/delivery/source_register.csv` |
-| Registered and approved assets | 12 | `data/delivery/asset_register.csv` |
+| Registered and approved assets | 14 | `data/delivery/asset_register.csv` |
 
 **One of the 8 commitments is a clause, not a pillar.** The published campaign source contains
 no standalone water pillar, so `promise-wash` is labelled
@@ -312,17 +312,18 @@ the point of the form**, so the poll's identity rules are deliberately *not* app
 ## Known disclosures
 
 **Hausa provenance.** 129 Hausa strings added in September 2026 are **AI-drafted** — 53 from
-S1/S2, 6 from the atlas, 4 in the footer contributor credit, and 66 in the poll. Disclose that
-wherever they ship. The owner reviewed and accepted the S1–S4 set as written on 29 September
-2026; an independent AI pass over the poll strings on 30 September 2026 found and corrected
-**20 defects**, including a re-identification warning that had lost its negation, a privacy
-disclosure that had dropped the word "exact", and the map's licensing caveat that said
-"colours" where it meant "boundaries". **That AI pass did not close the gate on its own** — an
-AI reviewing AI-drafted Hausa only produces candidates — and the owner reports the
-native-speaker review complete on 2 October 2026. **The disclosure stays**, because the
-strings are machine-drafted and machine-corrected, then human-reviewed: that is a different
-claim from "written by a speaker". Every string, its correction and the reviewer's open list
-are in [`docs/HAUSA_REVIEW.md`](docs/HAUSA_REVIEW.md).
+S1/S2, 6 from the atlas, 4 in the footer contributor credit, and 66 in the poll — plus **8
+added on 2 October 2026** for the demo video section, which are also AI-drafted and not
+reviewed. Disclose that wherever they ship. The owner reviewed and accepted the S1–S4 set as
+written on 29 September 2026; an independent AI pass over the poll strings on 30 September
+2026 found and corrected **20 defects**, including a re-identification warning that had lost
+its negation, a privacy disclosure that had dropped the word "exact", and the map's licensing
+caveat that said "colours" where it meant "boundaries". **That AI pass did not close the gate
+on its own** — an AI reviewing AI-drafted Hausa only produces candidates — and the owner
+reports the native-speaker review complete on 2 October 2026. **The disclosure stays**,
+because the strings are machine-drafted and machine-corrected, then human-reviewed: that is a
+different claim from "written by a speaker". Every string, its correction and the reviewer's
+open list are in [`docs/HAUSA_REVIEW.md`](docs/HAUSA_REVIEW.md).
 
 **Map licensing.** The boundaries are GRID3/eHealth Africa operational LGA boundaries,
 **CC BY 4.0**, cached once at
@@ -392,6 +393,13 @@ Outputs land in `build/demo/`, which is gitignored: the files are tens of megaby
 video that a re-run reproduces, and a public repository's history cannot replace them once
 pushed.
 
+**The published copies are not those.** The About page offers both cuts for download, from
+`assets/brand/demo-16x9.mp4` and `assets/brand/demo-9x16.mp4` — registered in
+`asset_register.csv` with a SHA-256 that `validate_data()` re-hashes on every build, and
+published through `ASSET_FILES`, so the weekly cron's existing `git add docs/assets/` ships
+them without knowing video exists. A test asserts that the href on the page, the copy under
+`docs/assets/brand/` and the register row all agree.
+
 **Four properties of the pipeline that are easy to break by accident:**
 
 - **Nothing is submitted.** The vote button is shown and never pressed, and
@@ -410,7 +418,9 @@ pushed.
 - **The zero-state claim travels with its evidence.** The dashboard shot carries both the
   site's own line ("reads zero because nobody has answered yet") and the not-representative
   disclosure in the same frame as the caption. **Re-shoot when the first responses land**,
-  or the video is stating something false.
+  or the video is stating something false — and the About page carries the recording date and
+  the state of the poll at that moment, so the claim is bounded on the page rather than only
+  in a commit message nobody rereads.
 
 ## Testing
 

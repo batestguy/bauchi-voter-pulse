@@ -1,5 +1,6 @@
 import csv
 import hashlib
+import re
 import subprocess
 import unittest
 from copy import deepcopy
@@ -124,6 +125,33 @@ class DeliveryIntegrityTests(unittest.TestCase):
         self.assertFalse(
             any(row["review_status"] == "needs_review" for row in rows("review_queue.csv"))
         )
+
+
+class ReadmeInventoryTests(unittest.TestCase):
+    """The README's data table is prose, and prose drifts.
+
+    It said 12 registered assets after two more were registered, and nothing in the build
+    compared the two: `validate_data()` hashes each register row, and no check ever asked
+    whether the number a reader is shown still matches the register. This walks the table
+    and recomputes every figure from the file it names, so the same class of defect cannot
+    survive a change to the data again.
+    """
+
+    TABLE = re.compile(r"^\|\s*[^|]+?\|\s*(\d[\d,]*)\s*\|\s*`([^`]+)`\s*\|\s*$", re.MULTILINE)
+
+    def test_every_inventory_figure_matches_the_file_it_cites(self):
+        readme = Path("README.md").read_text(encoding="utf-8")
+        found = self.TABLE.findall(readme)
+        self.assertGreaterEqual(len(found), 8, "the README inventory table was not found")
+
+        for printed, cited in found:
+            with self.subTest(row=cited):
+                path = Path(cited)
+                self.assertTrue(path.exists(), f"{cited} is cited in the README but missing")
+                with path.open(newline="", encoding="utf-8") as handle:
+                    actual = len(list(csv.DictReader(handle)))
+                self.assertEqual(int(printed.replace(",", "")), actual,
+                                 f"README says {printed} for {cited}, which holds {actual} rows")
 
 
 if __name__ == "__main__":

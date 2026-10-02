@@ -28,6 +28,11 @@ closed items below carry their own dates)
 >
 > ### ⏭ Start here next session
 >
+> **Shipped on 2 October: a 30-second captioned demo of the live site**, in a 16:9 and a 9:16
+> cut, offered for download from `about.html`. Both are registered assets with hashes, so
+> the weekly cron publishes them like any other image. Its caption claims the poll has no
+> responses yet, so **re-shoot it when the first response arrives** — §30.
+>
 > **All three owner actions from the 1 October handoff are now closed. One remains, and it
 > is blocked on data rather than on a decision:**
 >
@@ -2289,6 +2294,64 @@ written twice.**
   machine-drafted and machine-corrected; a human reviewed them afterwards, which is a
   different claim and is worded differently.
 - **Nothing has been committed.** Per §Restart step 6, push authorisation is not standing.
+
+## 30. The Demo Video — Built, Published, and Given an Expiry Date
+
+**A 30-second captioned recording of the live site, in two cuts, offered for download from
+`about.html`.** Built entirely by script in `tools/`, so it can be re-shot when the site
+changes; see the README's *Demo video* section for the commands.
+
+| Cut | File | Format | Length |
+|---|---|---|---|
+| Desktop | `assets/brand/demo-16x9.mp4` | 1920×1080, H.264 + AAC, 30.2 s | 4.1 MB |
+| Phone | `assets/brand/demo-9x16.mp4` | 1080×1920, H.264 + AAC, 26.7 s | 4.0 MB |
+
+**It is a registered asset, not a file dropped in `docs/`.** Both cuts carry
+`asset_register.csv` rows with a SHA-256 that `validate_data()` re-hashes on every build,
+and they are published through `ASSET_FILES`, so the weekly cron's existing
+`git add docs/assets/` ships them without anyone editing the workflow. A test asserts that
+the href on the page, the copy under `docs/assets/brand/` and the register row agree — the
+first place on the site where a stale path could 404 silently.
+
+**The audio is generated, not licensed.** `tools/make_music.py` synthesises the instrumental
+from oscillators on the build machine, so there is no third-party author and therefore no
+rights claim to clear. The empty-poll stretch ducks the pad and drops the kick outright;
+measured, its beat-pulse ratio is 1.01 against 1.90–2.31 elsewhere, which is the only reason
+the hush is audible at all.
+
+### The two guardrails, and how they are enforced
+
+- **Nothing was submitted.** The capture shows the vote button and never presses it, and
+  `tools/check_no_submission.mjs` reads the live `Responses`, `Comments` and `Audit` tabs
+  and exits non-zero if any holds a row. Run after any re-shoot. Verified on this capture:
+  all three tabs hold headers only.
+- **The zero-state claim has an expiry, so it is bounded on the page.** The caption reads
+  *"nobody has answered yet"*, true only until the first response. The About section carries
+  the recording date and the poll's state at that moment, and
+  `test_the_demo_video_states_when_it_was_recorded` fails the build if that line is removed.
+  **Re-shoot when the poll has responses**, or the video asserts something false on the
+  owner's behalf in every feed it is shared into.
+
+### Two defects worth carrying forward
+
+1. **The captions ran about a second and a half late on every shot.** The recorder marked
+   shots *after* their settle hold, so each caption inherited the next shot's wait. It now
+   logs a mark at the instant the frame changes, and the caption windows, the music arc and
+   the head trim are all derived from that log. **Nothing about the edit is hard-coded**,
+   because a take drifts by seconds between runs with the network — today's atlas click
+   landed at 14.8 s and an earlier take's at 12.6 s.
+2. **The README's own data table was stale and nothing compared it.** It said 12 registered
+   assets after two more were registered. `ReadmeInventoryTests` now walks that table and
+   recomputes every figure from the file it cites; verified by putting the wrong number back
+   and watching it fail.
+
+### Also this session
+
+- **`ffmpeg` was a dangling winget shim** pointing into a package folder that did not exist —
+  the same failure class as the `rg.exe` shim in §27. Installed; `build_demo.py` resolves the
+  binary inside the package directory rather than trusting PATH.
+- **8 new AI-drafted Hausa strings** ship with the video section. They are **not**
+  native-speaker reviewed, and the provenance disclosure now says so.
 
 ---
 

@@ -379,6 +379,18 @@ Enforced in code; keep them enforced.
 ## Content integrity rules
 These are enforced in code; keep them enforced.
 - **Never let two promise rows share `promise_text`.** `validate_unique_promises()` fails the build. A phantom row once duplicated a commitment across two sectors.
+- **The demo video is a registered asset and a published one, not a file dropped in `docs/`.**
+  Both cuts live in `assets/brand/`, carry `asset_register.csv` rows with a SHA-256 that
+  `validate_data()` re-hashes on every build, and are published through `ASSET_FILES` — so
+  the weekly cron's existing `git add docs/assets/` ships them without knowing video exists.
+  Three things must agree and a test asserts all three: the href on the page, the copy under
+  `docs/assets/brand/`, and the register row.
+- **The demo video's caption makes a claim with an expiry.** It reads *"nobody has answered
+  yet"*, which is true only until the first response. The section on `about.html` therefore
+  carries the recording date and the state of the poll at that moment, and
+  `test_the_demo_video_states_when_it_was_recorded` fails the build if that line is removed.
+  **Re-shoot when the poll has responses**, or the video asserts something false on the
+  owner's behalf in every feed it is shared into.
 - **Never put Hausa in an English content column.** `validate_no_hausain_english_columns()` fails the build, using both an orthography test and a function-word test — the orthography test alone misses sentences that are Hausa but use no `ƙ ɓ ɗ ʙ`.
 - **Never leave a required `_ha` column blank.** Enforced by `validate_data()` and the test suite.
 - **Source titles are citations** and stay in their original language, untranslated. Our own prose (`usage_note`, `verification_status`, indicator values) must translate.
@@ -441,7 +453,7 @@ preflight that Apps Script cannot satisfy. **Never send `Content-Type: applicati
 from a browser to an Apps Script `/exec` endpoint** — it fails with a bare `Failed to fetch`,
 no console error, and a user who is told their vote was not sent.
 
-**129** Hausa strings added in September 2026 are AI-drafted — 53 from S1/S2, 6 from S4, 4 in the footer contributor credit, and 66 in the S5 poll (counted across both dashboard states, which ship different strings). Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler. **The owner reviewed and accepted the S1–S4 set as written on 29 September 2026**. The poll strings were then reviewed by a native Hausa speaker — **the owner confirmed that review complete on 2 October 2026**; no reviewer's name is recorded in this repository, so do not attribute it to anyone. **The disclosure stays**, because the strings are still AI-drafted and machine-corrected rather than natively translated, and "AI-drafted, then reviewed" is a different claim from "written by a speaker".
+**129** Hausa strings added in September 2026 are AI-drafted — 53 from S1/S2, 6 from S4, 4 in the footer contributor credit, and 66 in the S5 poll (counted across both dashboard states, which ship different strings). Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler. **The owner reviewed and accepted the S1–S4 set as written on 29 September 2026**. The poll strings were then reviewed by a native Hausa speaker — **the owner confirmed that review complete on 2 October 2026**; no reviewer's name is recorded in this repository, so do not attribute it to anyone. **A further 8 strings were added on 2 October 2026** for the demo video section on `about.html`, and they are **AI-drafted and not native-speaker reviewed**. **The disclosure stays** for all of them, because the strings are still AI-drafted and machine-corrected rather than natively translated, and "AI-drafted, then reviewed" is a different claim from "written by a speaker".
 
 **The poll strings are no longer awaiting a native-speaker review.** An independent AI pass
 ran on 30 September 2026 and found **20 defects**, all now corrected
