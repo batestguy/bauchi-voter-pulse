@@ -10,6 +10,7 @@ from src.dashboard import render
 
 
 DATA = Path("data/delivery")
+DOCS_ASSETS = Path("docs/assets/brand")
 
 
 def rows(name):
@@ -152,6 +153,35 @@ class ReadmeInventoryTests(unittest.TestCase):
                     actual = len(list(csv.DictReader(handle)))
                 self.assertEqual(int(printed.replace(",", "")), actual,
                                  f"README says {printed} for {cited}, which holds {actual} rows")
+
+    def test_every_download_the_readme_offers_is_a_real_registered_file(self):
+        """A download link in the README is the one thing on this page a reader can act on.
+
+        The repo offers two MP4s from the README and the About page. A relative link to a
+        binary would land on GitHub's file page rather than the file, so the README uses
+        absolute `raw.githubusercontent.com` URLs - which means a rename, a move or a
+        deleted asset would leave a 404 in the first screen of the project with no test
+        anywhere noticing. This walks the URLs and resolves each one to a file that exists
+        on disk and is registered.
+        """
+        readme = Path("README.md").read_text(encoding="utf-8")
+        urls = re.findall(
+            r"https://raw\.githubusercontent\.com/[^/]+/[^/]+/[^/]+/(assets/brand/[^\s)\"']+)",
+            readme,
+        )
+        self.assertGreaterEqual(len(urls), 2, "no raw download links found in the README")
+
+        with open("data/delivery/asset_register.csv", encoding="utf-8", newline="") as fh:
+            registered = {row["file"] for row in csv.DictReader(fh)}
+
+        for url_path in urls:
+            with self.subTest(url=url_path):
+                local = Path(url_path)
+                self.assertTrue(local.exists(), f"{local} is offered for download but missing")
+                self.assertEqual(local.stat().st_size, (DOCS_ASSETS / local.name).stat().st_size,
+                                 "the downloadable copy differs from the published one")
+                self.assertIn(local.name, registered,
+                              f"{local.name} is offered for download but not registered")
 
 
 if __name__ == "__main__":

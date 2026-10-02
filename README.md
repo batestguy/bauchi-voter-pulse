@@ -4,6 +4,19 @@
 
 ### ➡️ **[Open the live site →](https://batestguy.github.io/bauchi-voter-pulse/)**
 
+**📥 Download the 30-second demo** — captioned, English and Hausa, about 4 MB each:
+
+| Cut | Download | For |
+|---|---|---|
+| 16:9 | [`demo-16x9.mp4`](https://raw.githubusercontent.com/batestguy/bauchi-voter-pulse/main/assets/brand/demo-16x9.mp4) | desktop, Facebook, YouTube |
+| 9:16 | [`demo-9x16.mp4`](https://raw.githubusercontent.com/batestguy/bauchi-voter-pulse/main/assets/brand/demo-9x16.mp4) | WhatsApp Status, phone feeds |
+
+Both cuts are committed in this repository under `assets/brand/`, registered in
+`asset_register.csv` with a SHA-256, and also served from the live site. They were recorded
+on 2 October 2026, before any poll response had arrived — **re-shoot them when the first
+response lands**, or the caption is claiming something false. See
+[HANDOFF.md §30](HANDOFF.md).
+
 A source-backed, bilingual campaign intelligence site for the 2027 Bauchi State
 governorship race. Every figure on it traces to a registered source, and campaign
 commitments are never presented as completed work.
