@@ -1,10 +1,12 @@
 # APM Bauchi Progress & Delivery
 
+[![Visit the live site](https://img.shields.io/badge/Visit%20the%20live%20site-APM%20Bauchi%20Progress%20%26%20Delivery-f0a500?style=for-the-badge)](https://batestguy.github.io/bauchi-voter-pulse/)
+
+### ➡️ **[Open the live site →](https://batestguy.github.io/bauchi-voter-pulse/)**
+
 A source-backed, bilingual campaign intelligence site for the 2027 Bauchi State
 governorship race. Every figure on it traces to a registered source, and campaign
 commitments are never presented as completed work.
-
-**Live:** <https://batestguy.github.io/bauchi-voter-pulse/>
 
 The site connects one chain:
 
@@ -418,3 +420,7 @@ the filled sample), `data/human_review/filled/` (the completed, signed human rev
 `Code.gs` is committed on purpose. It holds no credential, no Sheet ID and no deployment ID;
 its only data is the public registration-area map, already in `lga_wards.csv` and on the form.
 `.clasp.json` is gitignored for both endpoint folders.
+
+---
+
+**[← Back to the live site: batestguy.github.io/bauchi-voter-pulse](https://batestguy.github.io/bauchi-voter-pulse/)**
