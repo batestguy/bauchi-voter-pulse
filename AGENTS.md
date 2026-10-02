@@ -490,6 +490,29 @@ Enforced in code; keep them enforced.
   `asset_register.csv` row against the file on disk, and the file must also be added to
   `ASSET_FILES` or it never reaches `docs/assets/brand/`.
 
+## Source-ingestion rules (weekly cron)
+The `delivery-sources.yml` job rewrites `data/delivery/` unattended. These are enforced in
+code; keep them enforced.
+- **A function that rewrites a translated, hand-curated file must read its column list from
+  the file's own header.** `sync_source_register` once listed its eleven output columns
+  inline and omitted `usage_note_ha`, so on 2 October 2026 the cron committed the register
+  without the Hausa column, **deleting 28 hand-reviewed translations and breaking the build
+  while reporting success** — nothing in its path could fail. It is now
+  `fields = list(reader.fieldnames)` plus an asserted required set.
+- **A missing required column must raise, not produce a shorter file.** The silent rewrite
+  is the whole failure; a loud one is recoverable.
+- **Write LF.** `csv.DictWriter` defaults to `\r\n`, which rewrites every line of the file on
+  the Linux runner and buries the two dates that actually changed.
+- **A pending review blocks the build.** `test_no_pending_source_reviews` refuses a
+  `needs_review` row. Resolve it with `tools/resolve_review_queue.py`, which handles only the
+  candidate it was written for and refuses anything else rather than guessing. An empty page,
+  a link index or a navigation shell is `not_achievement`: it holds no figure and no claim.
+- **A negative control must restore what it broke from memory.** `tools/_negative_control_sync.py`
+  once used `git checkout` to restore, and silently discarded an uncommitted fix while
+  reporting success, because a clean diff against HEAD reads the same either way. It now
+  asserts the fix is back. Same lesson as the brief's control, and the same reason both
+  require the verifier's own message rather than a non-zero exit.
+
 ## Printable brief rules (phase SB)
 `brief/apm-brief.pdf` is a **repository download, not a page of the site**, and these are
 enforced in code.

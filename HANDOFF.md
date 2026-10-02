@@ -2541,10 +2541,76 @@ When the first response lands, all three of these are required, not optional:
 ### Project status: closed
 
 Everything specified in `IMPLEMENTATION_PLAN.md` phases S0–S4 has shipped, plus S5 (the
-poll, live and disabled) and this brief. 408 tests pass, 1 skipped. The remaining open items
+poll, live and disabled) and this brief. 410 tests pass, 1 skipped. The remaining open items
 are owner actions that no code can reach, and they are listed above under "Open items":
 pruning retained request data, and recording any change the native Hausa reviewer made to
 the strings the AI pass flagged as questionable.
+
+---
+
+## §32 The weekly sources cron was destroying a column
+
+**Found on 2 October 2026, while rebasing the brief commit onto `04049a1`.**
+
+The `delivery-sources.yml` cron had pushed `source_register.csv` **without the
+`usage_note_ha` column**, deleting 28 hand-reviewed Hausa translations and breaking the
+build — while the job itself reported success, because nothing in its path could fail.
+Seven tests caught it afterwards.
+
+The cause was `sync_source_register`, which listed its eleven output columns inline:
+
+```python
+fields = ["source_id", "publisher", ..., "usage_note", "content_hash"]   # no usage_note_ha
+```
+
+A function that rewrites a translated, hand-curated file every week, and names its
+columns in a list it owns, will delete every column somebody added afterwards. **It is
+now read from the file's own header**, with the required set asserted and a missing column
+raising instead of producing a shorter file.
+
+Two guards, both verified by breaking them:
+
+- `test_the_weekly_sync_cannot_drop_a_column_from_the_source_register` runs the real
+  function against a copy of the committed file and asserts the header, the row count and
+  every Hausa cell survive — then asserts the hash *did* change, so the test cannot pass by
+  doing nothing.
+- `test_the_sync_refuses_to_write_a_register_missing_a_required_column` asserts a deficient
+  register is refused and the file is left byte-for-byte alone.
+
+`tools/_negative_control_sync.py` reinstates the original eleven-column list and requires
+the guard's own complaint. **It restores from memory, never with `git checkout`:** the first
+version did use `git checkout`, and it silently threw away the still-uncommitted fix while
+reporting "the file is intact" — a clean diff against HEAD looks the same either way. It now
+asserts the fix is back in place after it runs.
+
+### The pending review the cron left behind
+
+The same push appended `candidate-81c21bd81b43` with `review_status = needs_review`, which
+`test_no_pending_source_reviews` refuses to let ship.
+
+**Verdict: `not_achievement`.** The archived capture is 296 KB of HTML that reduces to 6,490
+characters of visible text containing **zero** occurrences of "Naira", "billion", "trillion"
+or `₦`. It is the site's navigation chrome and a column of "Download Now!" links to budget
+documents — the FY2026 appropriation law, the Q1 implementation report, the citizen budget.
+The documents themselves were not retrieved. Promoting it would publish a source holding no
+figure and no claim.
+
+The same shape was already reviewed as `not_achievement` on 24 September 2026
+(`candidate-8d01196b6724`, "Navigation page listing reports and services"), so this is
+recorded consistently rather than inventing a new category.
+
+**The budget PDFs are not dismissed by this.** They remain genuinely useful sources; they are
+simply not this capture. Adding them is a separate manual step that needs someone to fetch and
+read each document — `tools/resolve_review_queue.py` refuses to resolve any candidate it was
+not written for, rather than guessing.
+
+### Also fixed: the brief's own arithmetic
+
+The brief enumerated the source-manifest review outcomes in prose — 26 published, 3 context,
+3 duplicates, 2 rejected. The cron added a 35th document with a fifth status, so the
+sentence would have claimed it read 34 documents while the file held 35. The breakdown is now
+**derived** from the data, with agreement-corrected wording ("1 is queued", not "one are
+queued") and a build-time assertion that the categories sum to the total.
 
 ### If you only have time for one thing
 

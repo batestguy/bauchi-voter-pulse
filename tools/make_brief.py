@@ -32,6 +32,7 @@ import json
 import pathlib
 import re
 import shutil
+from collections import Counter
 import subprocess
 import sys
 
@@ -64,6 +65,25 @@ BAUCHI_LGAS = (
 )
 
 
+# How each review status is described in the brief, in both numbers, because "and one
+# are queued" is the kind of thing that makes a careful document look careless. A
+# status with no entry here is still counted, under a generic phrase -- silently
+# dropping one would leave the sentence claiming it read fewer documents than it did.
+REVIEW_PHRASES = {
+    "published_source": ("became published entries", "became a published entry"),
+    "context_only": ("were kept for background", "was kept for background"),
+    "duplicate_source": (
+        "were duplicates of something already held",
+        "was a duplicate of something already held",
+    ),
+    "not_achievement": (
+        "were dropped because they were not evidence of an achievement",
+        "was dropped because it was not evidence of an achievement",
+    ),
+    "needs_review": ("are queued and not yet classified", "is queued and not yet classified"),
+}
+
+
 def rows(name: str) -> list[dict]:
     """Read a delivery CSV with DictReader.
 
@@ -93,6 +113,22 @@ def fact() -> dict:
     promise_targets = sum(1 for r in prom if r["target_date"].strip())
     promise_measures = sum(1 for r in prom if r["success_indicator"].strip())
 
+    # Enumerated from the data rather than written out. The sources cron adds rows,
+    # and a hand-written sentence then claims it read fewer documents than it did.
+    breakdown = Counter(r["review_status"] for r in manifest)
+    doc_review = []
+    for status, count in sorted(breakdown.items(), key=lambda kv: (-kv[1], kv[0])):
+        plural, singular = REVIEW_PHRASES.get(
+            status,
+            (
+                f"are recorded as {status.replace('_', ' ')}",
+                f"is recorded as {status.replace('_', ' ')}",
+            ),
+        )
+        doc_review.append((count, singular if count == 1 else plural))
+    if sum(count for count, _ in doc_review) != len(manifest):
+        raise SystemExit("review-status breakdown does not account for every source document")
+
     return {
         "built": dt.date.today().isoformat(),
         "sources": len(src),
@@ -101,7 +137,8 @@ def fact() -> dict:
         "grade_b": grades.count("B"),
         "grade_d": grades.count("D"),
         "documents": len(manifest),
-        "docs_published": sum(1 for r in manifest if r["review_status"] == "published_source"),
+        "doc_review": doc_review,
+        "docs_published": breakdown.get("published_source", 0),
         "docs_context": sum(1 for r in manifest if r["review_status"] == "context_only"),
         "docs_duplicate": sum(1 for r in manifest if r["review_status"] == "duplicate_source"),
         "docs_rejected": sum(1 for r in manifest if r["review_status"] == "not_achievement"),
@@ -136,6 +173,20 @@ def fact() -> dict:
         "poll_questions": 1,
         "poll_responses": 0,
     }
+
+
+def _join_clauses(pairs: list[tuple[int, str]]) -> str:
+    """Render a (count, phrase) list as an English clause list.
+
+    Digits are kept rather than spelled out: the phrases carry their own agreement,
+    and "and 1 is queued" reads better than "and one is queued" next to "26 became".
+    """
+    if not pairs:
+        return "none of them were classified yet"
+    parts = [f"{count} {phrase}" for count, phrase in pairs]
+    if len(parts) == 1:
+        return parts[0]
+    return ", ".join(parts[:-1]) + f", and {parts[-1]}"
 
 
 def qr_svg(target: str, name: str, scale: int = 8) -> pathlib.Path:
@@ -531,10 +582,8 @@ def build_html(f: dict) -> tuple[str, list[str]]:
       that something was delivered.</p>
 
       <p><b>How much was read.</b> {f['documents']} source documents were opened and classified:
-      {f['docs_published']} became published entries, {f['docs_context']} were kept for background,
-      {f['docs_duplicate']} were duplicates of something already held, and
-      {f['docs_rejected']} were dropped because they were not evidence of an achievement at all.
-      Counting the rejections matters as much as counting the entries.</p>
+      {_join_clauses(f['doc_review'])}. Counting the rejections matters as much as counting
+      the entries, and so does counting what is still queued.</p>
     </div>
 
     <div>

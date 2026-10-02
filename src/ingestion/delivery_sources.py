@@ -257,7 +257,23 @@ def sync_source_register(documents):
     if not path.exists() or not documents:
         return
     with path.open(newline="", encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
+        reader = csv.DictReader(f)
+        # The field list is read from the file, never written out here. This function
+        # used to hardcode eleven names and it did not include `usage_note_ha`, so
+        # every weekly run rewrote the register without the Hausa column: 28
+        # hand-reviewed translations were deleted from the repository and the build
+        # broke, with the cron reporting a clean success. Deriving the order from the
+        # header means a column added later is carried through untouched instead of
+        # dropped, which is the only version of this that cannot recur.
+        fields = list(reader.fieldnames or [])
+        rows = list(reader)
+    required = {"source_id", "content_hash", "retrieved_date", "usage_note", "usage_note_ha"}
+    missing = required - set(fields)
+    if missing:
+        raise ValueError(
+            f"source_register.csv is missing required column(s) {sorted(missing)}; "
+            "refusing to rewrite it, because the rewrite would discard them"
+        )
     by_id = {row.get("source_id"): row for row in rows}
     for document in documents:
         row = by_id.get(document.get("source_id"))
@@ -267,9 +283,11 @@ def sync_source_register(documents):
         row["retrieved_date"] = document["retrieved_date"]
         if document.get("publication_date"):
             row["publication_date"] = document["publication_date"]
-    fields = ["source_id", "publisher", "source_type", "title", "url", "publication_date", "retrieved_date", "document_type", "source_grade", "usage_note", "content_hash"]
     with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
+        # \n because the committed file is LF apart from one embedded break; the csv
+        # default of \r\n rewrites all 29 lines on every run and buries the two dates
+        # that actually changed.
+        writer = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows({field: row.get(field, "") for field in fields} for row in rows)
 

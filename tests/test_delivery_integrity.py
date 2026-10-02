@@ -91,6 +91,97 @@ class CommittedSnapshotBytesTests(unittest.TestCase):
 
 
 class DeliveryIntegrityTests(unittest.TestCase):
+    def test_the_weekly_sync_cannot_drop_a_column_from_the_source_register(self):
+        """The cron rewrites this file every week, so a lossy rewrite is silent damage.
+
+        `sync_source_register` once hardcoded eleven column names and left out
+        `usage_note_ha`. The weekly job therefore rewrote the register without the
+        Hausa column, deleting 28 hand-reviewed translations and breaking the build --
+        and the cron reported success, because from its point of view nothing failed.
+        It committed on 2 October 2026 and had to be restored by hand.
+
+        So this runs the real function against a temporary copy of the committed file
+        and asserts that every column and every translated cell survives. The point is
+        the round trip, not the individual column: a future column must survive too,
+        which is why the assertion is made against the header rather than a list.
+        """
+        import shutil
+        import tempfile
+
+        from src.ingestion import delivery_sources
+
+        register = DATA / "source_register.csv"
+        before_header = register.open(encoding="utf-8").readline().strip().split(",")
+        before = rows("source_register.csv")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "source_register.csv").write_bytes(register.read_bytes())
+            original_data = delivery_sources.DATA
+            delivery_sources.DATA = root
+            try:
+                delivery_sources.sync_source_register(
+                    [
+                        {
+                            "source_id": before[0]["source_id"],
+                            "content_hash": "0" * 64,
+                            "retrieved_date": "2026-10-02",
+                            "publication_date": "2026-09-01",
+                        }
+                    ]
+                )
+            finally:
+                delivery_sources.DATA = original_data
+
+            after_path = root / "source_register.csv"
+            after_header = after_path.open(encoding="utf-8").readline().strip().split(",")
+            with after_path.open(newline="", encoding="utf-8") as handle:
+                after = list(csv.DictReader(handle))
+
+        self.assertEqual(after_header, before_header,
+                         "the sync changed the register's columns")
+        self.assertEqual(len(after), len(before), "the sync changed the register's row count")
+        self.assertIn("usage_note_ha", after_header, "the Hausa usage note column is gone again")
+        for old, new in zip(before, after):
+            with self.subTest(source_id=old["source_id"]):
+                self.assertEqual(new["usage_note_ha"], old["usage_note_ha"],
+                                 "the sync rewrote a hand-reviewed Hausa translation")
+        self.assertEqual(after[0]["content_hash"], "0" * 64,
+                         "the sync did not apply the hash it was given, so the test proves nothing")
+
+    def test_the_sync_refuses_to_write_a_register_missing_a_required_column(self):
+        """Losing a column must stop the run, not produce a shorter file.
+
+        The failure above was silent because nothing in the sync path could fail. A
+        register arriving without `usage_note_ha` is now refused outright.
+        """
+        import tempfile
+
+        from src.ingestion import delivery_sources
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "source_register.csv"
+            stub = (
+                "source_id,publisher,title,content_hash,retrieved_date\n"
+                "s-1,P,T,abc,2026-01-01\n"
+            )
+            path.write_text(stub, encoding="utf-8")
+            original = delivery_sources.DATA
+            delivery_sources.DATA = root
+            try:
+                with self.assertRaises(ValueError):
+                    delivery_sources.sync_source_register(
+                        [{"source_id": "s-1", "content_hash": "x", "retrieved_date": "y"}]
+                    )
+            finally:
+                delivery_sources.DATA = original
+            # The refusal must leave the file byte-for-byte as it was. Asserting the
+            # column is still absent reads as a contradiction unless the intent is
+            # spelled out, which is why it is spelled out here.
+            self.assertEqual(path.read_text(encoding="utf-8"), stub,
+                             "the file was rewritten despite the refusal")
+
     def test_delivery_data_passes_renderer_validation(self):
         render.validate_data()
 
