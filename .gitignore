@@ -21,3 +21,10 @@ docs/apps-script/.clasp.json
 docs/requests-script/.clasp.json
 **/.clasp.json
 !**/.clasp.json.example
+
+# Demo video build output. Captures, generated MP4/GIF and the contact sheets are
+# large binaries that are re-runnable from tools/, not source: `node tools/record_demo.mjs`
+# plus `python tools/build_demo.py` regenerates all of it. Committing them would put
+# tens of megabytes of video into the history of a public repository, where they cannot
+# be replaced once pushed.
+build/

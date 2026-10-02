@@ -372,6 +372,46 @@ this as a task to force through by committing zeroes.**
 achievement photography, and whether to narrow the `wash` sector label from "Water and
 climate resilience" — the published campaign source contains zero climate content.
 
+## Demo video
+
+`tools/` renders a short captioned demo from the **live** site. It is fully scripted, so it
+can be re-shot when the site changes.
+
+```bash
+# One-time: playwright is already in the npx cache, Chrome is installed.
+set NODE_PATH=%LOCALAPPDATA%\npm-cache\_npx\9833c18b2d85bc59\node_modules
+
+node tools/record_demo.mjs desktop        # 1920x1080, logs every cut to build/demo/shots-*.json
+node tools/record_demo.mjs phone          # 430x932, for the 9:16 cut
+python tools/build_demo.py desktop        # -> build/demo/demo-desktop.mp4
+python tools/build_demo.py phone          # -> build/demo/demo-phone.mp4
+node tools/check_no_submission.mjs        # proves the capture pressed nothing
+```
+
+Outputs land in `build/demo/`, which is gitignored: the files are tens of megabytes of
+video that a re-run reproduces, and a public repository's history cannot replace them once
+pushed.
+
+**Four properties of the pipeline that are easy to break by accident:**
+
+- **Nothing is submitted.** The vote button is shown and never pressed, and
+  `check_no_submission.mjs` reads the live `Responses`, `Comments` and `Audit` tabs and
+  fails if any holds a row. A demo ballot would be a real record in a production Sheet, and
+  deleting it would still leave it in Sheet version history.
+- **Nothing about the edit is hard-coded.** The recorder logs a mark at the instant each
+  frame changes, and the caption windows, the music arc and the head trim are all derived
+  from that log. Marking shots *after* their hold made every caption land about a second and
+  a half late, which no contact sheet would have caught.
+- **The music is synthesised, not downloaded.** `tools/make_music.py` builds it from
+  oscillators on this machine, so there is no licence to clear and no attribution to carry —
+  the only way to be certain of "no copyright" is for the audio to have no third-party author.
+  The empty-poll stretch ducks the pad and drops the kick outright; measured, its
+  beat-pulse ratio is ~1.0 against ~1.9-2.3 everywhere else.
+- **The zero-state claim travels with its evidence.** The dashboard shot carries both the
+  site's own line ("reads zero because nobody has answered yet") and the not-representative
+  disclosure in the same frame as the caption. **Re-shoot when the first responses land**,
+  or the video is stating something false.
+
 ## Testing
 
 ```text
