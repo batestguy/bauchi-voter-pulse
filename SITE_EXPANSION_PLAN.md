@@ -1021,6 +1021,24 @@ Still open, and not owner gates in the same sense:
 - Decide whether to narrow the `wash` sector label from "Water and climate resilience" —
   the published campaign source contains zero climate content.
 
+### Owner gates — update, 2 October 2026
+
+- ✅ **The native-speaker Hausa review of the poll strings is complete** (owner-attested). The
+  AI pass of 30 September 2026 found and corrected 20 defects and did **not** close this gate
+  by itself; the human review did. **The disclosure stays** — the strings are AI-drafted and
+  machine-corrected, then human-reviewed, which is a different claim from "translated". Full
+  record and the reviewer's open list: `docs/HAUSA_REVIEW.md`.
+- ✅ **Request-Sheet retention is decided: nothing is deleted automatically.** No deletion
+  period, no purge. The reasoning is that a retained request is staff workflow data, and
+  expiring it would delete needs nobody has actioned. Two costs are permanent and stated
+  rather than described away: Sheet version history outlives a blanked cell, and the tab holds
+  a supporter's name and street address indefinitely. See `docs/GOOGLE_SHEETS_SETUP.md` §3, §5.
+- ⏸ **Publishing the first poll snapshot is blocked on data, not on work.** The `Responses`
+  tab was read on 2 October 2026 and holds headers only — the deployment verification rows
+  were deleted on 1 October. `build_snapshot.py` was run against that real export and refused
+  to write, which is correct: a committed snapshot of zeroes would replace the page's honest
+  empty state. Do not treat this as an outstanding task to force through.
+
 ### If you only have time for one thing
 
 ```text

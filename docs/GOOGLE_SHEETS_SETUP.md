@@ -116,7 +116,7 @@ You do not need to remember these; they are code, tested, and cannot be forgotte
    registration-area map, which is already in `lga_wards.csv` and on the form.
 5. Test with dummy records first. Confirm rejected data never reaches the Sheet.
 
-### Two things that are still not solved
+### Three things that are still not solved
 
 - **No rate limiting.** The honeypot and the control-character rejection discourage
   automated submission; neither stops a determined one. Adding real rate limiting means
@@ -124,6 +124,13 @@ You do not need to remember these; they are code, tested, and cannot be forgotte
   currently does not hold. That is an owner decision, not an implementation detail.
 - **Google retains IP addresses in Apps Script execution logs** regardless of what this
   Sheet stores. Not fixable in code. Decide about it consciously.
+- **Nothing deletes a request.** There is no retention period, no deletion period and no
+  automatic purge on the `Requests` tab — see §5, where that is now a recorded owner
+  decision rather than an omission. The consequence is permanent: blanking a cell does not
+  remove it from Sheet version history, so any deletion is owner-side, and the tab holds a
+  supporter's name and street address indefinitely. Two things make that cost something —
+  staff access control, and a manual pruning rhythm — and **no code in this repository can
+  enforce or audit either one.**
 
 ## 4. Aggregate publishing
 
@@ -159,11 +166,19 @@ suppressed_ward_count
 - **Confirm the consent wording with whoever handles data-protection questions.** The
   consent text must say plainly what is stored (name, phone, email, address, and what they
   wrote), who can read it, and how long it is kept.
-- **Set a retention/deletion period for the `Requests` tab.** This is not hypothetical: the
-  rows are private data with a name and a street address on them, and an unbounded queue of
-  those is a liability that grows every day. Decide the period and who deletes closed
-  requests. Nothing in the code does this for you, and unlike the poll's free-text comment
-  there is no automatic purge here — a request you delete is a request you cannot action.
+- **Set a retention/deletion period for the `Requests` tab — DECIDED 2 October 2026: none.
+  Nothing is deleted automatically, by owner decision.** The reasoning: a retained request is
+  staff workflow data, and expiring it automatically would delete needs nobody has actioned.
+  That is a legitimate reason, and it is the whole of the reason; there is no code here that
+  enforces or audits the mitigation. What still follows from the decision:
+  - the tab holds a supporter's name, an email address and a street address **indefinitely**,
+    so exposure grows every day and access control is the only control;
+  - **blanking a cell does not remove it from Sheet version history** — an expired request
+    stays recoverable until the owner prunes it, and that is an owner action no code can
+    reach;
+  - a manual pruning rhythm is therefore required in practice. It is a human process, not a
+    feature, and nothing in this repository records when it last ran.
+  Unlike the poll's free-text comment, there is no automatic purge here to lean on.
 - Confirm whether the RA label is acceptable for the MVP.
 - Confirm the private Sheet owner, staff access list, and Apps Script execution
   account.

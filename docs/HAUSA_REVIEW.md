@@ -1,8 +1,27 @@
 # Hausa review record
 
-**Date:** 30 September 2026
+**Date:** 30 September 2026 (AI pass); native-speaker review reported complete 2 October 2026
 **Reviewer:** an independent AI agent, reviewing Hausa strings it did not write
-**Status:** corrections applied, **native-speaker review still required**
+**Status:** corrections applied, **native-speaker review complete** (owner-attested)
+
+## Native-speaker review, 2 October 2026
+
+**The owner reports the native-speaker review complete on 2 October 2026.** No reviewer's name
+is recorded here, and none may be invented — if it is to be cited, add it to this line.
+
+**What that closes and what it does not.** The gate existed because an AI reviewed
+AI-drafted Hausa. It is now closed by a human reviewer the owner reports. Two things survive
+it, deliberately:
+
+1. **The strings are still AI-drafted.** They were machine-drafted, machine-corrected, and
+   then human-reviewed. That is provenance, not a defect, and it is what the disclosure in
+   `AGENTS.md`, `README.md` and `HANDOFF.md` says — "AI-drafted, then reviewed" — rather
+   than "written by a speaker". **Do not shorten the disclosure to "translated".**
+2. **The list below is the reviewer's worklist, and it may not match what shipped.** The
+   ~11 strings in *Left for the native speaker* were deliberately untouched by the AI pass.
+   If the native reviewer changed any of them, record the change here — otherwise this file
+   describes a state that no longer ships, which is the specific defect this repository keeps
+   having to fix in other files.
 
 ## What this is, and what it is not
 
@@ -12,9 +31,11 @@ find, specifically: a wrong word for the intended meaning, an English word left 
 Hausa slot, a non-word, a mismatched pair, a string contradicting the English beside it, or
 a string contradicting another string for the same concept.
 
-**This does not close the Hausa gate.** An AI reviewed AI-drafted Hausa. Every correction
-below is a *candidate* correction. A native Hausa speaker must confirm them, and the
-disclosure in `AGENTS.md` and `.evals/` stays until they do.
+**This did not close the Hausa gate on its own.** An AI reviewed AI-drafted Hausa. Every
+correction below was a *candidate* correction, and the gate was closed by the
+native-speaker review the owner reports complete on 2 October 2026 — see the section at the
+top. The disclosure in `AGENTS.md` and `.evals/` stays, because it is a statement of
+provenance.
 
 ## Why the corrections were trusted enough to apply
 
@@ -99,7 +120,8 @@ which is why this one was fixed rather than deferred.
 ## Left for the native speaker
 
 The reviewer flagged these as questionable or regional, **not** as wrong. They were
-deliberately not changed.
+deliberately not changed. **These are the reviewer's open list for the native speaker** — see
+the 2 October 2026 section at the top for what that review did and did not settle.
 
 - `data-ha="Raba"` for "Share" — `raba` is a calque of "share"; `ƙoƙe` may be intended.
 - `data-ha="Amsa"` for the "Responses" column header — singular used as a mass noun.

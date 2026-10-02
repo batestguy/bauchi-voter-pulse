@@ -341,6 +341,12 @@ regardless of what this Sheet stores. Not fixable in code.
 
 ## 6. Owner decisions before deployment
 
+**Update, 2 October 2026:** the poll is deployed and live, and the owner reports the
+native-speaker Hausa review complete — including the gender wording below and the
+known-suspect strings listed in `AGENTS.md` (three of those four no longer exist; see
+`docs/HAUSA_REVIEW.md`). The list is kept as the record of what the review covered, not as
+work still outstanding.
+
 These are yours, not the implementer's:
 
 - [ ] Confirm the nine sector labels and their exact bilingual wording.

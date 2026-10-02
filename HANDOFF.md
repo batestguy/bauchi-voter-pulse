@@ -1,6 +1,7 @@
 # APM Bauchi Progress & Delivery — Project Handoff
 
-**Handoff date:** 1 October 2026, end of session
+**Handoff date:** 2 October 2026, end of session (supersedes the 1 October session; the
+closed items below carry their own dates)
 **Repository:** `batestguy/bauchi-voter-pulse`
 **Branch:** `main` — **in sync with `origin/main`**, nothing unpushed
 **Live product:** [APM Bauchi Progress & Delivery](https://batestguy.github.io/bauchi-voter-pulse/)
@@ -18,7 +19,7 @@
 > | Bound script | `APM poll endpoint` `1dJTeFKE…` | `APM requests endpoint` `1hoBdGyY…` |
 > | Tabs created | Responses, Comments, Audit, Retention | Requests, Audit |
 > | `setupSheets` run | yes | yes |
-> | Retention trigger | installed (`installRetention`) | n/a — no auto-purge, by decision |
+> | Retention trigger | installed (`installRetention`) | n/a — no auto-purge, **decided** (§25) |
 > | Live receipt | `APM-POLL-2026-000009` | `APM-2026-000003` |
 >
 > Both scripts were pushed with `clasp push --force`. `.clasp.json` is gitignored for both
@@ -27,19 +28,31 @@
 >
 > ### ⏭ Start here next session
 >
-> **Three owner actions remain, in this order:**
+> **All three owner actions from the 1 October handoff are now closed. One remains, and it
+> is blocked on data rather than on a decision:**
 >
-> 1. **Publish the poll results.** The dashboard renders its full layout at zero, and will
->    stay that way until a snapshot is committed. This is the one gap between "the poll
->    works" and "the poll reports" — see §24.
-> 2. **Decide retention for the request Sheet.** It now holds real names, email addresses
->    and street addresses, and nothing deletes them. This is the only open item with legal
->    weight rather than quality weight. See §25.
-> 3. **Get a native Hausa speaker** over `docs/HAUSA_REVIEW.md` plus everything added on
->    1 October. Still the launch gate.
+> 1. **Publishing the poll results — still open, and now measured.** The `Responses` tab was
+>    read on 2 October 2026: **headers intact, zero data rows.** The receipts above were
+>    verification rows, deleted on 1 October; `Comments` and `Audit` are empty too.
+>    `build_snapshot.py` was run against that real export and **exited 1 and wrote
+>    nothing**, which is the correct outcome — a committed snapshot of zeroes would replace
+>    the page's honest empty state with a chart of nothing.
+>    There is nothing to publish until real responses arrive. See §24.
+> 2. ~~**Decide retention for the request Sheet.**~~ **Decided 2 October 2026: no automatic
+>    purge, no deletion period**, on the reasoning that retained requests are staff workflow
+>    data and expiring them would delete needs nobody has actioned. Two costs are permanent
+>    and stated rather than described away: Sheet version history keeps anything blanked, and
+>    the tab holds a supporter's name and street address indefinitely. See §25.
+> 3. ~~**Get a native Hausa speaker over `docs/HAUSA_REVIEW.md`.~~ **Done.** The owner
+>    reports the native-speaker review complete on 2 October 2026. The AI-drafted provenance
+>    disclosure stays, because the strings are still machine-drafted and machine-corrected.
+>    See `docs/HAUSA_REVIEW.md`.
 >
-> **Done and closed this session:** the About page (§23), the CORS defect that stopped both
-> forms working at all (§21), the LGA/area constraint that was never enforced in the UI
+> **Also closed on 2 October:** nothing. The work of that session was verification, not
+> feature work — see §29.
+>
+> **Closed on 1 October, for context:** the About page (§23), the CORS defect that stopped
+> both forms working at all (§21), the LGA/area constraint that was never enforced in the UI
 > (§22), the snapshot builder (§24), and the zero-state dashboard (§26).
 >
 > ### The one thing to understand before touching the poll
@@ -1522,7 +1535,7 @@ genuine 75% majority is untouched; a small minority is never inflated.
   `test_the_poll_script_never_defines_a_name_the_request_script_defines` asserts the two
   declaration sets are disjoint.
 
-### Hausa review of 30 September 2026 — 20 defects found and corrected, gate still open
+### Hausa review of 30 September 2026 — 20 defects found and corrected; gate closed 2 October 2026
 
 An **independent AI agent** reviewed the Hausa strings after the interactive dashboard was
 built. It had not written them. Full record: **`docs/HAUSA_REVIEW.md`**, which lists every
@@ -1555,10 +1568,14 @@ reference" at 10 sites while the file already used the right words elsewhere; th
 optgroup's visible text is its `label` **attribute** and `setLanguage` only rewrites
 `textContent`.
 
-**What this does not do.** An AI reviewed AI-drafted Hausa. Every correction is a
-*candidate*. A native speaker must still confirm them, and a list of ~11 strings the
-reviewer flagged as merely questionable is in `docs/HAUSA_REVIEW.md` for that purpose. **The
-disclosure stays.**
+**What this did not do on its own.** An AI reviewed AI-drafted Hausa. Every correction was a
+*candidate*, and a list of ~11 strings the reviewer flagged as merely questionable is in
+`docs/HAUSA_REVIEW.md` for a human. **The gate was closed on 2 October 2026 by the
+native-speaker review the owner reports complete** — not by this pass. **The AI-drafted
+provenance disclosure stays**, because the strings are still machine-drafted and
+machine-corrected rather than natively translated. If that reviewer changed any of the ~11
+strings listed below, record the change in `docs/HAUSA_REVIEW.md` rather than leaving the
+file describing a state that no longer ships.
 
 **Correction to §21's earlier claim.** That section named four known-wrong strings. Three
 had already been fixed in `7ce2ff9` and no longer existed — `ba zafi ba` → `ba zabi ba`,
@@ -1569,16 +1586,20 @@ three that are already right.
 **I am not a native Hausa speaker and cannot certify any of these strings.** The structural
 checks — placeholders, terminology drift, untranslated English, identical pairs — all pass.
 The four items above are what reading the strings actually found, and a native speaker has
-to confirm the fixes.
+to confirm the fixes. **The owner reports that confirmation done on 2 October 2026; no
+reviewer's name is recorded here and none may be invented.**
 
 ### Open for the owner
 
-- **Get a native speaker to review the poll strings before connecting the poll.** A garbled
-  disclosure is worse than an English one, because it looks translated.
+- ~~**Get a native speaker to review the poll strings before connecting the poll.**~~ **Done
+  2 October 2026.** A garbled disclosure is worse than an English one, because it looks
+  translated — which is why this gate existed and why the disclosure it produced stays.
 - **`docs/POLL_SETUP.md` step 6: set a retention period for the comment column, and a
   process that deletes on schedule.** Comments are now explicitly kept for study, which
   makes this a live obligation rather than a hypothetical. A 300-char free-text field held
-  indefinitely is not anonymous in any meaningful sense.
+  indefinitely is not anonymous in any meaningful sense. **Shipped in code**: default 180
+  days, `MAX_COMMENT_RETENTION_DAYS = 365` ceiling, daily `purgeExpiredComments` trigger
+  installed by `installRetention`.
 - **Google retains IP addresses in Apps Script logs** regardless of what the Sheet stores.
   Not fixable in code; a conscious decision, not a discovery.
 - Whether the poll closes, and what the page says when it does.
@@ -2003,22 +2024,104 @@ repository secret. On a public repository that is a real increase in attack surf
 exporting the tab keeps every credential out of git entirely. At campaign volumes that is
 the better trade. Revisit only if the weekly ritual becomes the bottleneck.
 
-## 25. Open: Retention for the Request Sheet
+### What the first export actually contained (2 October 2026)
 
-**This is the one item left with legal weight rather than quality weight.**
+**The command was run against the real Sheet and it wrote nothing, which is the answer.**
+The `Responses` tab holds its nine headers and **zero data rows** — the receipts recorded in
+§27 were verification rows, deleted on 1 October. The builder printed:
 
-The request form collects a name, an optional email address and a street address. That is
-real personal data, unlike the poll, and **nothing deletes it**. The poll has a retention
-ceiling, a default, a daily trigger and a purge; the request form has none of that.
+```text
+no accepted responses in …\Responses.csv (0 row(s) read, all rejected or non-consenting).
+Nothing written: an empty poll renders as the page's own empty state, and a committed
+snapshot of zeroes would replace that with a chart of nothing.
+```
 
-The decision was left with the owner and has not been made. "We chose not to automate this"
-is defensible and is what `docs/GOOGLE_SHEETS_SETUP.md` currently says. "We never picked a
-date" is how a spreadsheet ends up holding a supporter's home address indefinitely.
+and **exited 1**. `data/delivery/poll_snapshot.json` still does not exist, which is what
+`test_no_placeholder_tally_is_committed_anywhere` requires.
 
-Worth noting for whoever decides: **blanking a cell does not remove it from Sheet version
-history.** An expired request stays recoverable until the owner prunes it, which is an
-owner action no code can reach. That is stated in both guides rather than left to be
-discovered.
+**So there is nothing to publish, and this is not a defect to be worked around.** The
+dashboard on the live site is already the correct published state: the full control surface
+at zero, §26's hatched tracks, and the line that says the figures read zero because nobody has
+answered yet. When real responses arrive, the three commands above are the whole procedure.
+Read §25a for how to take the export.
+
+## 25. Retention for the Request Sheet — Decided 2 October 2026: Nothing Is Deleted
+
+**This was the one item left with legal weight rather than quality weight. The owner decided
+it on 2 October 2026: no automatic purge, no deletion period.** The request form collects a
+name, an optional email address and a street address. That is real personal data, unlike the
+poll, and **nothing deletes it**. The poll has a retention ceiling, a default, a daily trigger
+and a purge; the request form has none of that.
+
+**The reasoning, in full, because a decision recorded without its reasoning reads as an
+omission:** a retained request is staff workflow data, and expiring it automatically would
+delete needs nobody has actioned. That is the whole basis. It is a legitimate reason and it
+is not a technical one.
+
+**Two costs of that decision are permanent, and neither is softened by the reasoning:**
+
+1. **Blanking a cell does not remove it from Sheet version history.** Any future deletion is
+   still owner-side, and it stays recoverable until the owner prunes it. That is an owner
+   action no code in this repository can reach or audit.
+2. **The tab holds a supporter's name and street address indefinitely.** The liability grows
+   every day that passes. The mitigations are staff access control and a manual pruning
+   rhythm, and **neither is enforced or recorded by anything here** — there is no run log for
+   a pruning process that does not exist in code.
+
+**What must not be written about this state:** do not describe the request data as retained
+"safely" or "by design" without saying who can read it and that nothing deletes it. That
+wording is now in `AGENTS.md` and in `docs/GOOGLE_SHEETS_SETUP.md` §3 and §5, so the next
+session inherits the decision *and* its cost rather than one without the other.
+
+## 25a. Reading the Poll Sheet Without a Credential
+
+The snapshot in §24 requires an exported `Responses.csv`. On 2 October 2026 that export was
+taken without the owner exporting it by hand, and the route is worth recording because it
+needs no credential and no service-account key in git.
+
+**The short version: `/export?format=csv` works. It looks like it fails, and the failure is a
+detection error, not a download error.**
+
+```text
+https://docs.google.com/spreadsheets/d/<SHEET_ID>/export?format=csv&gid=<TAB_GID>
+```
+
+- **Launch Brave against the real profile with a debugging port**, then drive it over CDP:
+  `brave.exe --remote-debugging-port=9222`. The port is only read at launch, so this cannot
+  attach to an already-running browser — §27's lesson applies again.
+- **Find the Sheet ID from Drive search.** `drive.google.com/drive/u/0/search?q=<name>` lists
+  every match in a `data-id` attribute. That avoids trusting a truncated ID from a table in
+  this file. Poll responses: `1uvtVDggYj09jqmNMPwwgTIJkG4C9qbIuvh1zc58hlEM`.
+- **Get the tab GIDs from the tab strip**, by clicking each tab and reading `location.hash`:
+  `Responses` `2135492820`, `Comments` `732506979`, `Audit` `2113795227`. The attributes on
+  the tab elements repeat and cannot be trusted one-to-one.
+- **Navigate to the export URL and then look on disk.** The navigation is *abandoned* — the
+  tab stays `about:blank` — and CDP reports `totalBytes: 0` and `state: "canceled"`. **Both
+  are lies.** All three files were written anyway.
+
+**Where the file lands is the part that costs time.** It does **not** go to the browser's
+normal Downloads folder, and it ignored **both** `Page.setDownloadBehavior` and
+`Browser.setDownloadBehavior` with an explicit `downloadPath`. On this machine Brave's
+configured download directory is the **repository root**, so the exports appeared as
+`APM poll responses - Responses.csv`, `data.csv`, `data (1).csv` and `data (2).csv` in
+`D:\APMdeliverable`. **Check the filesystem rather than trusting the CDP event or the path you
+asked for, and delete the stray files afterwards** — they are untracked and one of them sits
+next to the source tree.
+
+**Two routes that do not work, so they are not tried again:**
+
+- **`gviz` is refused for a private Sheet**, even same-origin with credentials:
+  `access_denied / ACCESS_DENIED — requires an OAuth credential`. It returns that as a 200.
+- **`Network.getResponseBody` cannot read the CSV response** (`No resource with given
+  identifier found`), and `Fetch` cannot intercept it at `ResponseReceived` —
+  `Unsupported request stage`.
+
+**And one that works, if you want to read the grid without writing anything:**
+click once in the grid (**never double-click — that opens the cell editor**), `Ctrl+A`,
+`Ctrl+C`, then `navigator.clipboard.readText()` after `Browser.grantPermissions` for
+`origin: https://docs.google.com`. The result is TSV and it reproduces the tab exactly,
+empty rows included. **It writes nothing to the Sheet**, which matters, because §27 records a
+session where an automated click cleared `A1`.
 
 ## 26. The Dashboard at Zero — and What It Is Not
 
@@ -2138,6 +2241,55 @@ disagreed with something written beside it, and nothing compared the two.**
 In every case the fix was to **derive the statement from the data** and add a test that
 compares the two. Writing the number again next time is what reintroduces it.
 
+## 29. Verification Session — 2 October 2026
+
+**No feature work. One item was measured, two owner decisions were recorded, and the
+measurement is why nothing was published.**
+
+### The poll has no responses
+
+The `Responses` tab was read through a real logged-in browser (§25a). Nine headers, **zero
+data rows**. The receipts in §27 were verification rows, deleted on 1 October. Running the
+documented command against that real export:
+
+```text
+python src/poll/build_snapshot.py …\Responses.csv
+  → no accepted responses … (0 row(s) read, all rejected or non-consenting).
+  → Nothing written …                                     exit 1
+```
+
+**A snapshot of zeroes was not committed, and committing one is refused on purpose.** The
+page's own empty state is the honest published state, and §26's zero scaffold is already
+serving it. So "publish the results" is not done — it is **blocked on responses existing**,
+which is a different thing and should not be written up as an outstanding task.
+
+### Two decisions recorded
+
+| Decision | Outcome | Where it is recorded |
+|---|---|---|
+| Request-Sheet retention | **No automatic purge, no deletion period** | `HANDOFF.md` §25, `AGENTS.md`, `docs/GOOGLE_SHEETS_SETUP.md` §3 and §5 |
+| Native Hausa review | **Complete** (owner-attested, 2 Oct 2026) | `docs/HAUSA_REVIEW.md`, `AGENTS.md`, `README.md` |
+
+Both were recorded **with their costs**, not as closed boxes. The retention decision keeps
+the two permanent costs visible (Sheet version history outlives a blanked cell; the tab holds
+a name and a street address indefinitely). The Hausa decision keeps the provenance disclosure
+and the instruction to record any change the reviewer made to the ~11 strings the AI pass
+deliberately left alone. **A decision logged without its cost is the same defect as a number
+written twice.**
+
+**No reviewer's name is recorded, because none was given, and none may be invented.**
+
+### What did not change
+
+- No code changed. **402 tests pass**, one skipped (Playwright).
+- No snapshot exists. `data/delivery/poll_snapshot.json` is still absent.
+- The request endpoint is untouched — the decision was about *policy*, not about adding a
+  purge nobody wanted.
+- The AI-drafted provenance disclosure stays in every place it shipped. The strings are
+  machine-drafted and machine-corrected; a human reviewed them afterwards, which is a
+  different claim and is worded differently.
+- **Nothing has been committed.** Per §Restart step 6, push authorisation is not standing.
+
 ---
 
 ## Restart and Resume Procedure
@@ -2155,13 +2307,19 @@ compares the two. Writing the number again next time is what reintroduces it.
    A drop in any suite means something regressed. Investigate before proceeding. Both
    endpoint harnesses are wired into the Python suite as well, so `unittest discover` runs
    them too — but run each directly when you have touched its `Code.gs`.
-3. **Confirm the preserved local work is still untracked/modified, and do not touch it:**
-   `src/aggregation/aggregate.py`, `.evals/`, `data/human_review/filled/`,
-   `.playwright-mcp/`. Never `git reset`, `git clean`, permanent `git stash`, or stage them.
-4. **The one thing to pick up: publish the poll snapshot.** Both endpoints are deployed and
-   verified (§21); the dashboard renders its full layout at zero (§26) and will stay that
-   way until a snapshot is committed. See §24 for the three commands. Everything else about
-   the poll is done.
+3. **Confirm the preserved local work is still untracked, and do not touch it:**
+   `.evals/2026-W39.md`, `.evals/2026-W39_sample100_filled.csv`,
+   `data/human_review/filled/`, `.playwright-mcp/`. Never `git reset`, `git clean`,
+   permanent `git stash`, or `git add .` over them. **Corrected 2 October 2026:** this list
+   used to name `src/aggregation/aggregate.py`, which is now tracked and clean — it was
+   preserved local work in an earlier session and has since been committed. Verify with
+   `git status --porcelain --untracked-files=all` rather than trusting the list.
+4. **The one thing left is publishing the poll snapshot, and it is blocked on data, not on
+   work.** Both endpoints are deployed and verified (§21); the dashboard renders its full
+   layout at zero (§26) and will stay that way until a snapshot is committed. As of
+   2 October 2026 the `Responses` tab is empty, so there is nothing to publish (§24, §29).
+   Everything else about the poll is done. See §24 for the three commands and §25a for how
+   to take the export.
 5. **To change the endpoint code, edit `Code.gs.template` and regenerate** — never `Code.gs`
    directly, or the next build discards the change:
    ```bash
@@ -2191,19 +2349,28 @@ compares the two. Writing the number again next time is what reintroduces it.
    `source_register.csv` and `data/derived/lga_paths.json` - re-fetching changes the hash
    and both records must be regenerated together.
 
-### Three things the owner still has to decide
+### What the owner still has to decide
 
-- **Retention for the request Sheet.** This is the one that now matters: the request form
-  holds real names, email addresses and street addresses and nothing deletes them. See §25.
-  The poll's comment column is already handled — default 180 days, 365-day ceiling, daily
-  purge trigger installed. Google retains IP addresses in Apps Script execution logs
-  regardless of what either Sheet stores.
-- **Whether to publish poll results at all, and when.** The machinery is built and tested
-  (§24). The first snapshot should be taken once there are enough real responses that the
-  charts are worth showing, and it will be almost entirely suppressed below a floor of 5.
-- **A native Hausa speaker** to review `docs/HAUSA_REVIEW.md` plus everything added on
-  1 October 2026: 22 corrected strings, ~11 deliberately left alone, and the new About page
-  and zero-state dashboard copy. An AI reviewing AI-drafted Hausa does not close that gate.
+**Two of the three items from the 1 October handoff were decided on 2 October 2026. One
+remains, and it is a question of timing rather than of policy.**
+
+- ~~**Retention for the request Sheet.**~~ **Decided 2 October 2026: nothing is deleted.**
+  §25 carries the reasoning and the two permanent costs. The poll's comment column is
+  already handled — default 180 days, 365-day ceiling, daily purge trigger installed.
+  Google retains IP addresses in Apps Script execution logs regardless of what either Sheet
+  stores, and that remains not fixable in code.
+- **Whether to publish poll results, and when — still open.** The machinery is built and
+  tested (§24) and **was run against the real Sheet on 2 October 2026 against an empty
+  `Responses` tab**, so it wrote nothing. The first real snapshot should be taken once there
+  are enough responses that the charts are worth showing, and it will be almost entirely
+  suppressed below a floor of 5. **This is not a bug to fix and not a gap to fill by hand:**
+  committing a snapshot of zeroes is refused by the builder and by a test.
+- ~~**A native Hausa speaker.**~~ **Done.** The owner reports the native-speaker review
+  complete on 2 October 2026, covering `docs/HAUSA_REVIEW.md` plus what was added on
+  1 October. The AI-drafted provenance disclosure stays. If that reviewer changed any of the
+  ~11 strings the AI pass deliberately left alone, **record the change in
+  `docs/HAUSA_REVIEW.md`** — otherwise that file describes a state that no longer ships, which
+  is the defect this repository keeps meeting in other files.
 
 ### Names and titles are retained
 

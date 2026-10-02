@@ -416,12 +416,21 @@ These are enforced in code; keep them enforced.
 Public sources only; anonymize; disclose outputs are social/news analysis, not private polling. Version everything so any dashboard cell traces to schema + model + data.
 
 **The request form holds real personal data — names, email addresses and street addresses —
-and nothing deletes it.** The poll has a retention default, a 365-day ceiling, a daily
-trigger and a purge; the request form has none of that, by an owner decision that is stated
-in `docs/GOOGLE_SHEETS_SETUP.md` rather than left to look forgotten. **That decision is still
-open and is the one item here with legal weight rather than quality weight.** Blanking a
-cell does not remove it from Sheet version history; an expired request stays recoverable
-until the owner prunes it, and that is an owner action no code can reach.
+and nothing deletes it. That is now a decision, not an omission.** The poll has a retention
+default, a 365-day ceiling, a daily trigger and a purge; the request form has none of that.
+**The owner decided on 2 October 2026 to keep it that way**: no automatic purge, no deletion
+period, retained requests are staff workflow data and expiring them automatically would
+delete needs nobody has actioned. The reasoning and the two things that make it cost
+something are stated in `docs/GOOGLE_SHEETS_SETUP.md` §3 and §5 so the decision is visible
+rather than inferred from an absence.
+
+**Two costs of that decision are permanent and must not be described away.** Blanking a cell
+does not remove it from Sheet version history, so any deletion is still owner-side. And a
+retained request holds a supporter's name and street address indefinitely, which is the
+liability that grows every day; the mitigation is staff access control and a manual pruning
+rhythm, neither of which any code in this repository can enforce or audit. **Do not describe
+the request data as retained "safely" or "by design" without saying who can read it and that
+nothing deletes it.**
 
 **Both public forms are deployed and live.** `POLL_ENDPOINT` and `REQUEST_ENDPOINT` in
 `src/dashboard/render.py` hold `/exec` URLs. Those URLs are public by construction — they are
@@ -432,17 +441,20 @@ preflight that Apps Script cannot satisfy. **Never send `Content-Type: applicati
 from a browser to an Apps Script `/exec` endpoint** — it fails with a bare `Failed to fetch`,
 no console error, and a user who is told their vote was not sent.
 
-**129** Hausa strings added in September 2026 are AI-drafted and not native-speaker reviewed — 53 from S1/S2, 6 from S4, 4 in the footer contributor credit, and 66 in the S5 poll (counted across both dashboard states, which ship different strings). Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler. **The owner reviewed and accepted the S1–S4 set as written on 29 September 2026**; the poll strings are new and **not yet reviewed**. The disclosure stays, because they are still AI-drafted rather than native-speaker translated.
+**129** Hausa strings added in September 2026 are AI-drafted — 53 from S1/S2, 6 from S4, 4 in the footer contributor credit, and 66 in the S5 poll (counted across both dashboard states, which ship different strings). Disclose that wherever they ship, exactly as `.evals/2026-W39.md` discloses its labeler. **The owner reviewed and accepted the S1–S4 set as written on 29 September 2026**. The poll strings were then reviewed by a native Hausa speaker — **the owner confirmed that review complete on 2 October 2026**; no reviewer's name is recorded in this repository, so do not attribute it to anyone. **The disclosure stays**, because the strings are still AI-drafted and machine-corrected rather than natively translated, and "AI-drafted, then reviewed" is a different claim from "written by a speaker".
 
-**A native Hausa speaker must still review the poll strings before the poll is connected.**
-An independent AI pass ran on 30 September 2026 and found **20 defects**, all now corrected
+**The poll strings are no longer awaiting a native-speaker review.** An independent AI pass
+ran on 30 September 2026 and found **20 defects**, all now corrected
 - see `docs/HAUSA_REVIEW.md` for every string, the correction, and why it was provable. The
 three most serious: a re-identification warning that had lost its negation and so told the
 reader to *include* their name; a privacy disclosure that had dropped the word "exact" from
 "never an exact age"; and the map's licensing caveat, which said "colours" where it meant
-"boundaries". **That pass does not close this gate.** An AI reviewed AI-drafted Hausa, so
-every correction is a candidate, and a list of strings it flagged as *questionable* was
-deliberately left unchanged. The disclosure stays.
+"boundaries". **That AI pass did not close the gate on its own** — an AI reviewed AI-drafted
+Hausa, so every correction was a candidate, and a list of strings it flagged as *questionable*
+was deliberately left unchanged for the human reviewer. That human review is what the owner
+reports done. **The strings it left as questionable are still recorded in
+`docs/HAUSA_REVIEW.md`; if the reviewer changed any of them, record the change there rather
+than leaving the file describing a state that no longer ships.**
 
 **Correction to an earlier claim here.** This file previously named four known-suspect
 strings. Three had already been fixed in `7ce2ff9` and no longer existed: `ba zafi ba` ->
